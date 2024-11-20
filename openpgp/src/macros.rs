@@ -207,6 +207,7 @@ macro_rules! assert_send_and_sync {
 /// public.  We test the cases here, instead.  If you change the
 /// examples here, propagate the changes to the docstring above.
 #[cfg(test)]
+#[allow(dead_code)]
 mod test_assert_send_and_sync {
     /// For most types just call it after defining the type:
     pub struct MyStruct {}

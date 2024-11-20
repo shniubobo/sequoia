@@ -2164,10 +2164,16 @@ impl<'a, C> ValidComponentAmalgamation<'a, C>
         // While we have the binding signature, extract a few
         // properties to avoid recomputing the same thing multiple
         // times.
-        iter.filter_map(|c| {
+        //
+        // However, we don't actually verify the binding signatures
+        // yet.  We'll do this later, and we'll only consider the most
+        // promising candidate to avoid needlessly verifying
+        // signatures.
+        let mut candidates = iter.filter_map(|c| {
             // No binding signature at time `t` => not alive.
-            let sig = match c.binding_signature(policy, t) {
-                Ok(sig) => Some(sig),
+            let mut iter = c.unverified_binding_signatures(policy, t);
+            let (n, sig) = match iter.next()? {
+                Ok((n, sig)) => Some((n, sig)),
                 Err(e) => {
                     error = Some(e);
                     None
@@ -2185,12 +2191,19 @@ impl<'a, C> ValidComponentAmalgamation<'a, C>
                 },
             }?;
 
-            Some(((c, sig, revoked), primary, signature_creation_time))
-        })
-            .max_by(|(a, a_primary, a_signature_creation_time),
-                    (b, b_primary, b_signature_creation_time)| {
-                match (matches!(&a.2, RevocationStatus::Revoked(_)),
-                       matches!(&b.2, RevocationStatus::Revoked(_))) {
+            Some(((c, iter, n, sig, revoked), primary, signature_creation_time))
+        }).collect::<Vec<_>>();
+
+        // While we have candidates, find the most promising one and
+        // verify it.
+        while ! candidates.is_empty() {
+            // First, sort the candidates.
+            candidates.sort_by(
+                |(a, a_primary, a_signature_creation_time),
+                (b, b_primary, b_signature_creation_time)|
+            {
+                match (matches!(&a.4, RevocationStatus::Revoked(_)),
+                       matches!(&b.4, RevocationStatus::Revoked(_))) {
                     (true, false) => return Ordering::Less,
                     (false, true) => return Ordering::Greater,
                     _ => (),
@@ -2215,14 +2228,75 @@ impl<'a, C> ValidComponentAmalgamation<'a, C>
                     Ordering::Equal =>
                         panic!("non-canonicalized Cert (duplicate components)"),
                 }
-            })
-            .ok_or_else(|| {
-                error.map(|e| e.context(format!(
-                    "No binding signature at time {}", crate::fmt::time(&t))))
-                    .unwrap_or_else(|| Error::NoBindingSignature(t).into())
-            })
-            .and_then(|c| ComponentAmalgamation::new(cert, (c.0).0)
-                      .with_policy_relaxed(policy, t, valid_cert))
+            });
+
+            // In a moment, we'll get a mutable reference to the most
+            // promising candidate.  However, while we hold the
+            // reference, we may decide to drop that candidate.
+            let mut drop_last = false;
+
+            // Verify the most promising signature.
+            if let Some(best) = candidates.last_mut() {
+                use crate::cert::lazysigs::SigState;
+
+                // If it checks out, we're done.
+                let (c, n) = ((best.0).0, (best.0.2));
+                if matches!(c.self_signatures.verify_sig(
+                    n, c.backsig_signer.as_ref()),
+                            Ok(SigState::Good))
+                {
+                    // We're done.
+                    return ComponentAmalgamation::new(cert, c)
+                        .with_policy_relaxed(policy, t, valid_cert);
+                }
+
+                // The signature was bad.  Get the next signature,
+                // recompute the metadata and keep searching.
+                match best.0.1.next() {
+                    Some(Ok((n, sig))) => {
+                        let revoked =
+                            c._revocation_status(policy, t, false, Some(sig));
+                        let primary =
+                            sig.primary_userid().unwrap_or(false);
+                        let signature_creation_time =
+                            match sig.signature_creation_time()
+                        {
+                            Some(time) => time,
+                            None => {
+                                error = Some(Error::MalformedPacket(
+                                    "Signature has no creation time".into())
+                                             .into());
+                                drop_last = true;
+                                std::time::UNIX_EPOCH
+                            },
+                        };
+
+                        best.0.2 = n;
+                        best.0.3 = sig;
+                        best.0.4 = revoked;
+                        best.1 = primary;
+                        best.2 = signature_creation_time;
+                    },
+                    Some(Err(e)) => {
+                        error = Some(e);
+                        drop_last = true;
+                    },
+                    None =>
+                        drop_last = true,
+                }
+            }
+
+            if drop_last {
+                // There was no new signature to consider in this
+                // component, drop it.
+                candidates.pop();
+            }
+        }
+
+        // There was no valid binding signature.
+        Err(error.map(|e| e.context(format!(
+            "No binding signature at time {}", crate::fmt::time(&t))))
+            .unwrap_or_else(|| Error::NoBindingSignature(t).into()))
     }
 
     /// The component's self-signatures.

@@ -122,7 +122,7 @@ pub struct ComponentBundle<C> {
 
     /// If set, is equal to `component`, and provides context to
     /// verify primary key binding signatures.
-    backsig_signer: Option<Key<key::PublicParts, key::SubordinateRole>>,
+    pub(super) backsig_signer: Option<Key<key::PublicParts, key::SubordinateRole>>,
 
     // Third-party certifications.  (In general, this will only be by
     // designated revokers.)
@@ -269,179 +269,39 @@ impl<C> ComponentBundle<C> {
     {
         let t = t.into().unwrap_or_else(crate::now);
 
-      /// Finds the active binding signature.
-      ///
-      /// This function does not depend on the type of `C`, but it
-      /// is unfortunately monomorphized for every `C`.  Prevent
-      /// this by moving the code to a function independent of `C`.
-      fn find_binding_signature<'s>(policy: &dyn Policy,
-                                    self_signatures: &'s LazySignatures,
-                                    backsig_signer:
-                                    Option<&Key<key::PublicParts, key::SubordinateRole>>,
-                                    hash_algo_security: HashAlgoSecurity,
-                                    t: time::SystemTime)
-                                    -> Result<&'s Signature>
-      {
-        // Recall: the signatures are sorted by their creation time in
-        // descending order, i.e., newest first.
-        //
-        // We want the newest signature that is older than `t`, or
-        // that has been created at `t`.  So, search for `t`.
+        let mut f = self.unverified_binding_signatures(policy, t);
 
-        // We search all signatures without triggering the signature
-        // verification.  Later, we will verify the candidates, and
-        // reject bad signatures.
-        let unverified_self_signatures = self_signatures.as_slice_unverified();
-
-        let i =
-            // Usually, the first signature is what we are looking for.
-            // Short circuit the binary search.
-              if unverified_self_signatures.get(0)
-              .filter(|s| s.signature_creation_time().map(|c| t >= c)
-                      .unwrap_or(false))
-              .filter(
-                  // Verify the signature now.
-                  |_| matches!(self_signatures.verify_sig(0, backsig_signer),
-                               Ok(SigState::Good)))
-              .is_some()
-            {
-                0
-            } else {
-                match unverified_self_signatures.binary_search_by(
-                    |s| canonical_signature_order(
-                        s.signature_creation_time(), Some(t)))
-                {
-                    // If there are multiple matches, then we need to search
-                    // backwards to find the first one.  Consider:
-                    //
-                    //     t: 9 8 8 8 8 7
-                    //     i: 0 1 2 3 4 5
-                    //
-                    // If we are looking for t == 8, then binary_search could
-                    // return index 1, 2, 3 or 4.
-                    Ok(mut i) => {
-                        while i > 0
-                            && unverified_self_signatures[i - 1].signature_creation_time()
-                            == Some(t)
-                        {
-                            i -= 1;
-                        }
-                        i
-                    }
-
-                    // There was no match.  `i` is where a new element could
-                    // be inserted while maintaining the sorted order.
-                    // Consider:
-                    //
-                    //    t: 9 8 6 5
-                    //    i: 0 1 2 3
-                    //
-                    // If we are looing for t == 7, then binary_search will
-                    // return i == 2.  That's exactly where we should start
-                    // looking.
-                    Err(i) => i,
-                }
-            };
-
-        let mut sig = None;
-
-        // Prefer the first error, which is the error arising from the
-        // most recent binding signature that wasn't created after
-        // `t`.
-        let mut error = None;
-
-        'next_sig: for (j, s) in unverified_self_signatures[i..].iter()
-            .enumerate()
-        {
-            if let Err(e) = s.signature_alive(t, time::Duration::new(0, 0)) {
-                // We know that t >= signature's creation time.  So,
-                // it is expired.  But an older signature might not
-                // be.  So, keep trying.
-                if error.is_none() {
-                    error = Some(e);
-                }
-                continue;
-            }
-
-            if let Err(e) = policy.signature(s, hash_algo_security)
-            {
-                if error.is_none() {
-                    error = Some(e);
-                }
-                continue;
-            }
+        while let Some(itm) = f.next() {
+            let (n, s) = itm?;
 
             // Verify the signature now.
-            if ! matches!(self_signatures.verify_sig(i + j, backsig_signer),
-                          Ok(SigState::Good)) {
-                // Reject bad signatures.
-                continue;
+            if matches!(self.self_signatures.verify_sig(
+                n, self.backsig_signer.as_ref()),
+                        Ok(SigState::Good)) {
+                return Ok(s);
             }
-
-            // The signature is good, but we may still need to verify the
-            // back sig.
-            if s.typ() == crate::types::SignatureType::SubkeyBinding &&
-                s.key_flags().map(|kf| kf.for_signing()).unwrap_or(false)
-            {
-                let mut n = 0;
-                let mut one_good_backsig = false;
-                'next_backsig: for backsig in s.embedded_signatures() {
-                    n += 1;
-                    if let Err(e) = backsig.signature_alive(
-                        t, time::Duration::new(0, 0))
-                    {
-                        // The primary key binding signature is not
-                        // alive.
-                        if error.is_none() {
-                            error = Some(e);
-                        }
-                        continue 'next_backsig;
-                    }
-
-                    if let Err(e) = policy
-                        .signature(backsig, hash_algo_security)
-                    {
-                        if error.is_none() {
-                            error = Some(e);
-                        }
-                        continue 'next_backsig;
-                    }
-
-                    one_good_backsig = true;
-                }
-
-                if n == 0 {
-                    // This shouldn't happen because
-                    // Signature::verify_subkey_binding checks for the
-                    // primary key binding signature.  But, better be
-                    // safe.
-                    if error.is_none() {
-                        error = Some(Error::BadSignature(
-                            "Primary key binding signature missing".into())
-                                     .into());
-                    }
-                    continue 'next_sig;
-                }
-
-                if ! one_good_backsig {
-                    continue 'next_sig;
-                }
-            }
-
-            sig = Some(s);
-            break;
         }
+        Err(Error::NoBindingSignature(t).into())
+    }
 
-        if let Some(sig) = sig {
-            Ok(sig)
-        } else if let Some(err) = error {
-            Err(err)
-        } else {
-            Err(Error::NoBindingSignature(t).into())
-        }
-      }
+    /// Returns unverified candidates for active binding signatures at
+    /// time `t`.
+    ///
+    /// This is like [`ComponentBundle::binding_signature`], but does
+    /// not actually verify the signature.  Instead, it returns a
+    /// reference to the unverified signature, and its offset in the
+    /// [`LazySignatures`] structure.
+    pub(super) fn unverified_binding_signatures<'s: 'p, 'p, T>(
+        &'s self,
+        policy: &'p dyn Policy,
+        t: T)
+        -> impl Iterator<Item = Result<(usize, &'s Signature)>> + 'p
+    where
+        T: Into<Option<time::SystemTime>>,
+    {
+        let t = t.into().unwrap_or_else(crate::now);
 
-        find_binding_signature(
+        find_unverified_binding_signatures(
             policy,
             &self.self_signatures,
             self.backsig_signer.as_ref(),
@@ -888,6 +748,205 @@ impl<C> ComponentBundle<C> {
         self.other_revocations.dedup_by(sig_merge);
         self.other_revocations.sort_by(sig_cmp);
         self.other_revocations.iter_mut().for_each(sig_fixup);
+    }
+}
+
+/// Finds the active binding signature.
+///
+/// This function does not depend on the type of `C`, but it
+/// is unfortunately monomorphized for every `C`.  Prevent
+/// this by moving the code to a function independent of `C`.
+fn find_unverified_binding_signatures<'s: 'p, 'p>(
+    policy: &'p dyn Policy,
+    self_signatures: &'s LazySignatures,
+    backsig_signer:
+    Option<&Key<key::PublicParts, key::SubordinateRole>>,
+    hash_algo_security: HashAlgoSecurity,
+    t: time::SystemTime)
+    -> impl Iterator<Item = Result<(usize, &'s Signature)>> + 'p
+{
+    // Recall: the signatures are sorted by their creation time in
+    // descending order, i.e., newest first.
+    //
+    // We want the newest signature that is older than `t`, or
+    // that has been created at `t`.  So, search for `t`.
+
+    // We search all signatures without triggering the signature
+    // verification.  Later, we will verify the candidates, and
+    // reject bad signatures.
+    let unverified_self_signatures = self_signatures.as_slice_unverified();
+
+    let i =
+    // Usually, the first signature is what we are looking for.
+    // Short circuit the binary search.
+        if unverified_self_signatures.get(0)
+        .filter(|s| s.signature_creation_time().map(|c| t >= c)
+                .unwrap_or(false))
+        .is_some()
+    {
+        0
+    } else {
+        match unverified_self_signatures.binary_search_by(
+            |s| canonical_signature_order(
+                s.signature_creation_time(), Some(t)))
+        {
+            // If there are multiple matches, then we need to search
+            // backwards to find the first one.  Consider:
+            //
+            //     t: 9 8 8 8 8 7
+            //     i: 0 1 2 3 4 5
+            //
+            // If we are looking for t == 8, then binary_search could
+            // return index 1, 2, 3 or 4.
+            Ok(mut i) => {
+                while i > 0
+                    && unverified_self_signatures[i - 1].signature_creation_time()
+                    == Some(t)
+                {
+                    i -= 1;
+                }
+                i
+            }
+
+            // There was no match.  `i` is where a new element could
+            // be inserted while maintaining the sorted order.
+            // Consider:
+            //
+            //    t: 9 8 6 5
+            //    i: 0 1 2 3
+            //
+            // If we are looing for t == 7, then binary_search will
+            // return i == 2.  That's exactly where we should start
+            // looking.
+            Err(i) => i,
+        }
+    };
+
+    Finder {
+        time: t,
+        policy,
+        hash_algo_security,
+        offset: i,
+        iter: unverified_self_signatures[i..].iter()
+            .enumerate(),
+        error: None,
+    }
+}
+
+struct Finder<'s, 'p> {
+    /// The time we're looking for.
+    time: time::SystemTime,
+
+    /// Signatures should be valid under this policy.
+    policy: &'p dyn Policy,
+
+    /// The hash algorithm security we require.
+    hash_algo_security: HashAlgoSecurity,
+
+    /// Start offset in the lazy signatures structure.
+    offset: usize,
+
+    /// The unverified signatures.
+    iter: std::iter::Enumerate<std::slice::Iter<'s, Signature>>,
+
+    /// Prefer the first error, which is the error arising from the
+    /// most recent binding signature that wasn't created after
+    /// `t`.
+    error: Option<anyhow::Error>,
+}
+
+impl Finder<'_, '_> {
+    fn stash_error(&mut self, e: anyhow::Error) {
+        if self.error.is_none() {
+            self.error = Some(e);
+        }
+    }
+}
+
+impl<'s> Iterator for Finder<'s, '_> {
+    type Item = Result<(usize, &'s Signature)>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        'next_sig: loop {
+            match self.iter.next() {
+                Some((j, s)) => {
+                    if let Err(e) = s.signature_alive(
+                        self.time, time::Duration::new(0, 0))
+                    {
+                        // We know that t >= signature's creation
+                        // time.  So, it is expired.  But an older
+                        // signature might not be.  So, keep
+                        // trying.
+                        self.stash_error(e);
+                        continue;
+                    }
+
+                    if let Err(e) = self.policy.signature(
+                        s, self.hash_algo_security)
+                    {
+                        self.stash_error(e);
+                        continue;
+                    }
+
+                    // Assuming the signature is good, but we may
+                    // still need to verify the back sig.
+                    if s.typ() == crate::types::SignatureType::SubkeyBinding &&
+                        s.key_flags().map(|kf| kf.for_signing())
+                        .unwrap_or(false)
+                    {
+                        let mut n = 0;
+                        let mut one_good_backsig = false;
+
+                        'next_backsig:
+                        for backsig in s.embedded_signatures() {
+                            n += 1;
+                            if let Err(e) = backsig.signature_alive(
+                                self.time, time::Duration::new(0, 0))
+                            {
+                                // The primary key binding
+                                // signature is not alive.
+                                self.stash_error(e);
+                                continue 'next_backsig;
+                            }
+
+                            if let Err(e) = self.policy
+                                .signature(backsig, self.hash_algo_security)
+                            {
+                                self.stash_error(e);
+                                continue 'next_backsig;
+                            }
+
+                            one_good_backsig = true;
+                        }
+
+                        if n == 0 {
+                            // This shouldn't happen because
+                            // Signature::verify_subkey_binding
+                            // checks for the primary key binding
+                            // signature.  But, better be safe.
+                            self.stash_error(Error::BadSignature(
+                                "Primary key binding signature missing"
+                                    .into()).into());
+                            continue 'next_sig;
+                        }
+
+                        if ! one_good_backsig {
+                            continue 'next_sig;
+                        }
+                    }
+
+                    return Some(Ok((self.offset + j, s)));
+                },
+
+                None => {
+                    if let Some(e) = self.error.take() {
+                        return Some(Err(e));
+                    } else {
+                        return None;
+                    }
+                },
+            }
+        }
     }
 }
 

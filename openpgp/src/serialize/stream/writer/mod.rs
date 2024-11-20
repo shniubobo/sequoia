@@ -102,16 +102,6 @@ pub(crate) trait Stackable<'a, C> : io::Write + fmt::Debug {
     fn write_u8(&mut self, b: u8) -> io::Result<()> {
         self.write_all(&[b])
     }
-
-    /// Writes a big endian `u16`.
-    fn write_be_u16(&mut self, n: u16) -> io::Result<()> {
-        self.write_all(&n.to_be_bytes())
-    }
-
-    /// Writes a big endian `u32`.
-    fn write_be_u32(&mut self, n: u32) -> io::Result<()> {
-        self.write_all(&n.to_be_bytes())
-    }
 }
 
 /// Make a `Box<Stackable>` look like a Stackable.
