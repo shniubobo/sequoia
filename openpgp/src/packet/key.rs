@@ -99,7 +99,7 @@ use crate::seal;
 use crate::SymmetricAlgorithm;
 use crate::HashAlgorithm;
 use crate::types::{Curve, Timestamp};
-use crate::crypto::S2K;
+use crate::crypto::{S2K, EncryptionParameters};
 use crate::Result;
 use crate::crypto::Password;
 use crate::crypto::SessionKey;
@@ -1718,6 +1718,18 @@ impl SecretKeyMaterial {
         Ok(self)
     }
 
+    /// Encrypts the secret key material using the given parameters.
+    ///
+    /// This returns an error if the secret key material is encrypted.
+    ///
+    /// See [`Unencrypted::encrypt_with`] for details.
+    pub fn encrypt_with(mut self, params: &EncryptionParameters)
+                        -> Result<Self>
+    {
+        self.encrypt_in_place_with(params)?;
+        Ok(self)
+    }
+
     /// Encrypts the secret key material using `password`.
     ///
     /// This returns an error if the secret key material is encrypted.
@@ -1728,6 +1740,26 @@ impl SecretKeyMaterial {
             SecretKeyMaterial::Unencrypted(ref u) => {
                 *self = SecretKeyMaterial::Encrypted(
                     u.encrypt(password)?);
+                Ok(())
+            }
+            SecretKeyMaterial::Encrypted(_) =>
+                Err(Error::InvalidArgument(
+                    "secret key is encrypted".into()).into()),
+        }
+    }
+
+    /// Encrypts the secret key material using the given parameters.
+    ///
+    /// This returns an error if the secret key material is encrypted.
+    ///
+    /// See [`Unencrypted::encrypt_with`] for details.
+    pub fn encrypt_in_place_with(&mut self, params: &EncryptionParameters)
+                                 -> Result<()>
+    {
+        match self {
+            SecretKeyMaterial::Unencrypted(ref u) => {
+                *self = SecretKeyMaterial::Encrypted(
+                    u.encrypt_with(params)?);
                 Ok(())
             }
             SecretKeyMaterial::Encrypted(_) =>
@@ -1809,27 +1841,35 @@ impl Unencrypted {
     pub fn encrypt(&self, password: &Password)
         -> Result<Encrypted>
     {
+        let s2k = S2K::default();
+        let algo = SymmetricAlgorithm::AES256;
+        let params = s2k.make_encryption_parameters(password, algo)?;
+        self.encrypt_with(&params)
+    }
+
+    /// Encrypts the secret key material using the given parameters.
+    pub fn encrypt_with(&self, params: &EncryptionParameters)
+                        -> Result<Encrypted>
+    {
         use std::io::Write;
         use crate::crypto::symmetric::Encryptor;
 
-        let s2k = S2K::default();
-        let algo = SymmetricAlgorithm::AES256;
-        let key = s2k.derive_key(password, algo.key_size()?)?;
-
         // Ciphertext is preceded by a random block.
-        let mut trash = vec![0u8; algo.block_size()?];
+        let mut trash = vec![0u8; params.algo().block_size()?];
         crypto::random(&mut trash);
 
         let checksum = Default::default();
         let mut esk = Vec::new();
         {
-            let mut encryptor = Encryptor::new(algo, &key, &mut esk)?;
+            let mut encryptor =
+                Encryptor::new(params.algo(), params.key(), &mut esk)?;
             encryptor.write_all(&trash)?;
             self.map(|mpis| mpis.serialize_with_checksum(&mut encryptor,
                                                          checksum))?;
         }
 
-        Ok(Encrypted::new(s2k, algo, Some(checksum), esk.into_boxed_slice()))
+        Ok(Encrypted::new(params.s2k().clone(), params.algo(), Some(checksum),
+                          esk.into_boxed_slice()))
     }
 }
 

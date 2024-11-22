@@ -18,7 +18,7 @@ use crate::packet::signature::{
 };
 use crate::cert::prelude::*;
 use crate::Error;
-use crate::crypto::{Password, Signer};
+use crate::crypto::{Password, S2K, Signer};
 use crate::types::{
     Features,
     HashAlgorithm,
@@ -1404,6 +1404,15 @@ impl CertBuilder<'_> {
                     time::Duration::new(SIG_BACKDATE_BY, 0)
             });
 
+        // Fix encryption parameters so that we encrypt all subkeys
+        // using the same session key.  This is an optimization that
+        // speeds up certificate creation as well as using them, as
+        // the key derivation function only has to be done once.
+        let encryption_params =
+            self.password.as_ref().map(|p| {
+                S2K::default().make_encryption_parameters(p, None)
+            }).transpose()?;
+
         // Generate & self-sign primary key.
         let (primary, sig, mut signer) = self.primary_key(creation_time)?;
 
@@ -1412,8 +1421,8 @@ impl CertBuilder<'_> {
         let cert = Cert::try_from(vec![
             Packet::SecretKey({
                 let mut primary = primary.clone();
-                if let Some(ref password) = self.password {
-                    primary.secret_mut().encrypt_in_place(password)?;
+                if let Some(params) = &encryption_params {
+                    primary.secret_mut().encrypt_in_place_with(params)?;
                 }
                 primary
             }),
@@ -1533,8 +1542,8 @@ impl CertBuilder<'_> {
 
             let signature = subkey.bind(&mut signer, &cert, builder)?;
 
-            if let Some(ref password) = self.password {
-                subkey.secret_mut().encrypt_in_place(password)?;
+            if let Some(params) = &encryption_params {
+                subkey.secret_mut().encrypt_in_place_with(params)?;
             }
             acc.push(subkey.into());
             acc.push(signature.into());

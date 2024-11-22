@@ -9,6 +9,7 @@
 use crate::Error;
 use crate::Result;
 use crate::HashAlgorithm;
+use crate::types::SymmetricAlgorithm;
 use crate::crypto::Password;
 use crate::crypto::SessionKey;
 use crate::crypto::hash::Digest;
@@ -172,6 +173,24 @@ impl S2K {
                 Self::nearest_hash_count(approx_hash_bytes as usize),
             })
         }
+    }
+
+    /// Makes encryption parameters.
+    ///
+    /// An `EncryptionParameters` object can be used to encrypt and
+    /// decrypt secret key material.
+    pub fn make_encryption_parameters<A>(&self, password: &Password, algo: A)
+                                         -> Result<EncryptionParameters>
+    where
+        A: Into<Option<SymmetricAlgorithm>>,
+    {
+        let algo = algo.into().unwrap_or_default();
+        let key = self.derive_key(password, algo.key_size()?)?;
+        Ok(EncryptionParameters {
+            algo,
+            key,
+            s2k: self.clone(),
+        })
     }
 
     /// Derives a key of the given size from a password.
@@ -431,6 +450,32 @@ impl Arbitrary for S2K {
             _ => unreachable!(),
         }
     }
+}
+
+/// XXX
+pub struct EncryptionParameters {
+    algo: SymmetricAlgorithm,
+    s2k: S2K,
+    key: SessionKey,
+}
+
+impl EncryptionParameters {
+    /// Returns the symmetric algorithm.
+    pub fn algo(&self) -> SymmetricAlgorithm {
+        self.algo
+    }
+
+    /// Returns the S2K parameters.
+    pub fn s2k(&self) -> &S2K {
+        &self.s2k
+    }
+
+    /// Returns the symmetric key derived from the S2K object and the
+    /// password.
+    pub fn key(&self) -> &SessionKey {
+        &self.key
+    }
+
 }
 
 #[cfg(test)]

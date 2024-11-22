@@ -37,7 +37,7 @@ pub mod hash;
 pub mod mem;
 pub mod mpi;
 mod s2k;
-pub use s2k::S2K;
+pub use s2k::{EncryptionParameters, S2K};
 pub(crate) mod symmetric;
 
 #[cfg(test)]
