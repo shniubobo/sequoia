@@ -1213,10 +1213,44 @@ impl Cert {
     ///     .generate()?;
     ///
     /// // Make sure Alice is listed as a designated revoker for Bob.
-    /// assert_eq!(bob.revocation_keys(p).collect::<Vec<&RevocationKey>>(),
+    /// assert_eq!(bob.revocation_keys2(p).collect::<Vec<&RevocationKey>>(),
     ///            vec![&(&alice).into()]);
     /// # Ok(()) }
     /// ```
+    pub fn revocation_keys2<'a, 'p: 'a>(&'a self, policy: &'p dyn Policy)
+        -> Box<dyn Iterator<Item = &'a RevocationKey> + 'a>
+    {
+        let mut keys = std::collections::HashSet::new();
+
+        let pk_sec = self.primary_key().hash_algo_security();
+
+        // All user ids.
+        self.userids()
+            .flat_map(|ua| {
+                // All valid self-signatures.
+                let sec = ua.hash_algo_security;
+                ua.bundle().self_signatures
+                    .filter_verified(move |sig| {
+                        policy.signature(sig, sec).is_ok()
+                            && sig.revocation_keys().next().is_some()
+                   }, None)
+            })
+            // All direct-key signatures.
+            .chain(self.primary_key().bundle()
+                   .self_signatures
+                   .filter_verified(move |sig| {
+                       policy.signature(sig, pk_sec).is_ok()
+                            && sig.revocation_keys().next().is_some()
+                   }, None))
+            .flat_map(|sig| sig.revocation_keys())
+            .for_each(|rk| { keys.insert(rk); });
+
+        Box::new(keys.into_iter())
+    }
+
+    /// Returns a list of any designated revokers for this certificate.
+    // XXXv2: Remove this function.
+    #[deprecated(note = "Use Cert::revocation_keys2")]
     pub fn revocation_keys<'a>(&'a self, policy: &dyn Policy)
         -> Box<dyn Iterator<Item = &'a RevocationKey> + 'a>
     {
@@ -4420,7 +4454,7 @@ impl<'a> ValidCert<'a> {
     where
         P: Into<Option<&'a dyn Policy>>,
     {
-        self.cert.revocation_keys(
+        self.cert.revocation_keys2(
             policy.into().unwrap_or_else(|| self.policy()))
     }
 }

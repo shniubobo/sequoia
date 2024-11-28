@@ -1917,7 +1917,7 @@ mod tests {
         let cert = cert.insert_packets(sig)?;
 
         assert!(cert.with_policy(p, then)?.primary_userid().is_err());
-        assert_eq!(cert.revocation_keys(p).collect::<HashSet<_>>(),
+        assert_eq!(cert.revocation_keys2(p).collect::<HashSet<_>>(),
                    revokers.iter().collect::<HashSet<_>>());
         Ok(())
     }

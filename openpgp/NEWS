@@ -4,6 +4,11 @@
 #+STARTUP: content hidestars
 
 
+* Changes in 1.22.0
+** New functionality
+   - Cert::revocation_keys2
+** Deprecated functionality
+   - Cert::revocation_keys
 * Changes in 1.21.2
 ** Notable fixes
    - A set of constructors for KeyFlags added in 1.21.0 mistakenly

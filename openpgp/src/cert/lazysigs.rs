@@ -29,6 +29,9 @@ use crate::{
     },
 };
 
+/// Controls tracing in this module.
+const TRACE: bool = false;
+
 /// Lazily verified signatures, similar to a `Vec<Signature>`.
 ///
 /// We use two distinct vectors to store the signatures and their
@@ -222,7 +225,31 @@ impl LazySignatures {
                              subkey: Option<&'a Key<key::PublicParts, key::SubordinateRole>>)
                              -> impl Iterator<Item = &'a Signature> + 'a
     {
-        self.iter_intern(subkey)
+        self.iter_intern(|_| true, subkey)
+            .filter_map(|(state, s)| match state {
+                SigState::Good => Some(s),
+                SigState::Bad => None,
+                SigState::Unverified => unreachable!(),
+            })
+    }
+
+    /// Like [`Vec::iter`], but only gives out verified signatures
+    /// passing the given `filter`.
+    ///
+    /// Note: the filter is applied to the possibly unverified
+    /// signature.  This prevents eager evaluation of signatures the
+    /// caller is not even interested in.
+    ///
+    /// If this is a subkey binding, `subkey` must be the bundle's
+    /// subkey.
+    pub fn filter_verified<'a, F>(&'a self,
+                                  filter: F,
+                                  subkey: Option<&'a Key<key::PublicParts, key::SubordinateRole>>)
+                                  -> impl Iterator<Item = &'a Signature> + 'a
+    where
+        F: FnMut(&'a Signature) -> bool + 'a,
+    {
+        self.iter_intern(filter, subkey)
             .filter_map(|(state, s)| match state {
                 SigState::Good => Some(s),
                 SigState::Bad => None,
@@ -238,7 +265,7 @@ impl LazySignatures {
                         subkey: Option<&'a Key<key::PublicParts, key::SubordinateRole>>)
                         -> impl Iterator<Item = &'a Signature> + 'a
     {
-        self.iter_intern(subkey)
+        self.iter_intern(|_| true, subkey)
             .filter_map(|(state, s)| match state {
                 SigState::Good => None,
                 SigState::Bad => Some(s),
@@ -250,12 +277,16 @@ impl LazySignatures {
     ///
     /// If this is a subkey binding, `subkey` must be the bundle's
     /// subkey.
-    fn iter_intern<'a>(&'a self,
-                       subkey: Option<&'a Key<key::PublicParts, key::SubordinateRole>>)
-                       -> impl Iterator<Item = (SigState, &'a Signature)> + 'a
+    fn iter_intern<'a, F>(&'a self,
+                          mut filter: F,
+                          subkey: Option<&'a Key<key::PublicParts, key::SubordinateRole>>)
+                          -> impl Iterator<Item = (SigState, &'a Signature)> + 'a
+    where
+        F: FnMut(&'a Signature) -> bool + 'a,
     {
         self.assert_invariant();
         self.sigs.iter().enumerate()
+            .filter(move |(_, s)| filter(s))
             .map(move |(i, s)| (self.verify_sig(i, subkey).expect("in bounds"), s))
     }
 
@@ -269,6 +300,9 @@ impl LazySignatures {
                       subkey: Option<&Key<key::PublicParts, key::SubordinateRole>>)
                       -> Result<SigState>
     {
+        tracer!(TRACE, format!("{}: LazySignatures({:?})::verify_sig",
+                               self.primary_key.keyid(),
+                               self as *const _));
         self.assert_invariant();
         if ! i < self.sigs.len() {
             return Err(Error::InvalidArgument(format!(
@@ -280,6 +314,8 @@ impl LazySignatures {
             None => unreachable!("LazySignatures invariant violated"),
             Some(SigState::Unverified) => {
                 let s = &self.sigs[i];
+                t!("evaluating sig {} ({}, {:02X}{:02X})", i, s.typ(),
+                   s.digest_prefix()[0], s.digest_prefix()[1]);
                 let mut r = s.verify_signature(&self.primary_key);
 
                 if r.is_ok() && subkey.is_some() &&
