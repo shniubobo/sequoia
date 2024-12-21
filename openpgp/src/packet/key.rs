@@ -903,7 +903,9 @@ impl<P, R> Clone for Key4<P, R>
             pk_algo: self.pk_algo.clone(),
             mpis: self.mpis.clone(),
             secret: self.secret.clone(),
-            fingerprint: self.fingerprint().clone().into(),
+            fingerprint: self.fingerprint.get()
+                .map(|fp| fp.clone().into())
+                .unwrap_or_default(),
             p: std::marker::PhantomData,
             r: std::marker::PhantomData,
         }
