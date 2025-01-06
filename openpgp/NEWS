@@ -4,6 +4,21 @@
 #+STARTUP: content hidestars
 
 
+* Changes in 2.0.0.alpha.1
+** API changes
+   - ComponentBundle::self_signatures2 renamed to ComponentBundle::self_signatures
+   - ComponentBundle::certifications2 renamed to ComponentBundle::certifications
+   - ComponentBundle::self_revocations2 renamed to ComponentBundle::self_revocations
+   - ComponentBundle::other_revocations2 renamed to ComponentBundle::other_revocations
+   - Signature::verify renamed to Signature::verify_document
+   - armor::Reader::new removed
+   - Padding::with_policy now takes a closure
+   - PKESK3::new now takes Option<KeyID>
+   - PKESK3::recipient now returns Option<KeyID>
+   - message::Token is now private
+   - message::MessageParserError is now private
+   - cert::CipherSuite no longer implements PartialOrd, Ord
+
 * Changes in 2.0.0.alpha.0
   The major new feature is the support for RFC9580, which modernizes
   the cryptographic primitives used in OpenPGP.  Notably, it adds

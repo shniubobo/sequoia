@@ -331,32 +331,4 @@ impl LazySignatures {
             Some(state) => Ok(state),
         }
     }
-
-    /// Returns a slice containing all verified signatures.
-    ///
-    /// This is used to implement the bundle's signature interface
-    /// which gives out slices instead of iterators.  This is quite
-    /// expensive to emulate, as it eagerly verifies all signatures,
-    /// and if there are bad signatures, we need to copy all
-    /// signatures into a new vector so that we can give out a
-    /// continuous slice.
-    // XXXv2: Remove this function.
-    pub fn slice_verified(&self,
-                          subkey: Option<&Key<key::PublicParts, key::SubordinateRole>>)
-                          -> &[Signature]
-    {
-        self.assert_invariant();
-
-        // First, verify all signatures.
-        let verified = self.iter_verified(subkey).collect::<Vec<_>>();
-
-        // Best case, all signatures are good, can use the vec.
-        if self.states.lock().unwrap().iter().all(|s| *s == SigState::Good) {
-            self.sigs.as_slice()
-        } else {
-            // Worst case, we have to make a copy of the good ones.
-            self.verified_sigs.get_or_init(
-                || verified.into_iter().cloned().collect())
-        }
-    }
 }

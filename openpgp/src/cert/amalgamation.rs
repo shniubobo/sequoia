@@ -844,12 +844,12 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
 
     /// The component's self-signatures.
     pub fn self_signatures(&self) -> impl Iterator<Item=&'a Signature> + Send + Sync {
-        self.bundle().self_signatures2()
+        self.bundle().self_signatures()
     }
 
     /// The component's third-party certifications.
     pub fn certifications(&self) -> impl Iterator<Item=&'a Signature> + Send + Sync {
-        self.bundle().certifications2()
+        self.bundle().certifications()
     }
 
     /// Returns third-party certifications that appear to issued by
@@ -884,13 +884,13 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// The component's revocations that were issued by the
     /// certificate holder.
     pub fn self_revocations(&self) -> impl Iterator<Item=&'a Signature> + Send + Sync {
-        self.bundle().self_revocations2()
+        self.bundle().self_revocations()
     }
 
     /// The component's revocations that were issued by other
     /// certificates.
     pub fn other_revocations(&self) -> impl Iterator<Item=&'a Signature> + Send + Sync {
-        self.bundle().other_revocations2()
+        self.bundle().other_revocations()
     }
 
     /// Returns all of the component's signatures.

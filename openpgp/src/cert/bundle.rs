@@ -469,20 +469,13 @@ impl<C> ComponentBundle<C> {
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
     ///               i, ka.fingerprint(),
-    ///               ka.bundle().self_signatures2().count());
+    ///               ka.bundle().self_signatures().count());
     /// }
     /// # Ok(()) }
     /// ```
-    // XXXv2: Rename this function.
-    pub fn self_signatures2(&self)
-                            -> impl Iterator<Item=&Signature> + Send + Sync {
+    pub fn self_signatures(&self)
+                           -> impl Iterator<Item=&Signature> + Send + Sync {
         self.self_signatures.iter_verified(self.backsig_signer.as_ref())
-    }
-
-    /// Returns the component's self-signatures.
-    #[deprecated(note = "Use self_signatures2 instead.")]
-    pub fn self_signatures(&self) -> &[Signature] {
-        &self.self_signatures.slice_verified(self.backsig_signer.as_ref())
     }
 
     /// Returns the component's third-party certifications.
@@ -506,20 +499,13 @@ impl<C> ComponentBundle<C> {
     /// for ua in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party certifications",
     ///               String::from_utf8_lossy(ua.userid().value()),
-    ///               ua.bundle().certifications2().count());
+    ///               ua.bundle().certifications().count());
     /// }
     /// # Ok(()) }
     /// ```
-    // XXXv2: Rename this function.
-    pub fn certifications2(&self)
-                           -> impl Iterator<Item=&Signature> + Send + Sync {
+    pub fn certifications(&self)
+                          -> impl Iterator<Item=&Signature> + Send + Sync {
         self.certifications.iter()
-    }
-
-    /// Returns the component's third-party certifications.
-    #[deprecated(note = "Use certifications2 instead.")]
-    pub fn certifications(&self) -> &[Signature] {
-        &self.certifications
     }
 
     /// Returns the component's revocations that were issued by the
@@ -544,21 +530,13 @@ impl<C> ComponentBundle<C> {
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} revocation certificates.",
     ///               String::from_utf8_lossy(u.userid().value()),
-    ///               u.bundle().self_revocations2().count());
+    ///               u.bundle().self_revocations().count());
     /// }
     /// # Ok(()) }
     /// ```
-    // XXXv2: Rename this function.
-    pub fn self_revocations2(&self)
-                             -> impl Iterator<Item=&Signature> + Send + Sync {
+    pub fn self_revocations(&self)
+                            -> impl Iterator<Item=&Signature> + Send + Sync {
         self.self_revocations.iter_verified(self.backsig_signer.as_ref())
-    }
-
-    /// Returns the component's revocations that were issued by the
-    /// certificate holder.
-    #[deprecated(note = "Use self_revocations2 instead.")]
-    pub fn self_revocations(&self) -> &[Signature] {
-        &self.self_revocations.slice_verified(self.backsig_signer.as_ref())
     }
 
     /// Returns the component's revocations that were issued by other
@@ -583,21 +561,13 @@ impl<C> ComponentBundle<C> {
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party revocation certificates.",
     ///               String::from_utf8_lossy(u.userid().value()),
-    ///               u.bundle().other_revocations2().count());
+    ///               u.bundle().other_revocations().count());
     /// }
     /// # Ok(()) }
     /// ```
-    // XXXv2: Rename this function.
-    pub fn other_revocations2(&self)
-                              -> impl Iterator<Item=&Signature> + Send + Sync {
+    pub fn other_revocations(&self)
+                             -> impl Iterator<Item=&Signature> + Send + Sync {
         self.other_revocations.iter()
-    }
-
-    /// Returns the component's revocations that were issued by other
-    /// certificates.
-    #[deprecated(note = "Use other_revocations2 instead.")]
-    pub fn other_revocations(&self) -> &[Signature] {
-        &self.other_revocations
     }
 
     /// Returns all of the component's Attestation Key Signatures.
@@ -672,11 +642,11 @@ impl<C> ComponentBundle<C> {
     pub fn signatures(&self)
                       -> impl Iterator<Item = &Signature> + Send + Sync
     {
-        self.self_revocations2()
-            .chain(self.self_signatures2())
+        self.self_revocations()
+            .chain(self.self_signatures())
             .chain(self.attestations())
-            .chain(self.certifications2())
-            .chain(self.other_revocations2())
+            .chain(self.certifications())
+            .chain(self.other_revocations())
     }
 
     /// Returns the component's revocation status at time `t`.

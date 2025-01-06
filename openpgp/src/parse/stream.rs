@@ -2911,7 +2911,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                         .into(),
                                 }
                             } else {
-                                match sig.verify(ka.key()) {
+                                match sig.verify_document(ka.key()) {
                                     Ok(()) => {
                                         if let Err(error)
                                             = self.policy.signature(

@@ -2939,7 +2939,7 @@ mod tests {
             key: Vec::from(&b"\x45\x8b\xd8\x4d\x88\xb3\xd2\x16\xb6\xc2\x3b\x99\x33\xd1\x23\x4b\x10\x15\x8e\x04\x16\xc5\x7c\x94\x88\xf6\x63\xf2\x68\x37\x08\x66\xfd\x5a\x7b\x40\x58\x21\x6b\x2c\xc0\xf4\xdc\x91\xd3\x48\xed\xc1"[..]).into_boxed_slice()
         };
         let pkesk =
-            PKESK3::new(KeyID::wildcard(), PublicKeyAlgorithm::ECDH, ciphertext)?;
+            PKESK3::new(None, PublicKeyAlgorithm::ECDH, ciphertext)?;
 
         // Session key
         let dek = b"\x0D\xDC\x40\xC5\x71\x51\x88\xAC\xBD\x45\x56\xD4\x2A\xDF\x77\xCD\xF4\x82\xA2\x1B\x8F\x2E\x48\x3B\xCA\xBF\xD3\xE8\x6D\x0A\x7C\xDF";
@@ -2973,7 +2973,8 @@ mod tests {
         let ciphertext = Ciphertext::RSA{
             c: MPI::new(&c[..]),
         };
-        let pkesk = PKESK3::new(key.keyid(), PublicKeyAlgorithm::RSAEncryptSign,
+        let pkesk = PKESK3::new(Some(key.keyid()),
+                                PublicKeyAlgorithm::RSAEncryptSign,
                                 ciphertext).unwrap();
 
         // Session key

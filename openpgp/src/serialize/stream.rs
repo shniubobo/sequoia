@@ -3009,7 +3009,7 @@ impl<'a, 'b> Encryptor2<'a, 'b> {
             } else {
                 let mut pkesk =
                     PKESK3::for_recipient(self.sym_algo, &sk, recipient.key)?;
-                pkesk.set_recipient(recipient.keyid.clone());
+                pkesk.set_recipient(Some(recipient.keyid.clone()));
                 Packet::PKESK(pkesk.into()).serialize(&mut inner)?;
             }
         }
@@ -3558,7 +3558,7 @@ mod test {
             if let Packet::Signature(sig) = &mut pp.packet {
                 let key = keys.get(sig.issuer_fingerprints().next().unwrap())
                     .unwrap();
-                sig.verify(key).unwrap();
+                sig.verify_document(key).unwrap();
                 good += 1;
             }
 
@@ -3915,7 +3915,7 @@ mod test {
         while let PacketParserResult::Some(mut pp) = ppr {
             if let Packet::Signature(sig) = &mut pp.packet {
                 assert_eq!(sig.signature_creation_time(), Some(timestamp));
-                sig.verify(ka.key()).unwrap();
+                sig.verify_document(ka.key()).unwrap();
                 good += 1;
             }
 

@@ -62,7 +62,7 @@ pub use key::{
 /// # Ok(())
 /// # }
 /// ```
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[non_exhaustive]
 pub enum CipherSuite {
     /// EdDSA and ECDH over Curve25519 with SHA512 and AES256
@@ -1842,7 +1842,7 @@ mod tests {
             .add_subkey(KeyFlags::empty().set_certification(), None, None)
             .generate().unwrap();
         let sig_pkts = cert1.subkeys().next().unwrap().bundle()
-            .self_signatures2().next().unwrap().hashed_area();
+            .self_signatures().next().unwrap().hashed_area();
 
         match sig_pkts.subpacket(SubpacketTag::KeyFlags).unwrap().value() {
             SubpacketValue::KeyFlags(ref ks) => assert!(ks.for_certification()),
@@ -1920,7 +1920,7 @@ mod tests {
             .generate().unwrap();
 
         let key = cert.primary_key().key();
-        let sig = &cert.primary_key().bundle().self_signatures2().next().unwrap();
+        let sig = &cert.primary_key().bundle().self_signatures().next().unwrap();
         assert!(sig.key_alive(key, now).is_ok());
         assert!(sig.key_alive(key, now + 590 * s).is_ok());
         assert!(! sig.key_alive(key, now + 610 * s).is_ok());

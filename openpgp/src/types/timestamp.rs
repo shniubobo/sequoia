@@ -45,7 +45,7 @@ use crate::{
 ///     .generate()?;
 ///
 /// let subkey = cert.keys().subkeys().next().unwrap();
-/// let packets = subkey.bundle().self_signatures2().next().unwrap().hashed_area();
+/// let packets = subkey.bundle().self_signatures().next().unwrap().hashed_area();
 ///
 /// match packets.subpacket(SubpacketTag::SignatureCreationTime).unwrap().value() {
 ///     SubpacketValue::SignatureCreationTime(ts) => assert!(u32::from(*ts) > 0),

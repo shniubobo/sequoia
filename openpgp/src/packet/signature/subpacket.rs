@@ -5217,7 +5217,7 @@ impl signature::SignatureBuilder {
     /// #
     /// # // "Before"
     /// # for key in cert.with_policy(p, None)?.keys().subkeys() {
-    /// #     assert_eq!(key.bundle().self_signatures2().count(), 2);
+    /// #     assert_eq!(key.bundle().self_signatures().count(), 2);
     /// #     assert!(key.alive().is_ok());
     /// # }
     /// #
@@ -5329,7 +5329,7 @@ impl signature::SignatureBuilder {
     /// #
     /// # // "Before"
     /// # for key in cert.with_policy(p, None)?.keys().subkeys() {
-    /// #     assert_eq!(key.bundle().self_signatures2().count(), 2);
+    /// #     assert_eq!(key.bundle().self_signatures().count(), 2);
     /// #     assert!(key.alive().is_ok());
     /// # }
     /// #

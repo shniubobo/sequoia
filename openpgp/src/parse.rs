@@ -2299,7 +2299,7 @@ impl PacketParser<'_> {
     ///         pp.start_hashing()?;
     ///     }
     ///     if let Packet::Signature(sig) = &mut pp.packet {
-    ///         good |= sig.verify(signer).is_ok();
+    ///         good |= sig.verify_document(signer).is_ok();
     ///     }
     ///     // Start parsing the next packet, recursing.
     ///     ppr = pp.recurse()?.1;
@@ -3887,16 +3887,26 @@ impl PKESK3 {
     fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "PKESK3::parse", php.recursion_depth());
         make_php_try!(php);
-        let mut keyid = [0u8; 8];
-        keyid.copy_from_slice(&php_try!(php.parse_bytes("keyid", 8)));
+
+        let keyid = {
+            let mut keyid = [0u8; 8];
+            keyid.copy_from_slice(&php_try!(php.parse_bytes("keyid", 8)));
+
+            let keyid = KeyID::from_bytes(&keyid);
+            if keyid.is_wildcard() {
+                None
+            } else {
+                Some(keyid)
+            }
+        };
+
         let pk_algo: PublicKeyAlgorithm = php_try!(php.parse_u8("pk_algo")).into();
         if ! pk_algo.for_encryption() {
             return php.fail("not an encryption algorithm");
         }
         let mpis = crypto::mpi::Ciphertext::_parse(pk_algo, &mut php)?;
 
-        let pkesk = php_try!(PKESK3::new(KeyID::from_bytes(&keyid),
-                                         pk_algo, mpis));
+        let pkesk = php_try!(PKESK3::new(keyid, pk_algo, mpis));
         php.ok(pkesk.into())
     }
 }
@@ -5862,7 +5872,6 @@ impl <'a> PacketParser<'a> {
                     // this as opaque content to the message validator.
                     let mut path = self.path().to_vec();
                     path.push(0);
-                    #[allow(deprecated)]
                     self.state.message_validator.push_token(
                         message::Token::OpaqueContent, &path);
                 }

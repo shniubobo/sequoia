@@ -4523,8 +4523,8 @@ mod test {
             assert_eq!(cert.userids.len(), 1);
             assert_eq!(cert.userids[0].userid().value(),
                        &b"Testy McTestface <testy@example.org>"[..]);
-            assert_eq!(cert.userids[0].self_signatures2().count(), 1);
-            assert_eq!(cert.userids[0].self_signatures2().next().unwrap()
+            assert_eq!(cert.userids[0].self_signatures().count(), 1);
+            assert_eq!(cert.userids[0].self_signatures().next().unwrap()
                        .digest_prefix(),
                        &[ 0xc6, 0x8f ]);
             assert_eq!(cert.user_attributes.len(), 0);
@@ -4546,8 +4546,8 @@ mod test {
             assert_eq!(cert.userids.len(), 1, "number of userids");
             assert_eq!(cert.userids[0].userid().value(),
                        &b"Testy McTestface <testy@example.org>"[..]);
-            assert_eq!(cert.userids[0].self_signatures2().count(), 1);
-            assert_eq!(cert.userids[0].self_signatures2().next().unwrap()
+            assert_eq!(cert.userids[0].self_signatures().count(), 1);
+            assert_eq!(cert.userids[0].self_signatures().next().unwrap()
                        .digest_prefix(),
                        &[ 0xc6, 0x8f ]);
 
@@ -4556,7 +4556,7 @@ mod test {
             assert_eq!(cert.subkeys.len(), 1, "number of subkeys");
             assert_eq!(cert.subkeys[0].key().creation_time(),
                        Timestamp::from(1511355130).into());
-            assert_eq!(cert.subkeys[0].self_signatures2().next().unwrap()
+            assert_eq!(cert.subkeys[0].self_signatures().next().unwrap()
                        .digest_prefix(),
                        &[ 0xb7, 0xb9 ]);
 
@@ -4572,8 +4572,8 @@ mod test {
             assert_eq!(cert.userids.len(), 1, "number of userids");
             assert_eq!(cert.userids[0].userid().value(),
                        &b"Testy McTestface <testy@example.org>"[..]);
-            assert_eq!(cert.userids[0].self_signatures2().count(), 1);
-            assert_eq!(cert.userids[0].self_signatures2().next().unwrap()
+            assert_eq!(cert.userids[0].self_signatures().count(), 1);
+            assert_eq!(cert.userids[0].self_signatures().next().unwrap()
                        .digest_prefix(),
                        &[ 0xc6, 0x8f ]);
 
@@ -4713,20 +4713,20 @@ mod test {
             .unwrap();
 
         assert!(cert_donald_signs_base.userids.len() == 1);
-        assert!(cert_donald_signs_base.userids[0].self_signatures2().count() == 1);
+        assert!(cert_donald_signs_base.userids[0].self_signatures().count() == 1);
         assert!(cert_base.userids[0].certifications.is_empty());
         assert!(cert_donald_signs_base.userids[0].certifications.len() == 1);
 
         let merged = cert_donald_signs_base.clone()
             .merge_public_and_secret(cert_ivanka_signs_base.clone()).unwrap();
         assert!(merged.userids.len() == 1);
-        assert!(merged.userids[0].self_signatures2().count() == 1);
+        assert!(merged.userids[0].self_signatures().count() == 1);
         assert!(merged.userids[0].certifications.len() == 2);
 
         let merged = cert_donald_signs_base.clone()
             .merge_public_and_secret(cert_donald_signs_all.clone()).unwrap();
         assert!(merged.userids.len() == 3);
-        assert!(merged.userids[0].self_signatures2().count() == 1);
+        assert!(merged.userids[0].self_signatures().count() == 1);
         // There should be two certifications from the Donald on the
         // first user id.
         assert!(merged.userids[0].certifications.len() == 2);
@@ -4738,7 +4738,7 @@ mod test {
             .merge_public_and_secret(cert_ivanka_signs_base.clone()).unwrap()
             .merge_public_and_secret(cert_ivanka_signs_all.clone()).unwrap();
         assert!(merged.userids.len() == 3);
-        assert!(merged.userids[0].self_signatures2().count() == 1);
+        assert!(merged.userids[0].self_signatures().count() == 1);
         // There should be two certifications from each of the Donald
         // and Ivanka on the first user id, and one each on the rest.
         assert!(merged.userids[0].certifications.len() == 4);
@@ -4756,7 +4756,7 @@ mod test {
             .merge_public_and_secret(cert_donald_signs_all.clone()).unwrap()
             .merge_public_and_secret(cert_ivanka_signs_all.clone()).unwrap();
         assert!(merged.userids.len() == 3);
-        assert!(merged.userids[0].self_signatures2().count() == 1);
+        assert!(merged.userids[0].self_signatures().count() == 1);
         // There should be two certifications from each of the Donald
         // and Ivanka on the first user id, and one each on the rest.
         assert!(merged.userids[0].certifications.len() == 4);
@@ -6288,7 +6288,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
                 cert = cert.insert_packets(binding).unwrap();
                 // A time that matches multiple signatures.
                 let direct_signatures =
-                    cert.primary_key().bundle().self_signatures2()
+                    cert.primary_key().bundle().self_signatures()
                     .collect::<Vec<_>>();
                 assert_eq!(cert.primary_key().with_policy(p, *t).unwrap()
                            .direct_key_signature().ok(),

@@ -3035,7 +3035,7 @@ impl Signature {
     /// is not revoked, not expired, has a valid self-signature, has a
     /// subkey binding signature (if appropriate), has the signing
     /// capability, etc.
-    pub fn verify<P, R>(&self, key: &Key<P, R>) -> Result<()>
+    pub fn verify_document<P, R>(&self, key: &Key<P, R>) -> Result<()>
         where P: key::KeyParts,
               R: key::KeyRole,
     {
@@ -3948,7 +3948,7 @@ mod test {
                 crate::tests::message(test.data)).unwrap();
             while let PacketParserResult::Some(mut pp) = ppr {
                 if let Packet::Signature(sig) = &mut pp.packet {
-                    let result = sig.verify(cert.primary_key().key()).is_ok();
+                    let result = sig.verify_document(cert.primary_key().key()).is_ok();
                     eprintln!("  Primary {:?}: {:?}",
                               cert.fingerprint(), result);
                     if result {
@@ -3956,7 +3956,7 @@ mod test {
                     }
 
                     for sk in cert.subkeys() {
-                        let result = sig.verify(sk.key()).is_ok();
+                        let result = sig.verify_document(sk.key()).is_ok();
                         eprintln!("   Subkey {:?}: {:?}",
                                   sk.key().fingerprint(), result);
                         if result {
@@ -3983,7 +3983,7 @@ mod test {
                 }
 
                 if let Packet::Signature(sig) = &mut pp.packet {
-                    let result = sig.verify(cert.primary_key().key()).is_ok();
+                    let result = sig.verify_document(cert.primary_key().key()).is_ok();
                     eprintln!("  Primary {:?}: {:?}",
                               cert.fingerprint(), result);
                     if result {
@@ -3991,7 +3991,7 @@ mod test {
                     }
 
                     for sk in cert.subkeys() {
-                        let result = sig.verify(sk.key()).is_ok();
+                        let result = sig.verify_document(sk.key()).is_ok();
                         eprintln!("   Subkey {:?}: {:?}",
                                   sk.key().fingerprint(), result);
                         if result {

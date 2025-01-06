@@ -139,13 +139,13 @@ use crate::types::{
 /// assert!(unpadded.len() < padded.len());
 /// # Ok(())
 /// # }
-pub struct Padder<'a> {
+pub struct Padder<'a, 'p: 'a> {
     inner: writer::BoxStack<'a, Cookie>,
-    policy: fn(u64) -> u64,
+    policy: Box<dyn Fn(u64) -> u64 + Send + Sync + 'p>,
 }
-assert_send_and_sync!(Padder<'_>);
+assert_send_and_sync!(Padder<'_, '_>);
 
-impl<'a> Padder<'a> {
+impl<'a, 'p> Padder<'a, 'p> {
     /// Creates a new padder with the given policy.
     ///
     /// # Examples
@@ -177,7 +177,7 @@ impl<'a> Padder<'a> {
     pub fn new(inner: Message<'a>) -> Self {
         Self {
             inner: writer::BoxStack::from(inner),
-            policy: padme,
+            policy: Box::new(padme),
         }
     }
 
@@ -199,8 +199,11 @@ impl<'a> Padder<'a> {
     /// # let _ = message;
     /// # Ok(()) }
     /// ```
-    pub fn with_policy(mut self, p: fn(u64) -> u64) -> Self {
-        self.policy = p;
+    pub fn with_policy<P>(mut self, p: P) -> Self
+    where
+        P: Fn(u64) -> u64 + Send + Sync + 'p,
+    {
+        self.policy = Box::new(p);
         self
     }
 
@@ -254,7 +257,7 @@ impl<'a> Padder<'a> {
     }
 }
 
-impl<'a> fmt::Debug for Padder<'a> {
+impl<'a, 'p> fmt::Debug for Padder<'a, 'p> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Padder")
             .field("inner", &self.inner)
@@ -262,7 +265,7 @@ impl<'a> fmt::Debug for Padder<'a> {
     }
 }
 
-impl<'a> io::Write for Padder<'a> {
+impl<'a, 'p> io::Write for Padder<'a, 'p> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.inner.write(buf)
     }
@@ -272,7 +275,7 @@ impl<'a> io::Write for Padder<'a> {
     }
 }
 
-impl<'a> writer::Stackable<'a, Cookie> for Padder<'a>
+impl<'a, 'p> writer::Stackable<'a, Cookie> for Padder<'a, 'p>
 {
     fn into_inner(self: Box<Self>)
                   -> Result<Option<writer::BoxStack<'a, Cookie>>> {

@@ -2828,7 +2828,8 @@ impl seal::Sealed for PKESK3 {}
 impl Marshal for PKESK3 {
     fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
         write_byte(o, 3)?; // Version.
-        (self.recipient() as &dyn Marshal).serialize(o)?;
+        let wildcard = KeyID::wildcard();
+        (self.recipient().unwrap_or(&wildcard) as &dyn Marshal).serialize(o)?;
         write_byte(o, self.pk_algo().into())?;
         self.esk().serialize(o)?;
 
