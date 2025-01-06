@@ -854,9 +854,9 @@ impl<'a> SubkeyBuilder<'a> {
                         SignatureType::PrimaryKeyBinding)
                     // GnuPG wants at least a 512-bit hash for P521 keys.
                     .set_hash_algo(HashAlgorithm::SHA512)
-                    .set_reference_time(creation_time);
+                    .set_reference_time(creation_time)?;
                 if let Some(t) = creation_time {
-                    backsig = backsig.set_reference_time(t);
+                    backsig = backsig.set_reference_time(t)?;
                 } else {
                     backsig = backsig.preserve_signature_creation_time()?;
                 }

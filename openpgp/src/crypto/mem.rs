@@ -283,14 +283,16 @@ impl fmt::Debug for Protected {
 /// # Examples
 ///
 /// ```rust
+/// # fn main() -> sequoia_openpgp::Result<()> {
 /// use sequoia_openpgp::crypto::mem::Encrypted;
 ///
-/// let e = Encrypted::new(vec![0, 1, 2].into());
+/// let e = Encrypted::new(vec![0, 1, 2].into())?;
 /// e.map(|p| {
 ///     // e is temporarily decrypted and made available to the closure.
 ///     assert_eq!(p.as_ref(), &[0, 1, 2]);
 ///     // p is cleared once the function returns.
 /// });
+/// # Ok(()) }
 /// ```
 #[derive(Clone, Debug)]
 pub struct Encrypted {
@@ -331,19 +333,20 @@ const ENCRYPTED_MEMORY_PAGE_SIZE: usize = 4096;
 mod has_access_to_prekey {
     use std::io::{self, Read, Write};
     use buffered_reader::Memory;
+    use crate::Result;
     use crate::types::{AEADAlgorithm, HashAlgorithm, SymmetricAlgorithm};
     use crate::crypto::{aead, SessionKey};
     use super::*;
 
     lazy_static::lazy_static! {
-        static ref PREKEY: Box<[Box<[u8]>]> = {
+        static ref PREKEY: Result<Box<[Box<[u8]>]>> = {
             let mut pages = Vec::new();
             for _ in 0..ENCRYPTED_MEMORY_PREKEY_PAGES {
                 let mut page = vec![0; ENCRYPTED_MEMORY_PAGE_SIZE];
-                crate::crypto::random(&mut page);
+                crate::crypto::random(&mut page)?;
                 pages.push(page.into());
             }
-            pages.into()
+            Ok(pages.into())
         };
     }
 
@@ -358,29 +361,30 @@ mod has_access_to_prekey {
 
     impl Encrypted {
         /// Computes the sealing key used to encrypt the memory.
-        fn sealing_key(salt: &[u8; 32]) -> SessionKey {
+        fn sealing_key(salt: &[u8; 32]) -> Result<SessionKey> {
             let mut ctx = HASH_ALGO.context()
                 .expect("Mandatory algorithm unsupported")
                 .for_digest();
             ctx.update(salt);
-            PREKEY.iter().for_each(|page| ctx.update(page));
+            PREKEY.as_ref().map_err(|e| anyhow::anyhow!("{}", e))?
+                .iter().for_each(|page| ctx.update(page));
             let mut sk: SessionKey = Protected::new(256/8).into();
             let _ = ctx.digest(&mut sk);
-            sk
+            Ok(sk)
         }
 
         /// Encrypts the given chunk of memory.
-        pub fn new(p: Protected) -> Self {
+        pub fn new(p: Protected) -> Result<Self> {
             if DANGER_DISABLE_ENCRYPTED_MEMORY {
-                return Encrypted {
+                return Ok(Encrypted {
                     plaintext_len: p.len(),
                     ciphertext: p,
                     salt: Default::default(),
-                };
+                });
             }
 
             let mut salt = [0; 32];
-            crate::crypto::random(&mut salt);
+            crate::crypto::random(&mut salt)?;
             let mut ciphertext = Protected::new(
                 p.len() + 2 * AEAD_ALGO.digest_size().expect("supported"));
 
@@ -390,18 +394,18 @@ mod has_access_to_prekey {
                                          AEAD_ALGO,
                                          p.len(),
                                          CounterSchedule::default(),
-                                         Self::sealing_key(&salt),
+                                         Self::sealing_key(&salt)?,
                                          io::Cursor::new(&mut ciphertext[..]))
                     .expect("Mandatory algorithm unsupported");
                 encryptor.write_all(&p).unwrap();
                 encryptor.finish().unwrap();
             }
 
-            Encrypted {
+            Ok(Encrypted {
                 plaintext_len: p.len(),
                 ciphertext,
                 salt,
-            }
+            })
         }
 
         /// Maps the given function over the temporarily decrypted
@@ -423,7 +427,8 @@ mod has_access_to_prekey {
                                      AEAD_ALGO,
                                      self.plaintext_len,
                                      CounterSchedule::default(),
-                                     Self::sealing_key(&self.salt),
+                                     Self::sealing_key(&self.salt)
+                                     .expect("was fine during encryption"),
                                      Box::new(ciphertext))
                 .expect("Mandatory algorithm unsupported");
 

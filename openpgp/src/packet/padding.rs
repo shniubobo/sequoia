@@ -3,8 +3,11 @@ use std::fmt;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
-use crate::packet;
-use crate::Packet;
+use crate::{
+    Packet,
+    Result,
+    packet,
+};
 
 /// Holds a Padding packet.
 ///
@@ -51,10 +54,10 @@ impl Padding {
     ///
     /// Note that this is the net size, packet framing (CTB and packet
     /// length) will come on top.
-    pub fn new(size: usize) -> Padding {
+    pub fn new(size: usize) -> Result<Padding> {
         let mut v = vec![0; size];
-        crate::crypto::random(&mut v);
-        v.into()
+        crate::crypto::random(&mut v)?;
+        Ok(v.into())
     }
 
     /// Gets the padding packet's value.

@@ -153,8 +153,8 @@ impl From<&Fingerprint> for KeyID {
                 KeyID::from_bytes(&fp[fp.len() - 8..]),
             Fingerprint::V6(fp) =>
                 KeyID::from_bytes(&fp[..8]),
-            Fingerprint::Invalid(fp) => {
-                KeyID::Invalid(fp.clone())
+            Fingerprint::Unknown { bytes, .. } => {
+                KeyID::Invalid(bytes.clone())
             }
         }
     }
@@ -167,8 +167,8 @@ impl From<Fingerprint> for KeyID {
                 KeyID::from_bytes(&fp[fp.len() - 8..]),
             Fingerprint::V6(fp) =>
                 KeyID::from_bytes(&fp[..8]),
-            Fingerprint::Invalid(fp) => {
-                KeyID::Invalid(fp)
+            Fingerprint::Unknown { bytes, .. } => {
+                KeyID::Invalid(bytes)
             }
         }
     }

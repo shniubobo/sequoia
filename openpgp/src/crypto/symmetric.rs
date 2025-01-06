@@ -547,7 +547,7 @@ mod tests {
                      .iter()
                      .filter(|x| x.is_supported()) {
             let mut key = vec![0; algo.key_size().unwrap()];
-            crate::crypto::random(&mut key);
+            crate::crypto::random(&mut key).unwrap();
 
             let mut ciphertext = Vec::new();
             {

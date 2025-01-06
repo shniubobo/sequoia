@@ -99,7 +99,7 @@ fn main() -> openpgp::Result<()> {
 
     // Current certificate.
     let mut current_fingerprint =
-        KeyHandle::Fingerprint(Fingerprint::from_bytes(&vec![0; 20]));
+        KeyHandle::Fingerprint(Fingerprint::from_bytes(4, &vec![0; 20])?);
     let mut current_keyid = KeyHandle::KeyID(KeyID::wildcard());
 
     // For each input file, create a parser.

@@ -315,7 +315,7 @@ impl<'a, 'p> writer::Stackable<'a, Cookie> for Padder<'a, 'p>
         let mut padding = vec![0; BUFFER_SIZE];
         while amount > 0 {
             let n = std::cmp::min(BUFFER_SIZE as u64, amount) as usize;
-            crate::crypto::random(&mut padding[..n]);
+            crate::crypto::random(&mut padding[..n])?;
             pb_writer.write_all(&padding[..n])?;
             amount -= n as u64;
         }
@@ -456,7 +456,7 @@ mod test {
         use crate::serialize::stream::*;
 
         let mut msg = vec![0; rand::random::<usize>() % 1024];
-        crate::crypto::random(&mut msg);
+        crate::crypto::random(&mut msg).unwrap();
 
         let mut padded = vec![];
         {

@@ -85,7 +85,7 @@ impl TryFrom<SystemTime> for Timestamp {
             Ok(d) if d.as_secs() <= std::u32::MAX as u64 =>
                 Ok(Timestamp(d.as_secs() as u32)),
             _ => Err(Error::InvalidArgument(
-                format!("Time exceeds u32 epoch: {:?}", t))
+                format!("time {:?} is not representable in OpenPGP", t))
                      .into()),
         }
     }

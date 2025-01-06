@@ -1632,7 +1632,7 @@ where C: IntoIterator<Item = S>,
     // by using the old attestation as template.
     let template = if let Some(old) = old_attestation {
         let mut s = SignatureBuilder::from(old)
-            .set_reference_time(now);
+            .set_reference_time(now)?;
         s.hashed_area_mut().clear();
         s.unhashed_area_mut().clear();
         s

@@ -1627,16 +1627,23 @@ impl SignatureBuilder {
     /// // If we set a reference time and don't set a creation time,
     /// // then that time is used for the creation time.
     /// let t = std::time::UNIX_EPOCH + Duration::new(1646660000, 0);
-    /// let sig = sig.set_reference_time(t);
+    /// let sig = sig.set_reference_time(t)?;
     /// assert_eq!(sig.effective_signature_creation_time()?, Some(t));
     /// # Ok(()) }
     /// ```
-    pub fn set_reference_time<T>(mut self, reference_time: T) -> Self
+    pub fn set_reference_time<T>(mut self, reference_time: T) -> Result<Self>
     where
         T: Into<Option<SystemTime>>,
     {
-        self.reference_time = reference_time.into();
-        self
+        let reference_time = reference_time.into();
+
+        // Make sure the time is representable.
+        if let Some(t) = reference_time.clone() {
+            Timestamp::try_from(t)?;
+        }
+
+        self.reference_time = reference_time;
+        Ok(self)
     }
 
     /// Returns the signature creation time that would be used if a
@@ -1757,7 +1764,7 @@ impl SignatureBuilder {
             (SBVersion::V6 { .. }, 4) => SBVersion::V4 {},
             (SBVersion::V4 {}, 6) => {
                 let mut salt = vec![0; self.fields.hash_algo().salt_size()?];
-                crate::crypto::random(&mut salt);
+                crate::crypto::random(&mut salt)?;
                 SBVersion::V6 { salt }
             },
             (SBVersion::V6 { salt }, 6) => SBVersion::V6 { salt },
@@ -1788,7 +1795,7 @@ impl SignatureBuilder {
                 // Add a salt to v4 signatures to make the signature
                 // unpredictable.
                 let mut salt = [0; 32];
-                crate::crypto::random(&mut salt);
+                crate::crypto::random(&mut salt)?;
                 self = self.set_notation("salt@notations.sequoia-pgp.org",
                                          salt, None, false)?;
             },
@@ -4033,7 +4040,7 @@ mod test {
     fn sign_verify() {
         let hash_algo = HashAlgorithm::SHA512;
         let mut hash = vec![0; hash_algo.digest_size().unwrap()];
-        crypto::random(&mut hash);
+        crypto::random(&mut hash).unwrap();
 
         for key in &[
             "testy-private.pgp",
@@ -4214,7 +4221,8 @@ mod test {
             .for_signature(pair.public().version());
         hash.update(&msg[..]);
 
-        let fp = Fingerprint::from_bytes(b"bbbbbbbbbbbbbbbbbbbb");
+        let fp =
+            Fingerprint::from_bytes(4, b"bbbbbbbbbbbbbbbbbbbb").unwrap();
         let keyid = KeyID::from(&fp);
 
         // First, make sure any superfluous subpackets are removed,
@@ -4655,9 +4663,9 @@ mod test {
                     SubpacketValue::SignatureExpirationTime(hour_t), true)?)?;
                 Ok(a)
             })?;
-        let sig = sig.set_reference_time(now);
+        let sig = sig.set_reference_time(now)?;
         assert_eq!(sig.signature_expiration_time(), Some(now + hour));
-        let sig = sig.set_reference_time(past);
+        let sig = sig.set_reference_time(past)?;
         assert_eq!(sig.signature_expiration_time(), Some(now - hour));
         Ok(())
     }

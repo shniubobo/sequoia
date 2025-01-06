@@ -891,10 +891,10 @@ mod tests {
             ].iter().filter(|algo| algo.is_supported() && algo.supports_symmetric_algo(sym_algo)) {
                 let chunk_size = 64;
                 let mut key = vec![0; sym_algo.key_size().unwrap()];
-                crate::crypto::random(&mut key);
+                crate::crypto::random(&mut key).unwrap();
                 let key: SessionKey = key.into();
                 let mut iv = vec![0; aead.nonce_size().unwrap()];
-                crate::crypto::random(&mut iv);
+                crate::crypto::random(&mut iv).unwrap();
 
                 let mut ciphertext = Vec::new();
                 {

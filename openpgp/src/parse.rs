@@ -1831,7 +1831,7 @@ impl Subpacket {
                         .iter().map(|o| (*o).into()).collect()),
             SubpacketTag::RevocationKey => {
                 // 1 octet of class, 1 octet of pk algorithm, 20 bytes
-                // for a v4 fingerprint and 32 bytes for a v5
+                // for a v4 fingerprint and 32 bytes for a v6
                 // fingerprint.
                 if len < 22 {
                     return Err(Error::MalformedPacket(
@@ -1840,8 +1840,9 @@ impl Subpacket {
                 }
                 let class = php.parse_u8("class")?;
                 let pk_algo = php.parse_u8("pk algo")?.into();
-                let fp = Fingerprint::from_bytes(
-                    &php.parse_bytes("fingerprint", len - 2)?);
+                let fp = Fingerprint::from_bytes_intern(
+                    None,
+                    &php.parse_bytes("fingerprint", len - 2)?)?;
                 SubpacketValue::RevocationKey(
                     RevocationKey::from_bits(pk_algo, fp, class)?)
             },
@@ -1946,7 +1947,7 @@ impl Subpacket {
                 }
                 let bytes = php.parse_bytes("issuer fp", len - 1)?;
                 SubpacketValue::IssuerFingerprint(
-                    Fingerprint::from_bytes(&bytes))
+                    Fingerprint::from_bytes(version, &bytes)?)
             },
             SubpacketTag::PreferredAEADAlgorithms =>
                 SubpacketValue::PreferredAEADAlgorithms(
@@ -1972,7 +1973,7 @@ impl Subpacket {
                 }
                 let bytes = php.parse_bytes("intended rcpt", len - 1)?;
                 SubpacketValue::IntendedRecipient(
-                    Fingerprint::from_bytes(&bytes))
+                    Fingerprint::from_bytes(version, &bytes)?)
             },
             SubpacketTag::AttestedCertifications => {
                 // If we don't know the hash algorithm, put all digest
@@ -2425,7 +2426,8 @@ impl OnePassSig6 {
 
         let hash_algo = hash_algo.into();
         let typ = typ.into();
-        let mut sig = OnePassSig6::new(typ, Fingerprint::from_bytes(&issuer));
+        let mut sig =
+            OnePassSig6::new(typ, Fingerprint::from_bytes(6, &issuer)?);
         sig.set_salt(salt.clone());
         sig.set_hash_algo(hash_algo);
         sig.set_pk_algo(pk_algo.into());
@@ -3942,7 +3944,8 @@ impl PKESK6 {
                 }
             }
             Some(Fingerprint::from_bytes(
-                &php_try!(php.parse_bytes("recipient", (fp_len - 1).into()))))
+                fp_version,
+                &php_try!(php.parse_bytes("recipient", (fp_len - 1).into())))?)
         };
 
         let pk_algo: PublicKeyAlgorithm =

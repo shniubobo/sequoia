@@ -2866,7 +2866,8 @@ impl Marshal for PKESK6 {
             match recipient {
                 Fingerprint::V4(_) => write_byte(o, 4)?,
                 Fingerprint::V6(_) => write_byte(o, 6)?,
-                Fingerprint::Invalid(_) => write_byte(o, 0xff)?,
+                Fingerprint::Unknown { version, .. } =>
+                    write_byte(o, version.unwrap_or(0xff))?,
             }
             (recipient as &dyn Marshal).serialize(o)?;
         } else {

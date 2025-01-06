@@ -145,7 +145,7 @@ fn test_session_key() {
 /// A test case that allocates a mem::Encrypted, uses it once, then
 /// drops it.
 fn test_encrypted() {
-    let m = mem::Encrypted::new(NEEDLE.into());
+    let m = mem::Encrypted::new(NEEDLE.into()).unwrap();
     m.map(|v| check_secret(&v));
 }
 

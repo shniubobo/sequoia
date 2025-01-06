@@ -1084,7 +1084,8 @@ mod tests {
         // => bad.
         let mut packets : Vec<Packet> = Vec::new();
         let cipher = SymmetricAlgorithm::AES256;
-        let sk = crate::crypto::SessionKey::new(cipher.key_size().unwrap());
+        let sk =
+            crate::crypto::SessionKey::new(cipher.key_size().unwrap()).unwrap();
         #[allow(deprecated)]
         packets.push(SKESK4::with_password(
             cipher,

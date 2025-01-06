@@ -123,7 +123,7 @@ impl SKESK6 {
 
         // Encrypt the session key with the KEK.
         let mut iv = vec![0u8; esk_aead.nonce_size()?];
-        crypto::random(&mut iv);
+        crypto::random(&mut iv)?;
         let mut ctx =
             esk_aead.context(esk_algo, &kek, &ad, &iv, CipherOp::Encrypt)?;
         let mut esk_digest =

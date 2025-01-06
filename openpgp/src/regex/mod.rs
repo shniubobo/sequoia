@@ -925,13 +925,13 @@ impl RegexSet {
     /// This can be used to optimize the evaluation of scoping rules
     /// along a path: if a `RegexSet` matches everything, then it
     /// doesn't further constrain the path.
-    pub fn everything() -> Result<Self>
+    pub fn everything() -> Self
     {
-        Ok(Self {
+        Self {
             re_bytes: vec![vec![]],
             re_set: RegexSet_::Everything,
             disable_sanitizations: false,
-        })
+        }
     }
 
     /// Returns whether a `RegexSet` matches everything.
@@ -957,7 +957,7 @@ impl RegexSet {
     /// use openpgp::regex::RegexSet;
     ///
     /// # fn main() -> openpgp::Result<()> {
-    /// assert!(RegexSet::everything()?.matches_everything());
+    /// assert!(RegexSet::everything().matches_everything());
     /// let empty: &[ &str ] = &[];
     /// assert!(RegexSet::new(empty)?.matches_everything());
     ///

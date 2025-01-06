@@ -406,7 +406,7 @@ mod tests {
             None,
         ).unwrap().into();
 
-        let sess_key = SessionKey::new(32);
+        let sess_key = SessionKey::new(32).unwrap();
         let pkesk = PKESK3::for_recipient(SymmetricAlgorithm::AES256, &sess_key,
                                           &key).unwrap();
         let mut keypair = key.into_keypair().unwrap();

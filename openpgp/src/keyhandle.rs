@@ -206,8 +206,8 @@ impl std::str::FromStr for KeyHandle {
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         let bytes = &crate::fmt::hex::decode_pretty(s)?[..];
-        match Fingerprint::from_bytes(bytes) {
-            fpr @ Fingerprint::Invalid(_) => {
+        match Fingerprint::from_bytes_intern(None, bytes)? {
+            fpr @ Fingerprint::Unknown { .. } => {
                 match KeyID::from_bytes(bytes) {
                     // If it can't be parsed as either a Fingerprint or a
                     // KeyID, return Fingerprint::Invalid.
@@ -349,7 +349,7 @@ impl KeyHandle {
     /// ```
     pub fn is_invalid(&self) -> bool {
         matches!(self,
-                 KeyHandle::Fingerprint(Fingerprint::Invalid(_))
+                 KeyHandle::Fingerprint(Fingerprint::Unknown { .. })
                  | KeyHandle::KeyID(KeyID::Invalid(_)))
     }
 
@@ -484,7 +484,10 @@ mod tests {
             8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
         assert_eq!(format!("{:X}", handle), "0102030405060708090A0B0C0D0E0F1011121314");
 
-        let handle = KeyHandle::Fingerprint(Fingerprint::Invalid(Box::new([10, 2, 3, 4])));
+        let handle = KeyHandle::Fingerprint(Fingerprint::Unknown {
+            version: None,
+            bytes: Box::new([10, 2, 3, 4]),
+        });
         assert_eq!(format!("{:X}", handle), "0A020304");
 
         let handle = KeyHandle::KeyID(KeyID::Long([10, 2, 3, 4, 5, 6, 7, 8]));
@@ -500,7 +503,10 @@ mod tests {
             8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]));
         assert_eq!(format!("{:x}", handle), "0102030405060708090a0b0c0d0e0f1011121314");
 
-        let handle = KeyHandle::Fingerprint(Fingerprint::Invalid(Box::new([10, 2, 3, 4])));
+        let handle = KeyHandle::Fingerprint(Fingerprint::Unknown {
+            version: None,
+            bytes: Box::new([10, 2, 3, 4]),
+        });
         assert_eq!(format!("{:x}", handle), "0a020304");
 
         let handle = KeyHandle::KeyID(KeyID::Long([10, 2, 3, 4, 5, 6, 7, 8]));
@@ -527,7 +533,7 @@ mod tests {
         // Invalid handles are parsed as invalid Fingerprints, not
         // invalid KeyIDs.
         let handle: KeyHandle = "4567 89AB CDEF 0123 4567".parse()?;
-        assert_match!(&KeyHandle::Fingerprint(Fingerprint::Invalid(_)) = &handle);
+        assert_match!(&KeyHandle::Fingerprint(Fingerprint::Unknown { .. }) = &handle);
         assert_eq!(handle.as_bytes(),
                    [0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67]);
 

@@ -7395,7 +7395,7 @@ fn accessors() {
         sig.clone().sign_hash(&mut keypair, hash.clone()).unwrap();
     assert_eq!(sig_.preferred_symmetric_algorithms(), Some(&pref[..]));
 
-    let fp = Fingerprint::from_bytes(b"bbbbbbbbbbbbbbbbbbbb");
+    let fp = Fingerprint::from_bytes(4, b"bbbbbbbbbbbbbbbbbbbb").unwrap();
     let rk = RevocationKey::new(pk_algo, fp.clone(), true);
     sig = sig.set_revocation_key(vec![ rk.clone() ]).unwrap();
     let sig_ =
@@ -7505,8 +7505,8 @@ fn accessors() {
     assert_eq!(sig_.preferred_aead_ciphersuites(), Some(&pref[..]));
 
     let fps = vec![
-        Fingerprint::from_bytes(b"aaaaaaaaaaaaaaaaaaaa"),
-        Fingerprint::from_bytes(b"bbbbbbbbbbbbbbbbbbbb"),
+        Fingerprint::from_bytes(4, b"aaaaaaaaaaaaaaaaaaaa").unwrap(),
+        Fingerprint::from_bytes(4, b"bbbbbbbbbbbbbbbbbbbb").unwrap(),
     ];
     sig = sig.set_intended_recipients(fps.clone()).unwrap();
     let sig_ =
@@ -8174,7 +8174,7 @@ fn issuer_default() -> Result<()> {
     assert_eq!(sig_.issuer_fingerprints().collect::<Vec<_>>(),
                vec![ &keypair.public().fingerprint() ]);
 
-    let fp = Fingerprint::from_bytes(b"bbbbbbbbbbbbbbbbbbbb");
+    let fp = Fingerprint::from_bytes(4, b"bbbbbbbbbbbbbbbbbbbb")?;
 
     // issuer subpacket present, do not override
     let mut sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);

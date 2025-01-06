@@ -177,7 +177,7 @@ impl S2K {
                 approx_hash_bytes)).into())
         } else {
             let mut salt = [0u8; 8];
-            crate::crypto::random(&mut salt);
+            crate::crypto::random(&mut salt)?;
             Ok(S2K::Iterated {
                 hash,
                 salt,

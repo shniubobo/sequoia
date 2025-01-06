@@ -63,9 +63,9 @@ pub fn backend() -> String {
 /// consider using [`SessionKey::new`].
 ///
 ///   [`SessionKey::new`]: crate::crypto::SessionKey::new()
-pub fn random<B: AsMut<[u8]>>(mut buf: B) {
+pub fn random<B: AsMut<[u8]>>(mut buf: B) -> Result<()> {
     use backend::interface::Backend;
-    backend::Backend::random(buf.as_mut()).unwrap();
+    backend::Backend::random(buf.as_mut())
 }
 
 /// Holds a session key.
@@ -104,7 +104,7 @@ impl SessionKey {
     /// use openpgp::packet::prelude::*;
     ///
     /// let cipher = SymmetricAlgorithm::AES256;
-    /// let sk = SessionKey::new(cipher.key_size().unwrap());
+    /// let sk = SessionKey::new(cipher.key_size()?)?;
     ///
     /// let key: Key<key::SecretParts, key::UnspecifiedRole> =
     ///     Key4::generate_ecc(false, Curve::Cv25519)?.into();
@@ -113,10 +113,10 @@ impl SessionKey {
     ///     PKESK3::for_recipient(cipher, &sk, &key)?.into();
     /// # Ok(()) }
     /// ```
-    pub fn new(size: usize) -> Self {
+    pub fn new(size: usize) -> Result<Self> {
         let mut sk: mem::Protected = vec![0; size].into();
-        random(&mut sk);
-        Self(sk)
+        random(&mut sk)?;
+        Ok(Self(sk))
     }
 
     /// Returns a reference to the inner [`mem::Protected`].
@@ -212,13 +212,15 @@ assert_send_and_sync!(Password);
 
 impl From<Vec<u8>> for Password {
     fn from(v: Vec<u8>) -> Self {
-        Password(mem::Encrypted::new(v.into()))
+        Password(mem::Encrypted::new(v.into())
+                 .expect("encrypting memory failed"))
     }
 }
 
 impl From<Box<[u8]>> for Password {
     fn from(v: Box<[u8]>) -> Self {
-        Password(mem::Encrypted::new(v.into()))
+        Password(mem::Encrypted::new(v.into())
+                 .expect("encrypting memory failed"))
     }
 }
 

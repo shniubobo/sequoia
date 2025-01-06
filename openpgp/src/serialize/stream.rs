@@ -1291,7 +1291,7 @@ impl<'a> Signer<'a> {
                     // need to include it in the OPS packet.
                     // Generate and remember the salt here.
                     let mut salt = vec![0; algo.salt_size()?];
-                    crate::crypto::random(&mut salt);
+                    crate::crypto::random(&mut salt)?;
 
                     // Add the salted context.
                     hash.update(&salt);
@@ -2976,7 +2976,7 @@ impl<'a, 'b> Encryptor2<'a, 'b> {
 
         let aead = if let Some(algo) = self.aead_algo {
             let mut salt = [0u8; 32];
-            crypto::random(&mut salt);
+            crypto::random(&mut salt)?;
             Some(AEADParameters {
                 algo,
                 chunk_size: Self::AEAD_CHUNK_SIZE,
@@ -2992,7 +2992,8 @@ impl<'a, 'b> Encryptor2<'a, 'b> {
         // Reuse existing session key or generate a new one.
         let sym_key_size = self.sym_algo.key_size()?;
         let sk = self.session_key.take()
-            .unwrap_or_else(|| SessionKey::new(sym_key_size));
+            .map(|sk| Ok(sk))
+            .unwrap_or_else(|| SessionKey::new(sym_key_size))?;
         if sk.len() != sym_key_size {
             return Err(Error::InvalidOperation(
                 format!("{} requires a {} bit key, but session key has {}",
@@ -3081,7 +3082,7 @@ impl<'a, 'b> Encryptor2<'a, 'b> {
             // initialization vector, hence we must write this to
             // self after installing the encryptor at self.inner.
             let mut iv = vec![0; self.sym_algo.block_size()?];
-            crypto::random(&mut iv);
+            crypto::random(&mut iv)?;
             self.write_all(&iv)?;
             self.write_all(&iv[iv.len() - 2..])?;
 

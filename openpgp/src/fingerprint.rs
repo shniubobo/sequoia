@@ -4,8 +4,10 @@ use std::fmt;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use crate::Error;
 use crate::KeyHandle;
 use crate::KeyID;
+use crate::Result;
 
 /// A long identifier for certificates and keys.
 ///
@@ -57,9 +59,14 @@ pub enum Fingerprint {
     /// A v6 OpenPGP fingerprint.
     V6([u8; 32]),
 
-    /// Used for holding fingerprint data that is not a V4 fingerprint, e.g. a
-    /// V3 fingerprint (deprecated) or otherwise wrong-length data.
-    Invalid(Box<[u8]>),
+    /// A fingerprint of unknown version or shape.
+    Unknown {
+        /// Version of the fingerprint, if known.
+        version: Option<u8>,
+
+        /// Raw bytes of the fingerprint.
+        bytes: Box<[u8]>,
+    },
 }
 assert_send_and_sync!(Fingerprint);
 
@@ -76,8 +83,8 @@ impl fmt::Debug for Fingerprint {
                 write!(f, "Fingerprint::V4({})", self),
             Fingerprint::V6(_) =>
                 write!(f, "Fingerprint::V6({})", self),
-            Fingerprint::Invalid(_) =>
-                write!(f, "Fingerprint::Invalid({})", self),
+            Fingerprint::Unknown { version, .. } =>
+                write!(f, "Fingerprint::Unknown {{ {:?}, {} }}", version, self),
         }
     }
 }
@@ -103,7 +110,7 @@ impl std::str::FromStr for Fingerprint {
                 "Odd number of nibbles".into()).into());
         }
 
-        Ok(Self::from_bytes(&crate::fmt::hex::decode_pretty(s)?[..]))
+        Self::from_bytes_intern(None, &crate::fmt::hex::decode_pretty(s)?)
     }
 }
 
@@ -124,20 +131,49 @@ impl Fingerprint {
     ///     [0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23,
     ///      0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67];
     ///
-    /// assert_eq!(Fingerprint::from_bytes(&bytes), fp);
+    /// assert_eq!(Fingerprint::from_bytes(4, &bytes)?, fp);
     /// # Ok(()) }
     /// ```
-    pub fn from_bytes(raw: &[u8]) -> Fingerprint {
-        if raw.len() == 20 {
-            let mut fp : [u8; 20] = Default::default();
-            fp.copy_from_slice(raw);
-            Fingerprint::V4(fp)
-        } else if raw.len() == 32 {
-            let mut fp: [u8; 32] = Default::default();
-            fp.copy_from_slice(raw);
-            Fingerprint::V6(fp)
-        } else {
-            Fingerprint::Invalid(raw.to_vec().into_boxed_slice())
+    pub fn from_bytes(version: u8, raw: &[u8]) -> Result<Fingerprint> {
+        Self::from_bytes_intern(Some(version), raw)
+    }
+
+    /// Like [`Fingerprint::from_bytes`], but with optional version.
+    pub(crate) fn from_bytes_intern(mut version: Option<u8>, raw: &[u8])
+                                    -> Result<Fingerprint>
+    {
+        // Apply some heuristics if no explicit version is known.
+        if version.is_none() && raw.len() == 32 {
+            version = Some(6);
+        } else if version.is_none() && raw.len() == 20 {
+            version = Some(4);
+        }
+
+        match version {
+            Some(6) => if raw.len() == 32 {
+                let mut fp: [u8; 32] = Default::default();
+                fp.copy_from_slice(raw);
+                Ok(Fingerprint::V6(fp))
+            } else {
+                Err(Error::InvalidArgument(format!(
+                    "a v6 fingerprint consists of 32 bytes, got {}",
+                    raw.len())).into())
+            },
+
+            Some(4) => if raw.len() == 20 {
+                let mut fp : [u8; 20] = Default::default();
+                fp.copy_from_slice(raw);
+                Ok(Fingerprint::V4(fp))
+            } else {
+                Err(Error::InvalidArgument(format!(
+                    "a v4 fingerprint consists of 20 bytes, got {}",
+                    raw.len())).into())
+            },
+
+            _ => Ok(Fingerprint::Unknown {
+                version,
+                bytes: raw.to_vec().into_boxed_slice(),
+            }),
         }
     }
 
@@ -163,7 +199,7 @@ impl Fingerprint {
         match self {
             Fingerprint::V4(ref fp) => fp,
             Fingerprint::V6(fp) => fp,
-            Fingerprint::Invalid(ref fp) => fp,
+            Fingerprint::Unknown { bytes, .. } => bytes,
         }
     }
 
