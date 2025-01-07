@@ -104,7 +104,7 @@
 //! let message = Armorer::new(message).build()?;
 //! let message = Encryptor2::for_recipients(message, recipients).build()?;
 //! // Reduce metadata leakage by concealing the message size.
-//! let message = Signer::new(message, signing_keypair)
+//! let message = Signer::new(message, signing_keypair)?
 //!     // Prevent Surreptitious Forwarding.
 //!     .add_intended_recipient(&recipient)
 //!     .build()?;
@@ -422,7 +422,7 @@ impl<'a> Armorer<'a> {
     ///     let message = Armorer::new(message)
     ///         .kind(armor::Kind::Signature)
     ///         .build()?;
-    ///     let mut signer = Signer::new(message, signing_keypair)
+    ///     let mut signer = Signer::new(message, signing_keypair)?
     ///         .detached()
     ///         .build()?;
     ///
@@ -633,11 +633,17 @@ pub struct Signer<'a> {
     inner: Option<writer::BoxStack<'a, Cookie>>,
     signers: Vec<(Box<dyn crypto::Signer + Send + Sync + 'a>,
                   HashAlgorithm, Vec<u8>)>,
+
+    /// The set of acceptable hashes.
+    acceptable_hash_algos: Vec<HashAlgorithm>,
+
+    /// The explicitly selected algo, if any.
+    hash_algo: Option<HashAlgorithm>,
+
     intended_recipients: Vec<Fingerprint>,
     mode: SignatureMode,
     template: signature::SignatureBuilder,
     creation_time: Option<SystemTime>,
-    hash_algo: HashAlgorithm,
     hashes: Vec<HashingMode<crypto::hash::Context>>,
     cookie: Cookie,
     position: u64,
@@ -693,7 +699,7 @@ impl<'a> Signer<'a> {
     /// let mut sink = vec![];
     /// {
     ///     let message = Message::new(&mut sink);
-    ///     let message = Signer::new(message, signing_keypair)
+    ///     let message = Signer::new(message, signing_keypair)?
     ///         // Customize the `Signer` here.
     ///         .build()?;
     ///     let mut message = LiteralWriter::new(message).build()?;
@@ -728,7 +734,7 @@ impl<'a> Signer<'a> {
     /// assert_eq!(&message, "Make it so, number one!");
     /// # Ok(()) }
     /// ```
-    pub fn new<S>(inner: Message<'a>, signer: S) -> Self
+    pub fn new<S>(inner: Message<'a>, signer: S) -> Result<Self>
         where S: crypto::Signer + Send + Sync + 'a
     {
         Self::with_template(inner, signer,
@@ -787,7 +793,7 @@ impl<'a> Signer<'a> {
     ///     message, signing_keypair,
     ///     signature::SignatureBuilder::new(SignatureType::Text)
     ///         .add_notation("issuer@starfleet.command", "Jean-Luc Picard",
-    ///                       None, true)?)
+    ///                       None, true)?)?
     ///     // Further customize the `Signer` here.
     ///     .build()?;
     /// let mut message = LiteralWriter::new(message).build()?;
@@ -796,7 +802,7 @@ impl<'a> Signer<'a> {
     /// # Ok(()) }
     /// ```
     pub fn with_template<S, T>(inner: Message<'a>, signer: S, template: T)
-                               -> Self
+                               -> Result<Self>
         where S: crypto::Signer + Send + Sync + 'a,
               T: Into<signature::SignatureBuilder>,
     {
@@ -804,7 +810,10 @@ impl<'a> Signer<'a> {
         let level = inner.cookie_ref().level + 1;
         Signer {
             inner: Some(inner),
-            signers: vec![(Box::new(signer), Default::default(), Vec::new())],
+            signers: Default::default(),
+            acceptable_hash_algos:
+            crate::crypto::hash::DEFAULT_HASHES.iter()
+                .cloned().collect(),
             intended_recipients: Vec::new(),
             mode: SignatureMode::Inline,
             template: template.into(),
@@ -816,7 +825,7 @@ impl<'a> Signer<'a> {
                 private: Private::Signer,
             },
             position: 0,
-        }
+        }.add_signer(signer)
     }
 
     /// Creates a signer for a detached signature.
@@ -856,7 +865,7 @@ impl<'a> Signer<'a> {
     /// let mut sink = vec![];
     /// {
     ///     let message = Message::new(&mut sink);
-    ///     let mut signer = Signer::new(message, signing_keypair)
+    ///     let mut signer = Signer::new(message, signing_keypair)?
     ///         .detached()
     ///         // Customize the `Signer` here.
     ///         .build()?;
@@ -951,7 +960,7 @@ impl<'a> Signer<'a> {
     /// let mut sink = vec![];
     /// {
     ///     let message = Message::new(&mut sink);
-    ///     let mut signer = Signer::new(message, signing_keypair)
+    ///     let mut signer = Signer::new(message, signing_keypair)?
     ///         .cleartext()
     ///         // Customize the `Signer` here.
     ///         .build()?;
@@ -1012,6 +1021,13 @@ impl<'a> Signer<'a> {
     ///
     /// Can be used multiple times.
     ///
+    /// Note that some signers only support a subset of hash
+    /// algorithms, see [`crate::crypto::Signer.acceptable_hashes`].
+    /// If the given signer supports at least one hash from the
+    /// current set of acceptable hashes, the signer is added and all
+    /// algorithms not supported by it are removed from the set of
+    /// acceptable hashes.  Otherwise, an error is returned.
+    ///
     /// # Examples
     ///
     /// ```
@@ -1039,19 +1055,44 @@ impl<'a> Signer<'a> {
     ///
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
-    /// let message = Signer::new(message, signing_keypair)
-    ///     .add_signer(additional_signing_keypair)
+    /// let message = Signer::new(message, signing_keypair)?
+    ///     .add_signer(additional_signing_keypair)?
     ///     .build()?;
     /// let mut message = LiteralWriter::new(message).build()?;
     /// message.write_all(b"Make it so, number one!")?;
     /// message.finalize()?;
     /// # Ok(()) }
     /// ```
-    pub fn add_signer<S>(mut self, signer: S) -> Self
+    pub fn add_signer<S>(mut self, signer: S) -> Result<Self>
         where S: crypto::Signer + Send + Sync + 'a
     {
+        // Update the set of acceptable hash algorithms.
+        let is_sorted = |data: &[HashAlgorithm]| {
+            data.windows(2).all(|w| w[0] <= w[1])
+        };
+
+        let mut signer_hashes = signer.acceptable_hashes();
+        let mut signer_hashes_;
+        if ! is_sorted(signer_hashes) {
+            signer_hashes_ = signer_hashes.to_vec();
+            signer_hashes_.sort();
+            signer_hashes = &signer_hashes_;
+        }
+        self.acceptable_hash_algos.retain(
+            |hash| signer_hashes.binary_search(hash).is_ok());
+
+        if self.acceptable_hash_algos.is_empty() {
+            return Err(Error::NoAcceptableHash.into());
+        }
+
+        if let Some(a) = self.hash_algo {
+            if ! self.acceptable_hash_algos.contains(&a) {
+                return Err(Error::NoAcceptableHash.into());
+            }
+        }
+
         self.signers.push((Box::new(signer), Default::default(), Vec::new()));
-        self
+        Ok(self)
     }
 
     /// Adds an intended recipient.
@@ -1091,7 +1132,7 @@ impl<'a> Signer<'a> {
     ///
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
-    /// let message = Signer::new(message, signing_keypair)
+    /// let message = Signer::new(message, signing_keypair)?
     ///     .add_intended_recipient(&recipient)
     ///     .build()?;
     /// let mut message = LiteralWriter::new(message).build()?;
@@ -1108,8 +1149,8 @@ impl<'a> Signer<'a> {
     ///
     /// Note that some signers only support a subset of hash
     /// algorithms, see [`crate::crypto::Signer.acceptable_hashes`].
-    /// If the hash selected using this method is not supported by a
-    /// signer, a hash supported by the signer is selected instead.
+    /// If the given algorithm is not supported by all signers, an
+    /// error is returned.
     ///
     /// # Examples
     ///
@@ -1135,7 +1176,7 @@ impl<'a> Signer<'a> {
     ///
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
-    /// let message = Signer::new(message, signing_keypair)
+    /// let message = Signer::new(message, signing_keypair)?
     ///     .hash_algo(HashAlgorithm::SHA384)?
     ///     .build()?;
     /// let mut message = LiteralWriter::new(message).build()?;
@@ -1144,8 +1185,12 @@ impl<'a> Signer<'a> {
     /// # Ok(()) }
     /// ```
     pub fn hash_algo(mut self, algo: HashAlgorithm) -> Result<Self> {
-        self.hash_algo = algo;
-        Ok(self)
+        if self.acceptable_hash_algos.contains(&algo) {
+            self.hash_algo = Some(algo);
+            Ok(self)
+        } else {
+            Err(Error::NoAcceptableHash.into())
+        }
     }
 
     /// Sets the signature's creation time to `time`.
@@ -1179,7 +1224,7 @@ impl<'a> Signer<'a> {
     ///
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
-    /// let message = Signer::new(message, signing_keypair)
+    /// let message = Signer::new(message, signing_keypair)?
     ///     .creation_time(Timestamp::now()
     ///                    .round_down(None, signing_key.creation_time())?)
     ///     .build()?;
@@ -1234,7 +1279,7 @@ impl<'a> Signer<'a> {
     /// #
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
-    /// let message = Signer::new(message, signing_keypair)
+    /// let message = Signer::new(message, signing_keypair)?
     ///     // Customize the `Signer` here.
     ///     .build()?;
     /// # Ok(()) }
@@ -1245,32 +1290,13 @@ impl<'a> Signer<'a> {
         assert!(self.inner.is_some(), "The constructor adds an inner writer.");
 
         for (keypair, signer_hash, signer_salt) in self.signers.iter_mut() {
-            // First, compute a suitable hash algorithm, starting with
-            // the one configured using Self::hash_algo.
-            let mut acceptable_hashes =
-                std::iter::once(&self.hash_algo)
-                .chain(crate::crypto::hash::DEFAULT_HASHES.iter())
-                .cloned()
-                .collect::<Vec<_>>();
-
-            let is_sorted = |data: &[HashAlgorithm]| {
-                data.windows(2).all(|w| w[0] <= w[1])
+            let algo = if let Some(a) = self.hash_algo {
+                a
+            } else {
+                self.acceptable_hash_algos.get(0)
+                    .expect("we make sure the set is never empty")
+                    .clone()
             };
-
-            let mut signer_hashes = keypair.acceptable_hashes();
-            let mut signer_hashes_;
-            if ! is_sorted(signer_hashes) {
-                signer_hashes_ = signer_hashes.to_vec();
-                signer_hashes_.sort();
-                signer_hashes = &signer_hashes_;
-            }
-            acceptable_hashes.retain(
-                |hash| signer_hashes.binary_search(hash).is_ok());
-
-            if acceptable_hashes.is_empty() {
-                return Err(Error::NoAcceptableHash.into());
-            }
-            let algo = acceptable_hashes[0];
             *signer_hash = algo;
             let mut hash = algo.context()?
                 .for_signature(keypair.public().version());
@@ -3543,9 +3569,9 @@ mod test {
             }).collect::<Vec<KeyPair>>();
 
             let m = Message::new(&mut o);
-            let mut signer = Signer::new(m, signers.pop().unwrap());
+            let mut signer = Signer::new(m, signers.pop().unwrap()).unwrap();
             for s in signers.into_iter() {
-                signer = signer.add_signer(s);
+                signer = signer.add_signer(s).unwrap();
             }
             let signer = signer.build().unwrap();
             let mut ls = LiteralWriter::new(signer).build().unwrap();
@@ -3901,7 +3927,7 @@ mod test {
                     .expect("expected unencrypted secret key");
 
             let m = Message::new(&mut o);
-            let signer = Signer::new(m, signer_keypair);
+            let signer = Signer::new(m, signer_keypair).unwrap();
             let signer = signer.creation_time(timestamp);
             let signer = signer.build().unwrap();
 
@@ -3964,7 +3990,7 @@ mod test {
                 let mut message = Signer::with_template(
                     message, signing_keypair,
                     signature::SignatureBuilder::new(SignatureType::Text)
-                ).detached().build()?;
+                )?.detached().build()?;
                 message.write_all(data)?;
                 message.finalize()?;
             }
@@ -4057,16 +4083,15 @@ mod test {
         let mut signature = vec![];
         let message = Message::new(&mut signature);
 
-        Signer::new(message, GoodSigner::default()).build().unwrap();
+        Signer::new(message, GoodSigner::default()).unwrap().build().unwrap();
     }
 
     #[test]
     fn no_overlapping_hashes() {
         let mut signature = vec![];
         let message = Message::new(&mut signature);
-        let signer = Signer::new(message, BadSigner);
 
-        if let Err(e) = signer.build() {
+        if let Err(e) = Signer::new(message, BadSigner) {
             assert_eq!(e.downcast_ref::<Error>(), Some(&Error::NoAcceptableHash));
         } else {
             unreachable!();
@@ -4078,10 +4103,8 @@ mod test {
         let mut signature = vec![];
         let message = Message::new(&mut signature);
 
-        let mut signer = Signer::new(message, GoodSigner::default());
-        signer = signer.add_signer(BadSigner);
-
-        if let Err(e) = signer.build() {
+        let signer = Signer::new(message, GoodSigner::default()).unwrap();
+        if let Err(e) = signer.add_signer(BadSigner) {
             assert_eq!(e.downcast_ref::<Error>(), Some(&Error::NoAcceptableHash));
         } else {
             unreachable!();
@@ -4107,8 +4130,8 @@ mod test {
 
         let mut sink = Vec::new();
         let message = Message::new(&mut sink);
-        let message = Signer::new(message, signer_a)
-            .add_signer(signer_b)
+        let message = Signer::new(message, signer_a)?
+            .add_signer(signer_b)?
             .build()?;
         let mut message = LiteralWriter::new(message).build()?;
         message.write_all(b"Make it so, number one!")?;
@@ -4258,7 +4281,7 @@ mod test {
 
             let mut sink = vec![];
             let message = Message::new(&mut sink);
-            let message = Signer::new(message, signing_keypair)
+            let message = Signer::new(message, signing_keypair)?
                 .build()?;
             let mut message = LiteralWriter::new(message).build()?;
             message.write_all(b"Hello world.")?;

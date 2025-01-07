@@ -398,7 +398,7 @@ where P: KeyParts,
             // hashed for v6 signatures.
                 .for_signature(6);
 
-            self.hash(&mut h);
+            self.hash(&mut h).expect("v6 key hashing is infallible");
 
             let mut digest = [0u8; 32];
             let _ = h.digest(&mut digest);

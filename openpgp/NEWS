@@ -27,6 +27,25 @@
    - mem::Encrypted::new is now fallible
    - crypto::random is now fallible
    - RegexSet::everything is now infallible
+   - Cert::revocation_keys now returns an unboxed iterator
+   - ValidCert::revocation_keys no longer takes a policy argument
+   - ValidCert::revocation_keys now returns an unboxed iterator
+   - All hash functions defined on Signature and SignatureBuilder,
+     such as Signature::hash_standalone, are now fallible
+   - All hash functions defined on Signature and SignatureBuilder,
+     such as Signature::hash_standalone, now check the signature type
+   - crypto::hash::Hash::hash is now fallible
+   - stream::Signer::new, stream::Signer::with_template, and
+     stream::Signer::add_signer are now fallible: the streaming signer
+     now computes the set of acceptable hash algorithms as signers are
+     added via the constructors and Signer::add_signer, and returns an
+     error if that set ever gets empty
+   - stream::Signer::hash_algo now returns an error if the given
+     algorithm is not acceptable for the set of signers
+
+** New functionality
+   - Signature::hash_userid_attestation
+   - Signature::hash_user_attribute_attestation
 
 * Changes in 2.0.0.alpha.0
   The major new feature is the support for RFC9580, which modernizes

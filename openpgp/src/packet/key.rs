@@ -1693,7 +1693,7 @@ impl<P, R> Key4<P, R>
             // hashed for v4 signatures.
                 .for_signature(4);
 
-            self.hash(&mut h);
+            self.hash(&mut h).expect("v4 key hashing is infallible");
 
             let mut digest = [0u8; 20];
             let _ = h.digest(&mut digest);

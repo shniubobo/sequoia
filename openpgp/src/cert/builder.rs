@@ -1998,7 +1998,7 @@ mod tests {
             .generate()?;
         let cert = cert.with_policy(p, None)?;
 
-        assert_eq!(cert.revocation_keys(None).collect::<HashSet<_>>(),
+        assert_eq!(cert.revocation_keys().collect::<HashSet<_>>(),
                    revokers.iter().collect::<HashSet<_>>());
 
         // Do it again, with a key that has no User IDs.
@@ -2008,7 +2008,7 @@ mod tests {
         let cert = cert.with_policy(p, None)?;
         assert!(cert.primary_userid().is_err());
 
-        assert_eq!(cert.revocation_keys(None).collect::<HashSet<_>>(),
+        assert_eq!(cert.revocation_keys().collect::<HashSet<_>>(),
                    revokers.iter().collect::<HashSet<_>>());
 
         // The designated revokers on all signatures should be
@@ -2027,7 +2027,7 @@ mod tests {
             .into_keypair()?;
         let mut hash = HashAlgorithm::SHA512.context()?
             .for_signature(primary_signer.public().version());
-        cert.primary_key().hash(&mut hash);
+        cert.primary_key().hash(&mut hash)?;
         let sig = signature::SignatureBuilder::new(SignatureType::DirectKey)
             .set_signature_creation_time(then)?
             .sign_hash(&mut primary_signer, hash)?;

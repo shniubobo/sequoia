@@ -1225,7 +1225,7 @@ impl Cert {
     /// # Ok(()) }
     /// ```
     pub fn revocation_keys<'a>(&'a self, policy: &dyn Policy)
-        -> Box<dyn Iterator<Item = &'a RevocationKey> + 'a>
+        -> impl Iterator<Item = &'a RevocationKey> + 'a
     {
         let mut keys = std::collections::HashSet::new();
 
@@ -1250,7 +1250,7 @@ impl Cert {
             .flat_map(|sig| sig.revocation_keys())
             .for_each(|rk| { keys.insert(rk); });
 
-        Box::new(keys.into_iter())
+        keys.into_iter()
     }
 
     /// Converts the certificate into an iterator over a sequence of
@@ -1547,7 +1547,7 @@ impl Cert {
                     match sig.hash_algo().context().and_then(|ctx| {
                         let mut ctx = ctx.for_signature(sig.version());
                         if matches!(sig.typ(), $sig_type_pat) {
-                            sig.$hash_method(&mut ctx, key, $($hash_args),*);
+                            sig.$hash_method(&mut ctx, key, $($hash_args),*)?;
                             ctx.into_digest()
                         } else {
                             Err(Error::UnsupportedSignatureType(sig.typ()).into())
@@ -1611,7 +1611,7 @@ impl Cert {
                     match sig.hash_algo().context().and_then(|ctx| {
                         let mut ctx = ctx.for_signature(sig.version());
                         if matches!(sig.typ(), $sig_type_pat) {
-                            sig.$hash_method(&mut ctx, key, $($verify_args),*);
+                            sig.$hash_method(&mut ctx, key, $($verify_args),*)?;
                             ctx.into_digest()
                         } else {
                             Err(Error::UnsupportedSignatureType(sig.typ()).into())
@@ -1846,7 +1846,7 @@ impl Cert {
                                  ctx.for_signature($sig.version());
 
                              $sig.$hash_method(&mut ctx, key,
-                                              $($verify_args),*);
+                                              $($verify_args),*)?;
                              ctx.into_digest()
                          })
                      {
@@ -1942,7 +1942,7 @@ impl Cert {
                                 let mut ctx =
                                     ctx.for_signature($sig.version());
                                 $sig.$hash_method(&mut ctx, key,
-                                                 $($verify_args),*);
+                                                 $($verify_args),*)?;
                                 ctx.into_digest()
                             })
                         {
@@ -2050,13 +2050,13 @@ impl Cert {
                                            String::from_utf8_lossy(
                                                binding.userid().value())),
                                    binding.attestations, sig,
-                                   hash_userid_binding, binding.userid());
+                                   hash_userid_attestation, binding.userid());
                     }
 
                     for binding in self.user_attributes.iter_mut() {
                         check_one!("user attribute",
                                    binding.attestations, sig,
-                                   hash_user_attribute_binding,
+                                   hash_user_attribute_attestation,
                                    binding.user_attribute());
                     }
                 },
@@ -4423,18 +4423,15 @@ impl<'a> ValidCert<'a> {
     ///     .generate()?;
     ///
     /// // Make sure Alice is listed as a designated revoker for Bob.
-    /// assert_eq!(bob.with_policy(p, None)?.revocation_keys(None)
+    /// assert_eq!(bob.with_policy(p, None)?.revocation_keys()
     ///            .collect::<Vec<&RevocationKey>>(),
     ///            vec![&(&alice).into()]);
     /// # Ok(()) }
     /// ```
-    pub fn revocation_keys<P>(&self, policy: P)
-        -> Box<dyn Iterator<Item = &'a RevocationKey> + 'a>
-    where
-        P: Into<Option<&'a dyn Policy>>,
+    pub fn revocation_keys(&self)
+        -> impl Iterator<Item = &'a RevocationKey> + 'a
     {
-        self.cert.revocation_keys(
-            policy.into().unwrap_or_else(|| self.policy()))
+        self.cert.revocation_keys(self.policy())
     }
 }
 
@@ -6443,7 +6440,6 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         let primary: Key<_, key::PrimaryRole> =
             key::Key4::generate_ecc(true, Curve::Ed25519)?.into();
-        let mut primary_pair = primary.clone().into_keypair()?;
         let cert = Cert::try_from(vec![primary.into()])?;
 
         // We now add components without binding signatures.  They
@@ -6478,16 +6474,10 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         let mut fake_key = packet::Unknown::new(
             packet::Tag::PublicSubkey, anyhow::anyhow!("fake key"));
         fake_key.set_body("fake key".into());
-        let fake_binding = signature::SignatureBuilder::new(
-                SignatureType::Unknown(SignatureType::SubkeyBinding.into()))
-            .sign_standalone(&mut primary_pair)?;
-        let cert = cert.insert_packets(vec![Packet::from(fake_key),
-                                           fake_binding.clone().into()])?;
+        let cert = cert.insert_packets(vec![Packet::from(fake_key)])?;
         assert_eq!(cert.unknowns().count(), 1);
         assert_eq!(cert.unknowns().next().unwrap().unknown().tag(),
                    packet::Tag::PublicSubkey);
-        assert_eq!(cert.unknowns().next().unwrap().self_signatures().collect::<Vec<_>>(),
-                   vec![&fake_binding]);
 
         Ok(())
     }
@@ -7349,7 +7339,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
             // Hash the certification.
             let mut h = attestation.hash_algo().context()?
                 .for_signature(attestation.version());
-            certification.hash_for_confirmation(&mut h);
+            certification.hash_for_confirmation(&mut h)?;
             let digest = h.into_digest()?;
 
             if DUMP {

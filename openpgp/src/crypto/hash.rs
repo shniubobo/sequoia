@@ -41,8 +41,9 @@ use crate::packet::key;
 use crate::packet::key::{Key4, Key6};
 use crate::packet::Signature;
 use crate::packet::signature::{self, Signature3, Signature4, Signature6};
+use crate::Error;
 use crate::Result;
-use crate::types::Timestamp;
+use crate::types::{SignatureType, Timestamp};
 
 use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
@@ -416,11 +417,11 @@ impl io::Write for HashDumper {
 ///   [`Signature`'s hashing functions]: crate::packet::Signature#hashing-functions
 pub trait Hash {
     /// Updates the given hash with this object.
-    fn hash(&self, hash: &mut Context);
+    fn hash(&self, hash: &mut Context) -> Result<()>;
 }
 
 impl Hash for UserID {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         let len = self.value().len() as u32;
 
         let mut header = [0; 5];
@@ -429,11 +430,12 @@ impl Hash for UserID {
 
         hash.update(&header);
         hash.update(self.value());
+        Ok(())
     }
 }
 
 impl Hash for UserAttribute {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         let len = self.value().len() as u32;
 
         let mut header = [0; 5];
@@ -442,6 +444,7 @@ impl Hash for UserAttribute {
 
         hash.update(&header);
         hash.update(self.value());
+        Ok(())
     }
 }
 
@@ -449,7 +452,7 @@ impl<P, R> Hash for Key<P, R>
     where P: key::KeyParts,
           R: key::KeyRole,
 {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         match self {
             Key::V4(k) => k.hash(hash),
             Key::V6(k) => k.hash(hash),
@@ -521,7 +524,7 @@ impl<P, R> Hash for Key4<P, R>
     where P: key::KeyParts,
           R: key::KeyRole,
 {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         use crate::serialize::MarshalInto;
 
         // We hash 9 bytes plus the MPIs.  But, the len doesn't
@@ -535,25 +538,15 @@ impl<P, R> Hash for Key4<P, R>
         // XXX: Use SmallVec to avoid heap allocations.
         let mut header: Vec<u8> = Vec::with_capacity(9 + 2);
 
-        // XXX: Sadly, we still cannot return errors here.
-        if let Err(e) = write_key_hash_header(&mut header, len, hash) {
-            // In protest, we mis-compute the digest.
-            let _ = write!(hash, "{}", e);
-
-            if cfg!(debug_assertions) {
-                // And complain in debug mode.
-                eprintln!("Key4::hash: {}", e);
-            }
-        }
+        // Write the appropriate header.  This depends on the version
+        // of the signature we hash the data for.
+        write_key_hash_header(&mut header, len, hash)?;
 
         // Version.
         header.push(4);
 
         // Creation time.
-        let creation_time: u32 =
-            Timestamp::try_from(self.creation_time())
-            .unwrap_or_else(|_| Timestamp::from(0))
-            .into();
+        let creation_time: u32 = self.creation_time_raw().into();
         header.extend_from_slice(&creation_time.to_be_bytes());
 
         // Algorithm.
@@ -563,7 +556,9 @@ impl<P, R> Hash for Key4<P, R>
         hash.update(&header[..]);
 
         // MPIs.
-        self.mpis().hash(hash);
+        self.mpis().hash(hash)?;
+
+        Ok(())
     }
 }
 
@@ -571,7 +566,7 @@ impl<P, R> Hash for Key6<P, R>
     where P: key::KeyParts,
           R: key::KeyRole,
 {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         use crate::serialize::MarshalInto;
 
         // We hash 15 bytes plus the MPIs.  But, the len doesn't
@@ -581,25 +576,15 @@ impl<P, R> Hash for Key6<P, R>
         // XXX: Use SmallVec to avoid heap allocations.
         let mut header: Vec<u8> = Vec::with_capacity(15);
 
-        // XXX: Sadly, we still cannot return errors here.
-        if let Err(e) = write_key_hash_header(&mut header, len, hash) {
-            // In protest, we mis-compute the digest.
-            let _ = write!(hash, "{}", e);
-
-            if cfg!(debug_assertions) {
-                // And complain in debug mode.
-                eprintln!("Key6::hash: {}", e);
-            }
-        }
+        // Write the appropriate header.  This depends on the version
+        // of the signature we hash the data for.
+        write_key_hash_header(&mut header, len, hash)?;
 
         // Version.
         header.push(6);
 
         // Creation time.
-        let creation_time: u32 =
-            Timestamp::try_from(self.creation_time())
-            .unwrap_or_else(|_| Timestamp::from(0))
-            .into();
+        let creation_time: u32 = self.creation_time_raw().into();
         header.extend_from_slice(&creation_time.to_be_bytes());
 
         // Algorithm.
@@ -613,12 +598,14 @@ impl<P, R> Hash for Key6<P, R>
         hash.update(&header[..]);
 
         // MPIs.
-        self.mpis().hash(hash);
+        self.mpis().hash(hash)?;
+
+        Ok(())
     }
 }
 
 impl Hash for Signature {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         match self {
             Signature::V3(sig) => sig.hash(hash),
             Signature::V4(sig) => sig.hash(hash),
@@ -628,8 +615,8 @@ impl Hash for Signature {
 }
 
 impl Hash for Signature3 {
-    fn hash(&self, hash: &mut Context) {
-        Self::hash_fields(hash, self);
+    fn hash(&self, hash: &mut Context) -> Result<()> {
+        Self::hash_fields(hash, self)
     }
 }
 
@@ -638,10 +625,9 @@ impl Signature3 {
     ///
     /// Because we need to call this from SignatureFields::hash, we
     /// provide this as associated method.
-    fn hash_fields(hash: &mut Context, f: &signature::SignatureFields) {
-        // XXX: Annoyingly, we have no proper way of handling errors
-        // here.
-
+    fn hash_fields(hash: &mut Context, f: &signature::SignatureFields)
+                   -> Result<()>
+    {
         let mut buffer = [0u8; 5];
 
         // Signature type.
@@ -661,12 +647,13 @@ impl Signature3 {
         buffer[4] = (creation_time      ) as u8;
 
         hash.update(&buffer[..]);
+        Ok(())
     }
 }
 
 impl Hash for Signature4 {
-    fn hash(&self, hash: &mut Context) {
-        Self::hash_fields(hash, &self.fields);
+    fn hash(&self, hash: &mut Context) -> Result<()> {
+        Self::hash_fields(hash, &self.fields)
     }
 }
 
@@ -675,7 +662,9 @@ impl Signature4 {
     ///
     /// Because we need to call this from SignatureFields::hash, we
     /// provide this as associated method.
-    fn hash_fields(mut hash: &mut Context, f: &signature::SignatureFields) {
+    fn hash_fields(mut hash: &mut Context, f: &signature::SignatureFields)
+                   -> Result<()>
+    {
         use crate::serialize::{Marshal, MarshalInto};
 
         // A version 4 signature packet is laid out as follows:
@@ -701,9 +690,7 @@ impl Signature4 {
         header[4..6].copy_from_slice(&(hashed_area_len as u16).to_be_bytes());
 
         hash.update(&header[..]);
-        // XXX: Annoyingly, we have no proper way of handling errors
-        // here.
-        let _ = f.hashed_area().serialize(&mut hash as &mut dyn Write);
+        f.hashed_area().serialize(&mut hash as &mut dyn Write)?;
 
         // A version 4 signature trailer is:
         //
@@ -726,17 +713,21 @@ impl Signature4 {
         trailer[2..6].copy_from_slice(&len.to_be_bytes());
 
         hash.update(&trailer[..]);
+
+        Ok(())
     }
 }
 
 impl Hash for Signature6 {
-    fn hash(&self, hash: &mut Context) {
-        Self::hash_fields(hash, &self.fields);
+    fn hash(&self, hash: &mut Context) -> Result<()> {
+        Self::hash_fields(hash, &self.fields)
     }
 }
 
 impl Signature6 {
-    fn hash_fields(mut hash: &mut Context, sig: &signature::SignatureFields) {
+    fn hash_fields(mut hash: &mut Context, sig: &signature::SignatureFields)
+                   -> Result<()>
+    {
         use crate::serialize::{Marshal, MarshalInto};
 
         // A version 6 signature packet is laid out as follows:
@@ -763,9 +754,7 @@ impl Signature6 {
 
         hash.update(&header[..]);
 
-        // XXX: Annoyingly, we have no proper way of handling errors
-        // here.
-        let _ = sig.hashed_area().serialize(&mut hash as &mut dyn Write);
+        sig.hashed_area().serialize(&mut hash as &mut dyn Write)?;
 
         // A version 6 signature trailer is:
         //
@@ -788,22 +777,26 @@ impl Signature6 {
         trailer[2..6].copy_from_slice(&len.to_be_bytes());
 
         hash.update(&trailer[..]);
+
+        Ok(())
     }
 }
 
 impl Hash for signature::SignatureFields {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         match self.version() {
             3 => Signature3::hash_fields(hash, self),
             4 => Signature4::hash_fields(hash, self),
             6 => Signature6::hash_fields(hash, self),
-            _ => (),
+            n => Err(Error::InvalidOperation(format!(
+                "cannot hash a version {} signature packet", n)
+            ).into()),
         }
     }
 }
 
 impl Hash for signature::SignatureBuilder {
-    fn hash(&self, hash: &mut Context) {
+    fn hash(&self, hash: &mut Context) -> Result<()> {
         match self.sb_version {
             signature::SBVersion::V4 {} =>
                 Signature4::hash_fields(hash, &self.fields),
@@ -819,30 +812,56 @@ impl Hash for signature::SignatureBuilder {
 impl signature::SignatureBuilder {
     /// Hashes this standalone signature.
     pub fn hash_standalone(&self, hash: &mut Context)
+                           -> Result<()>
     {
+        match self.typ() {
+            SignatureType::Standalone => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        self.hash(hash);
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this timestamp signature.
     pub fn hash_timestamp(&self, hash: &mut Context)
+                          -> Result<()>
     {
-        self.hash_standalone(hash);
+        match self.typ() {
+            SignatureType::Timestamp => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
+
+        if let Some(salt) = self.prefix_salt() {
+            hash.update(salt);
+        }
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this direct key signature over the specified primary
     /// key, and the primary key.
     pub fn hash_direct_key<P>(&self, hash: &mut Context,
                               key: &Key<P, key::PrimaryRole>)
+                              -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::DirectKey => (),
+            SignatureType::KeyRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this subkey binding over the specified primary key and
@@ -850,15 +869,23 @@ impl signature::SignatureBuilder {
     pub fn hash_subkey_binding<P, Q>(&self, hash: &mut Context,
                                      key: &Key<P, key::PrimaryRole>,
                                      subkey: &Key<Q, key::SubordinateRole>)
+                                     -> Result<()>
         where P: key::KeyParts,
               Q: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::SubkeyBinding => (),
+            SignatureType::SubkeyRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        subkey.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        subkey.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this primary key binding over the specified primary key
@@ -866,13 +893,22 @@ impl signature::SignatureBuilder {
     pub fn hash_primary_key_binding<P, Q>(&self, hash: &mut Context,
                                           key: &Key<P, key::PrimaryRole>,
                                           subkey: &Key<Q, key::SubordinateRole>)
+                                          -> Result<()>
         where P: key::KeyParts,
               Q: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::PrimaryKeyBinding => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        self.hash_subkey_binding(hash, key, subkey);
+        key.hash(hash)?;
+        subkey.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this user ID binding over the specified primary key and
@@ -880,14 +916,25 @@ impl signature::SignatureBuilder {
     pub fn hash_userid_binding<P>(&self, hash: &mut Context,
                                   key: &Key<P, key::PrimaryRole>,
                                   userid: &UserID)
+                                  -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::GenericCertification => (),
+            SignatureType::PersonaCertification => (),
+            SignatureType::CasualCertification => (),
+            SignatureType::PositiveCertification => (),
+            SignatureType::CertificationRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        userid.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        userid.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this user attribute binding over the specified primary
@@ -898,14 +945,25 @@ impl signature::SignatureBuilder {
         hash: &mut Context,
         key: &Key<P, key::PrimaryRole>,
         ua: &UserAttribute)
+        -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::GenericCertification => (),
+            SignatureType::PersonaCertification => (),
+            SignatureType::CasualCertification => (),
+            SignatureType::PositiveCertification => (),
+            SignatureType::CertificationRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.prefix_salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        ua.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        ua.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 }
 
@@ -915,30 +973,55 @@ impl signature::SignatureBuilder {
 impl Signature {
     /// Hashes this standalone signature.
     pub fn hash_standalone(&self, hash: &mut Context)
+                           -> Result<()>
     {
+        match self.typ() {
+            SignatureType::Standalone => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        self.hash(hash);
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this timestamp signature.
     pub fn hash_timestamp(&self, hash: &mut Context)
+                          -> Result<()>
     {
-        self.hash_standalone(hash);
+        match self.typ() {
+            SignatureType::Timestamp => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
+        if let Some(salt) = self.salt() {
+            hash.update(salt);
+        }
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this direct key signature over the specified primary
     /// key, and the primary key.
     pub fn hash_direct_key<P>(&self, hash: &mut Context,
                               key: &Key<P, key::PrimaryRole>)
+                              -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::DirectKey => (),
+            SignatureType::KeyRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this subkey binding over the specified primary key and
@@ -946,15 +1029,23 @@ impl Signature {
     pub fn hash_subkey_binding<P, Q>(&self, hash: &mut Context,
                                      key: &Key<P, key::PrimaryRole>,
                                      subkey: &Key<Q, key::SubordinateRole>)
+                                     -> Result<()>
         where P: key::KeyParts,
               Q: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::SubkeyBinding => (),
+            SignatureType::SubkeyRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        subkey.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        subkey.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this primary key binding over the specified primary key
@@ -962,13 +1053,22 @@ impl Signature {
     pub fn hash_primary_key_binding<P, Q>(&self, hash: &mut Context,
                                           key: &Key<P, key::PrimaryRole>,
                                           subkey: &Key<Q, key::SubordinateRole>)
+                                          -> Result<()>
         where P: key::KeyParts,
               Q: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::PrimaryKeyBinding => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        self.hash_subkey_binding(hash, key, subkey);
+        key.hash(hash)?;
+        subkey.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this user ID binding over the specified primary key and
@@ -976,14 +1076,25 @@ impl Signature {
     pub fn hash_userid_binding<P>(&self, hash: &mut Context,
                                   key: &Key<P, key::PrimaryRole>,
                                   userid: &UserID)
+                                  -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::GenericCertification => (),
+            SignatureType::PersonaCertification => (),
+            SignatureType::CasualCertification => (),
+            SignatureType::PositiveCertification => (),
+            SignatureType::CertificationRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        userid.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        userid.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this user attribute binding over the specified primary
@@ -994,19 +1105,79 @@ impl Signature {
         hash: &mut Context,
         key: &Key<P, key::PrimaryRole>,
         ua: &UserAttribute)
+        -> Result<()>
         where P: key::KeyParts,
     {
+        match self.typ() {
+            SignatureType::GenericCertification => (),
+            SignatureType::PersonaCertification => (),
+            SignatureType::CasualCertification => (),
+            SignatureType::PositiveCertification => (),
+            SignatureType::CertificationRevocation => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
         if let Some(salt) = self.salt() {
             hash.update(salt);
         }
-        key.hash(hash);
-        ua.hash(hash);
-        self.hash(hash);
+        key.hash(hash)?;
+        ua.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
+    }
+
+    /// Hashes this user ID attestation over the specified primary key and
+    /// user ID, the primary key, and the userid.
+    pub fn hash_userid_attestation<P>(&self, hash: &mut Context,
+                                  key: &Key<P, key::PrimaryRole>,
+                                  userid: &UserID)
+                                  -> Result<()>
+        where P: key::KeyParts,
+    {
+        match self.typ() {
+            SignatureType::AttestationKey => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
+        if let Some(salt) = self.salt() {
+            hash.update(salt);
+        }
+        key.hash(hash)?;
+        userid.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
+    }
+
+    /// Hashes this user attribute attestation over the specified primary
+    /// key and user attribute, the primary key, and the user
+    /// attribute.
+    pub fn hash_user_attribute_attestation<P>(
+        &self,
+        hash: &mut Context,
+        key: &Key<P, key::PrimaryRole>,
+        ua: &UserAttribute)
+        -> Result<()>
+        where P: key::KeyParts,
+    {
+        match self.typ() {
+            SignatureType::AttestationKey => (),
+            _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
+        }
+
+        if let Some(salt) = self.salt() {
+            hash.update(salt);
+        }
+        key.hash(hash)?;
+        ua.hash(hash)?;
+        self.hash(hash)?;
+        Ok(())
     }
 
     /// Hashes this signature for use in a Third-Party Confirmation
     /// signature.
-    pub fn hash_for_confirmation(&self, hash: &mut Context) {
+    pub fn hash_for_confirmation(&self, hash: &mut Context)
+                                 -> Result<()>
+    {
         match self {
             Signature::V3(s) => s.hash_for_confirmation(hash),
             Signature::V4(s) => s.hash_for_confirmation(hash),
@@ -1021,7 +1192,9 @@ impl Signature {
 impl Signature4 {
     /// Hashes this signature for use in a Third-Party Confirmation
     /// signature.
-    pub fn hash_for_confirmation(&self, hash: &mut Context) {
+    pub fn hash_for_confirmation(&self, hash: &mut Context)
+                                 -> Result<()>
+    {
         use crate::serialize::{Marshal, MarshalInto};
         // Section 5.2.4 of RFC4880:
         //
@@ -1050,18 +1223,19 @@ impl Signature4 {
             .min(std::u16::MAX as usize);
         body.extend(&(l as u16).to_be_bytes());
          // Assumes well-formedness.
-        let _ = self.hashed_area().serialize(&mut body);
+        self.hashed_area().serialize(&mut body)?;
 
         // The unhashed area.
         body.extend(&[0, 0]); // Size replaced by zero.
         // Unhashed packets omitted.
 
         body.extend(self.digest_prefix());
-        let _ = self.mpis().serialize(&mut body);
+        self.mpis().serialize(&mut body)?;
 
         hash.update(&[0x88]);
         hash.update(&(body.len() as u32).to_be_bytes());
         hash.update(&body);
+        Ok(())
     }
 }
 
@@ -1082,7 +1256,7 @@ mod test {
                     selfsig.hash_userid_binding(
                         &mut hash,
                         cert.primary_key().key(),
-                        binding.userid());
+                        binding.userid()).unwrap();
                     let h = hash.into_digest().unwrap();
                     if &h[..2] != selfsig.digest_prefix() {
                         eprintln!("{:?}: {:?} / {:?}",
@@ -1103,7 +1277,7 @@ mod test {
                     selfsig.hash_user_attribute_binding(
                         &mut hash,
                         cert.primary_key().key(),
-                        a.user_attribute());
+                        a.user_attribute()).unwrap();
                     let h = hash.into_digest().unwrap();
                     if &h[..2] != selfsig.digest_prefix() {
                         eprintln!("{:?}: {:?} / {:?}",
@@ -1123,7 +1297,7 @@ mod test {
                     selfsig.hash_subkey_binding(
                         &mut hash,
                         cert.primary_key().key(),
-                        binding.key());
+                        binding.key()).unwrap();
                     let h = hash.into_digest().unwrap();
                     if &h[..2] != selfsig.digest_prefix() {
                         eprintln!("{:?}: {:?}", i, binding);

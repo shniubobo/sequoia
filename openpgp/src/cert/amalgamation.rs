@@ -1475,8 +1475,8 @@ impl<'a> UserIDAmalgamation<'a> {
         // Hash the components like in a binding signature.
         let mut hash = HashAlgorithm::default().context()?
             .for_signature(primary_signer.public().version());
-        self.cert().primary_key().hash(&mut hash);
-        self.userid().hash(&mut hash);
+        self.cert().primary_key().hash(&mut hash)?;
+        self.userid().hash(&mut hash)?;
 
         // Check if there is a previous attestation.  If so, we need
         // that to robustly override it.
@@ -1559,8 +1559,8 @@ impl<'a> UserAttributeAmalgamation<'a> {
         // Hash the components like in a binding signature.
         let mut hash = HashAlgorithm::default().context()?
             .for_signature(primary_signer.public().version());
-        self.cert().primary_key().hash(&mut hash);
-        self.user_attribute().hash(&mut hash);
+        self.cert().primary_key().hash(&mut hash)?;
+        self.user_attribute().hash(&mut hash)?;
 
         // Check if there is a previous attestation.  If so, we need
         // that to robustly override it.
@@ -1619,7 +1619,7 @@ where C: IntoIterator<Item = S>,
     for certification in certifications.into_iter() {
         let mut h = hash_algo.context()?
             .for_signature(primary_signer.public().version());
-        certification.borrow().hash_for_confirmation(&mut h);
+        certification.borrow().hash_for_confirmation(&mut h)?;
         attestations.push(h.into_digest()?);
     }
 
@@ -1825,7 +1825,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
             .filter_map(move |sig| {
                 let mut hash = hash_algo.and_then(|a| a.context().ok())?
                     .for_signature(sig.version());
-                sig.hash_for_confirmation(&mut hash);
+                sig.hash_for_confirmation(&mut hash).ok()?;
                 let digest = hash.into_digest().ok()?;
                 if digests.contains(&digest[..]) {
                     Some(sig)
@@ -1998,7 +1998,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
             .filter_map(move |sig| {
                 let mut hash = hash_algo.and_then(|a| a.context().ok())?
                     .for_signature(sig.version());
-                sig.hash_for_confirmation(&mut hash);
+                sig.hash_for_confirmation(&mut hash).ok()?;
                 let digest = hash.into_digest().ok()?;
                 if digests.contains(&digest[..]) {
                     Some(sig)

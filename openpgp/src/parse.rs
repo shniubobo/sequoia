@@ -1517,7 +1517,7 @@ impl Signature {
 
         if let Some((level, mut hash)) = computed_digest {
             if let Packet::Signature(ref mut sig) = pp.packet {
-                sig.hash(&mut hash);
+                sig.hash(&mut hash)?;
 
                 let mut digest = vec![0u8; hash.digest_size()];
                 let _ = hash.digest(&mut digest);
@@ -7360,7 +7360,7 @@ mod test {
             let mut message = Signer::with_template(
                 message, signing_keypair,
                 signature::SignatureBuilder::new(SignatureType::Text)
-            ).detached().build()?;
+            )?.detached().build()?;
             message.write_all(data)?;
             message.finalize()?;
         }

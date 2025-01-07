@@ -67,9 +67,9 @@ fn main() -> openpgp::Result<()> {
 
     // Now, create a signer that emits the signature(s).
     let mut signer =
-        Signer::new(message, keys.pop().context("No key for signing")?);
+        Signer::new(message, keys.pop().context("No key for signing")?)?;
     for s in keys {
-        signer = signer.add_signer(s);
+        signer = signer.add_signer(s)?;
     }
     let mut message = signer.build().context("Failed to create signer")?;
 

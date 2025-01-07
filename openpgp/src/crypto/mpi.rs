@@ -282,11 +282,12 @@ impl fmt::Debug for MPI {
 }
 
 impl Hash for MPI {
-    fn hash(&self, hash: &mut hash::Context) {
+    fn hash(&self, hash: &mut hash::Context) -> Result<()> {
         let len = self.bits() as u16;
 
         hash.update(&len.to_be_bytes());
         hash.update(&self.value);
+        Ok(())
     }
 }
 
@@ -671,9 +672,8 @@ impl PublicKey {
 }
 
 impl Hash for PublicKey {
-    fn hash(&self, mut hash: &mut hash::Context) {
+    fn hash(&self, mut hash: &mut hash::Context) -> Result<()> {
         self.serialize(&mut hash as &mut dyn Write)
-            .expect("hashing does not fail")
     }
 }
 
@@ -1014,9 +1014,8 @@ impl SecretKeyMaterial {
 }
 
 impl Hash for SecretKeyMaterial {
-    fn hash(&self, mut hash: &mut hash::Context) {
+    fn hash(&self, mut hash: &mut hash::Context) -> Result<()> {
         self.serialize(&mut hash as &mut dyn Write)
-            .expect("hashing does not fail")
     }
 }
 
@@ -1194,9 +1193,8 @@ impl Ciphertext {
 }
 
 impl Hash for Ciphertext {
-    fn hash(&self, mut hash: &mut hash::Context) {
+    fn hash(&self, mut hash: &mut hash::Context) -> Result<()> {
         self.serialize(&mut hash as &mut dyn Write)
-            .expect("hashing does not fail")
     }
 }
 
@@ -1319,9 +1317,8 @@ pub enum Signature {
 assert_send_and_sync!(Signature);
 
 impl Hash for Signature {
-    fn hash(&self, mut hash: &mut hash::Context) {
+    fn hash(&self, mut hash: &mut hash::Context) -> Result<()> {
         self.serialize(&mut hash as &mut dyn Write)
-            .expect("hashing does not fail")
     }
 }
 
