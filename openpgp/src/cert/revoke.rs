@@ -1,5 +1,4 @@
 use std::convert::TryFrom;
-use std::ops::Deref;
 use std::time;
 
 use crate::{
@@ -309,14 +308,6 @@ impl CertRevocationBuilder {
         self.builder
             .set_hash_algo(hash_algo.into().unwrap_or(HashAlgorithm::SHA512))
             .sign_direct_key(signer, cert.primary_key().key())
-    }
-}
-
-impl Deref for CertRevocationBuilder {
-    type Target = signature::SignatureBuilder;
-
-    fn deref(&self) -> &Self::Target {
-        &self.builder
     }
 }
 
@@ -631,14 +622,6 @@ impl SubkeyRevocationBuilder {
             .set_hash_algo(hash_algo.into().unwrap_or(HashAlgorithm::SHA512));
 
         key.bind(signer, cert, self.builder)
-    }
-}
-
-impl Deref for SubkeyRevocationBuilder {
-    type Target = signature::SignatureBuilder;
-
-    fn deref(&self) -> &Self::Target {
-        &self.builder
     }
 }
 
@@ -961,14 +944,6 @@ impl UserIDRevocationBuilder {
             .set_hash_algo(hash_algo.into().unwrap_or(HashAlgorithm::SHA512));
 
         userid.bind(signer, cert, self.builder)
-    }
-}
-
-impl Deref for UserIDRevocationBuilder {
-    type Target = signature::SignatureBuilder;
-
-    fn deref(&self) -> &Self::Target {
-        &self.builder
     }
 }
 
@@ -1305,14 +1280,6 @@ impl UserAttributeRevocationBuilder {
             .set_hash_algo(hash_algo.into().unwrap_or(HashAlgorithm::SHA512));
 
         ua.bind(signer, cert, self.builder)
-    }
-}
-
-impl Deref for UserAttributeRevocationBuilder {
-    type Target = signature::SignatureBuilder;
-
-    fn deref(&self) -> &Self::Target {
-        &self.builder
     }
 }
 

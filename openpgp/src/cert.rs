@@ -127,14 +127,12 @@
 //! [`Signature::verify_userid_revocation`]: crate::packet::Signature::verify_userid_revocation()
 //! [`Signature::verify_user_attribute_revocation`]: crate::packet::Signature::verify_user_attribute_revocation()
 
-use std::io;
 use std::collections::btree_map::BTreeMap;
 use std::collections::btree_map::Entry;
 use std::collections::hash_map::DefaultHasher;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::hash::Hasher;
-use std::path::Path;
 use std::mem;
 use std::fmt;
 use std::time;
@@ -669,37 +667,7 @@ impl<'a> Parse<'a, Cert> for Cert {
     where
         R: BufferedReader<Cookie> + 'a,
     {
-        Cert::try_from(PacketParser::from_buffered_reader(reader)?)
-    }
-
-    /// Parses and returns a certificate.
-    ///
-    /// The reader must return an OpenPGP-encoded certificate.
-    ///
-    /// If `reader` contains multiple certificates, this returns an
-    /// error.  Use [`CertParser`] if you want to parse a keyring.
-    fn from_reader<R: io::Read + Send + Sync>(reader: R) -> Result<Self> {
-        Cert::try_from(PacketParser::from_reader(reader)?)
-    }
-
-    /// Parses and returns a certificate.
-    ///
-    /// The file must contain an OpenPGP-encoded certificate.
-    ///
-    /// If the file contains multiple certificates, this returns an
-    /// error.  Use [`CertParser`] if you want to parse a keyring.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Cert::try_from(PacketParser::from_file(path)?)
-    }
-
-    /// Parses and returns a certificate.
-    ///
-    /// `buf` must contain an OpenPGP-encoded certificate.
-    ///
-    /// If `buf` contains multiple certificates, this returns an
-    /// error.  Use [`CertParser`] if you want to parse a keyring.
-    fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D) -> Result<Self> {
-        Cert::try_from(PacketParser::from_bytes(data)?)
+        Cert::try_from(PacketParser::from_buffered_reader(reader.into_boxed())?)
     }
 }
 
@@ -1091,7 +1059,7 @@ impl Cert {
     /// #
     /// # // Make sure that we keep all keys even if they don't have
     /// # // any self signatures.
-    /// # let packets = cert.into_packets2()
+    /// # let packets = cert.into_packets()
     /// #     .filter(|p| p.tag() != Tag::Signature)
     /// #     .collect::<Vec<_>>();
     /// # let cert : Cert = packets.try_into()?;
@@ -1256,76 +1224,6 @@ impl Cert {
     /// Converts the certificate into an iterator over a sequence of
     /// packets.
     ///
-    /// **WARNING**: When serializing a `Cert`, any secret key
-    /// material is dropped.  In order to serialize the secret key
-    /// material, it is first necessary to convert the `Cert` into a
-    /// [`TSK`] and serialize that.  This behavior makes it harder to
-    /// accidentally leak secret key material.  *This function is
-    /// different.* If a key contains secret key material, it is
-    /// exported as a [`SecretKey`] or [`SecretSubkey`], as
-    /// appropriate.  This means that **if you serialize the resulting
-    /// packets, the secret key material will be serialized too**.
-    ///
-    /// [`TSK`]: crate::serialize::TSK
-    /// [`SecretKey`]: Packet::SecretKey
-    /// [`SecretSubkey`]: Packet::SecretSubkey
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use sequoia_openpgp as openpgp;
-    /// # use openpgp::cert::prelude::*;
-    /// #
-    /// # fn main() -> openpgp::Result<()> {
-    /// # let (cert, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
-    /// #       .generate()?;
-    /// println!("Cert contains {} packets",
-    ///          cert.into_packets().count());
-    /// #     Ok(())
-    /// # }
-    /// ```
-    #[deprecated(
-        since = "1.18.0",
-        note = "Use Cert::into_packets2() to strip secret key material \
-                or cert.into_tsk().into_packets() to serialize any \
-                secret key material")]
-    pub fn into_packets(self) -> impl Iterator<Item=Packet> + Send + Sync {
-        fn rewrite(mut p: impl Iterator<Item=Packet> + Send + Sync)
-            -> impl Iterator<Item=Packet> + Send + Sync
-        {
-            let k: Packet = match p.next().unwrap() {
-                Packet::PublicKey(k) => {
-                    if k.has_secret() {
-                        Packet::SecretKey(k.parts_into_secret().unwrap())
-                    } else {
-                        Packet::PublicKey(k)
-                    }
-                }
-                Packet::PublicSubkey(k) => {
-                    if k.has_secret() {
-                        Packet::SecretSubkey(k.parts_into_secret().unwrap())
-                    } else {
-                        Packet::PublicSubkey(k)
-                    }
-                }
-                _ => unreachable!(),
-            };
-
-            std::iter::once(k).chain(p)
-        }
-
-        rewrite(self.primary.into_packets())
-            .chain(self.userids.into_iter().flat_map(|b| b.into_packets()))
-            .chain(self.user_attributes.into_iter().flat_map(|b| b.into_packets()))
-            .chain(self.subkeys.into_iter().flat_map(|b| rewrite(b.into_packets())))
-            .chain(self.unknowns.into_iter().flat_map(|b| b.into_packets()))
-            .chain(self.bad.into_iter().map(|s| s.into()))
-    }
-
-    /// Converts the certificate into an iterator over a sequence of
-    /// packets.
-    ///
     /// This function strips secrets from the keys, similar to how
     /// serializing a [`Cert`] would not serialize secret keys.  This
     /// behavior makes it harder to accidentally leak secret key
@@ -1348,10 +1246,10 @@ impl Cert {
     /// #       .generate()?;
     /// assert!(cert.is_tsk());
     /// // But:
-    /// assert!(! Cert::from_packets(cert.into_packets2())?.is_tsk());
+    /// assert!(! Cert::from_packets(cert.into_packets())?.is_tsk());
     /// # Ok(()) }
     /// ```
-    pub fn into_packets2(self) -> impl Iterator<Item=Packet> + Send + Sync {
+    pub fn into_packets(self) -> impl Iterator<Item=Packet> + Send + Sync {
         /// Strips the secret key material.
         fn rewrite(mut p: impl Iterator<Item=Packet> + Send + Sync)
             -> impl Iterator<Item=Packet> + Send + Sync
@@ -1401,7 +1299,7 @@ impl Cert {
     ///
     /// // We should be able to turn a certificate into a PacketPile
     /// // and back.
-    /// assert!(Cert::from_packets(cert.into_packets2()).is_ok());
+    /// assert!(Cert::from_packets(cert.into_packets()).is_ok());
     ///
     /// // But a revocation certificate is not a certificate, so this
     /// // will fail.
@@ -2426,7 +2324,7 @@ impl Cert {
     ///     },
     ///     false).expect("valid");
     ///
-    /// let mut cert_a = cert.clone().into_packets2().collect::<Vec<Packet>>();
+    /// let mut cert_a = cert.clone().into_packets().collect::<Vec<Packet>>();
     /// match cert_a[1] {
     ///     Packet::Signature(ref mut sig) => {
     ///         let unhashed_area = sig.unhashed_area_mut();
@@ -2438,7 +2336,7 @@ impl Cert {
     /// };
     /// let cert_a = Cert::try_from(cert_a).expect("valid");
     ///
-    /// let mut cert_b = cert.clone().into_packets2().collect::<Vec<Packet>>();
+    /// let mut cert_b = cert.clone().into_packets().collect::<Vec<Packet>>();
     /// match cert_b[1] {
     ///     Packet::Signature(ref mut sig) => {
     ///         let unhashed_area = sig.unhashed_area_mut();
@@ -2454,7 +2352,7 @@ impl Cert {
     /// // are merged:
     /// let merged = cert_a.clone().merge_public(cert_b.clone())
     ///     .expect("same certificate")
-    ///     .into_packets2()
+    ///     .into_packets()
     ///     .collect::<Vec<Packet>>();
     /// match merged[1] {
     ///     Packet::Signature(ref sig) => {
@@ -2469,7 +2367,7 @@ impl Cert {
     /// // packets are merged:
     /// let merged = cert_b.clone().merge_public(cert_a.clone())
     ///     .expect("same certificate")
-    ///     .into_packets2()
+    ///     .into_packets()
     ///     .collect::<Vec<Packet>>();
     /// match merged[1] {
     ///     Packet::Signature(ref sig) => {
@@ -2632,7 +2530,7 @@ impl Cert {
     ///     },
     ///     false).expect("valid");
     ///
-    /// let mut cert_a = cert.clone().into_packets2().collect::<Vec<Packet>>();
+    /// let mut cert_a = cert.clone().into_packets().collect::<Vec<Packet>>();
     /// match cert_a[1] {
     ///     Packet::Signature(ref mut sig) => {
     ///         let unhashed_area = sig.unhashed_area_mut();
@@ -2644,7 +2542,7 @@ impl Cert {
     /// };
     /// let cert_a = Cert::try_from(cert_a).expect("valid");
     ///
-    /// let mut cert_b = cert.clone().into_packets2().collect::<Vec<Packet>>();
+    /// let mut cert_b = cert.clone().into_packets().collect::<Vec<Packet>>();
     /// match cert_b[1] {
     ///     Packet::Signature(ref mut sig) => {
     ///         let unhashed_area = sig.unhashed_area_mut();
@@ -2660,7 +2558,7 @@ impl Cert {
     /// // are merged:
     /// let merged = cert_a.clone().merge_public_and_secret(cert_b.clone())
     ///     .expect("same certificate")
-    ///     .into_packets2()
+    ///     .into_packets()
     ///     .collect::<Vec<Packet>>();
     /// match merged[1] {
     ///     Packet::Signature(ref sig) => {
@@ -2675,7 +2573,7 @@ impl Cert {
     /// // packets are merged:
     /// let merged = cert_b.clone().merge_public_and_secret(cert_a.clone())
     ///     .expect("same certificate")
-    ///     .into_packets2()
+    ///     .into_packets()
     ///     .collect::<Vec<Packet>>();
     /// match merged[1] {
     ///     Packet::Signature(ref sig) => {
@@ -3545,11 +3443,11 @@ impl<'a> TSK<'a> {
     /// assert_eq!(a, b);
     /// # Ok(()) }
     /// ```
-    pub fn into_packets(self) -> impl Iterator<Item=Packet> + 'a {
+    pub fn into_packets(self) -> impl Iterator<Item=Packet> + Send + Sync + 'a {
         /// Strips the secret key material if the filter rejects it,
         /// and optionally inserts secret key stubs.
         fn rewrite<'a>(
-            filter: &Box<dyn Fn(&key::UnspecifiedSecret) -> bool + 'a>,
+            filter: &Box<dyn Fn(&key::UnspecifiedSecret) -> bool + Send + Sync + 'a>,
             emit_secret_key_stubs: bool,
             mut p: impl Iterator<Item=Packet> + Send + Sync)
             -> impl Iterator<Item=Packet> + Send + Sync
@@ -3693,69 +3591,6 @@ impl TryFrom<PacketPile> for Cert {
     /// ```
     fn try_from(p: PacketPile) -> Result<Self> {
         Self::from_packets(p.into_children())
-    }
-}
-
-impl From<Cert> for Vec<Packet> {
-    /// Converts the `Cert` into a `Vec<Packet>`.
-    ///
-    /// If any packets include secret key material, that secret key
-    /// material is included in the resulting `Vec<Packet>`.  In
-    /// contrast, when serializing a `Cert`, or converting a cert to
-    /// packets with [`Cert::into_packets2`], the secret key material
-    /// not included.
-    ///
-    /// Note: This will change in sequoia-openpgp version 2, which
-    /// will harmonize the behavior and not include secret key
-    /// material.
-    // XXXv2: Drop the note in the doc comment and mentioned it in the
-    // release notes.
-    fn from(cert: Cert) -> Self {
-        #[allow(deprecated)]
-        cert.into_packets().collect::<Vec<_>>()
-    }
-}
-
-/// An iterator that moves out of a `Cert`.
-///
-/// This structure is created by the `into_iter` method on [`Cert`]
-/// (provided by the [`IntoIterator`] trait).
-///
-/// [`IntoIterator`]: std::iter::IntoIterator
-// We can't use a generic type, and due to the use of closures, we
-// can't write down the concrete type.  So, just use a Box.
-pub struct IntoIter(Box<dyn Iterator<Item=Packet> + Send + Sync>);
-assert_send_and_sync!(IntoIter);
-
-impl Iterator for IntoIter {
-    type Item = Packet;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.next()
-    }
-}
-
-impl IntoIterator for Cert
-{
-    type Item = Packet;
-    type IntoIter = IntoIter;
-
-    /// Converts the `Cert` into an iterator over `Packet`s.
-    ///
-    /// If any packets include secret key material, that secret key
-    /// material is included in the resulting iterator.  In contrast,
-    /// when serializing a `Cert`, or converting a cert to packets
-    /// with [`Cert::into_packets2`], the secret key material not
-    /// included.
-    ///
-    /// Note: This will change in sequoia-openpgp version 2, which
-    /// will harmonize the behavior and not include secret key
-    /// material.
-    // XXXv2: Drop the note in the doc comment and mentioned it in the
-    // release notes.
-    fn into_iter(self) -> Self::IntoIter {
-        #[allow(deprecated)]
-        IntoIter(Box::new(self.into_packets()))
     }
 }
 
@@ -4878,16 +4713,16 @@ mod test {
         // v3 primary keys are not supported.
 
         let cert = Cert::from_bytes(crate::tests::key("john-v3.pgp"));
-        assert_match!(Error::UnsupportedCert2(..)
+        assert_match!(Error::UnsupportedCert(..)
                       = cert.err().unwrap().downcast::<Error>().unwrap());
 
         let cert = Cert::from_bytes(crate::tests::key("john-v3-secret.pgp"));
-        assert_match!(Error::UnsupportedCert2(..)
+        assert_match!(Error::UnsupportedCert(..)
                       = cert.err().unwrap().downcast::<Error>().unwrap());
 
         // Lutz's key is a v3 key.
         let cert = Cert::from_bytes(crate::tests::key("lutz.gpg"));
-        assert_match!(Error::UnsupportedCert2(..)
+        assert_match!(Error::UnsupportedCert(..)
                       = cert.err().unwrap().downcast::<Error>().unwrap());
 
         // v3 certifications are not supported
@@ -5025,9 +4860,9 @@ mod test {
         assert_eq!(rev.len(), 1);
         assert_eq!(rev[0].tag(), Tag::Signature);
 
-        let packets_pre_merge = cert.clone().into_packets2().count();
+        let packets_pre_merge = cert.clone().into_packets().count();
         let cert = cert.insert_packets(rev).unwrap();
-        let packets_post_merge = cert.clone().into_packets2().count();
+        let packets_post_merge = cert.clone().into_packets().count();
         assert_eq!(packets_post_merge, packets_pre_merge + 1);
     }
 
@@ -5040,7 +4875,7 @@ mod test {
 
         let (cert, _) = CertBuilder::general_purpose(None, Some("Test"))
             .generate()?;
-        let packets = cert.clone().into_packets2().count();
+        let packets = cert.clone().into_packets().count();
 
         // Merge a signature with different unhashed subpacket areas.
         // Make sure only the last variant is merged.
@@ -5066,14 +4901,14 @@ mod test {
         let mut sigs = cert2.primary_key().self_signatures();
         assert_eq!(sigs.next(), Some(&sig_a));
         assert!(sigs.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert sig_b, make sure it (and it alone) appears.
         let cert2 = cert.clone().insert_packets(sig_b.clone())?;
         let mut sigs = cert2.primary_key().self_signatures();
         assert_eq!(sigs.next(), Some(&sig_b));
         assert!(sigs.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert sig_a and sig_b.  Make sure sig_b (and it alone)
         // appears.
@@ -5082,7 +4917,7 @@ mod test {
         let mut sigs = cert2.primary_key().self_signatures();
         assert_eq!(sigs.next(), Some(&sig_b));
         assert!(sigs.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert sig_b and sig_a.  Make sure sig_a (and it alone)
         // appears.
@@ -5091,7 +4926,7 @@ mod test {
         let mut sigs = cert2.primary_key().self_signatures();
         assert_eq!(sigs.next(), Some(&sig_a));
         assert!(sigs.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         Ok(())
     }
@@ -5100,7 +4935,7 @@ mod test {
     fn insert_packets_add_userid() -> Result<()> {
         let (cert, _) = CertBuilder::general_purpose(None, Some("a"))
             .generate()?;
-        let packets = cert.clone().into_packets2().count();
+        let packets = cert.clone().into_packets().count();
 
         let uid_a = UserID::from("a");
         let uid_b = UserID::from("b");
@@ -5110,7 +4945,7 @@ mod test {
         let mut uids = cert2.userids();
         assert_eq!(uids.next().unwrap().userid(), &uid_a);
         assert!(uids.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert b, make sure it also appears.
         let cert2 = cert.clone().insert_packets(uid_b.clone())?;
@@ -5121,7 +4956,7 @@ mod test {
         assert_eq!(uids.next().unwrap(), &uid_a);
         assert_eq!(uids.next().unwrap(), &uid_b);
         assert!(uids.next().is_none());
-        assert_eq!(cert2.clone().into_packets2().count(), packets + 1);
+        assert_eq!(cert2.clone().into_packets().count(), packets + 1);
 
         Ok(())
     }
@@ -5131,7 +4966,7 @@ mod test {
         use crate::crypto::Password;
 
         let (cert, _) = CertBuilder::new().generate()?;
-        let packets = cert.clone().into_packets2().count();
+        let packets = cert.clone().into_packets().count();
         assert_eq!(cert.keys().count(), 1);
 
         let key = cert.keys().secret().next().unwrap().key()
@@ -5144,27 +4979,27 @@ mod test {
         let cert2 = cert.clone().insert_packets(key_a.clone())?;
         assert_eq!(cert2.primary_key().key().parts_as_secret().unwrap(),
                    &key_a);
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert variant b.
         let cert2 = cert.clone().insert_packets(key_b.clone())?;
         assert_eq!(cert2.primary_key().key().parts_as_secret().unwrap(),
                    &key_b);
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert variant a then b.  We should keep b.
         let cert2 = cert.clone().insert_packets(
             vec![ key_a.clone(), key_b.clone() ])?;
         assert_eq!(cert2.primary_key().key().parts_as_secret().unwrap(),
                    &key_b);
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         // Insert variant b then a.  We should keep a.
         let cert2 = cert.clone().insert_packets(
             vec![ key_b.clone(), key_a.clone() ])?;
         assert_eq!(cert2.primary_key().key().parts_as_secret().unwrap(),
                    &key_a);
-        assert_eq!(cert2.clone().into_packets2().count(), packets);
+        assert_eq!(cert2.clone().into_packets().count(), packets);
 
         Ok(())
     }
@@ -6415,14 +6250,14 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         Ok(())
     }
 
-    /// Tests that Cert:.into_packets2() and Cert::serialize(..) agree.
+    /// Tests that Cert:.into_packets() and Cert::serialize(..) agree.
     #[test]
-    fn test_into_packets2() -> Result<()> {
+    fn test_into_packets() -> Result<()> {
         use crate::serialize::SerializeInto;
 
         let dkg = Cert::from_bytes(crate::tests::key("dkg.gpg"))?;
         let mut buf = Vec::new();
-        for p in dkg.clone().into_packets2() {
+        for p in dkg.clone().into_packets() {
             p.serialize(&mut buf)?;
         }
         let dkg = dkg.to_vec()?;

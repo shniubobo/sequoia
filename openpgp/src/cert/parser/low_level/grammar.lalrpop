@@ -98,7 +98,7 @@ pub Cert: Option<Cert> = {
                     }
                 }
                 Err(ParseError::User {
-                    error: Error::UnsupportedCert2(
+                    error: Error::UnsupportedCert(
                         format!("Unsupported primary key: {}", msg),
                         packets),
                 })

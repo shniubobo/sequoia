@@ -1,7 +1,6 @@
 use std::io;
 use std::mem;
 use std::vec;
-use std::path::Path;
 
 use buffered_reader::BufferedReader;
 use lalrpop_util::ParseError;
@@ -482,10 +481,10 @@ impl CertValidator {
 ///       .generate()?;
 ///
 /// let mut packets : Vec<Packet> = Vec::new();
-/// packets.extend(alice.clone());
+/// packets.extend(alice.clone().into_packets());
 /// packets.push(lit.clone().into());
 /// packets.push(lit.clone().into());
-/// packets.extend(bob.clone());
+/// packets.extend(bob.clone().into_packets());
 ///
 /// let r : Vec<Result<Cert>> = CertParser::from(packets).collect();
 /// assert_eq!(r.len(), 4);
@@ -601,22 +600,7 @@ impl<'a> Parse<'a, CertParser<'a>> for CertParser<'a>
     where
         R: BufferedReader<Cookie> + 'a,
     {
-        Ok(Self::from(PacketParser::from_buffered_reader(reader)?))
-    }
-
-    /// Initializes a `CertParser` from a `Read`er.
-    fn from_reader<R: 'a + io::Read + Send + Sync>(reader: R) -> Result<Self> {
-        Ok(Self::from(PacketParser::from_reader(reader)?))
-    }
-
-    /// Initializes a `CertParser` from a `File`.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Ok(Self::from(PacketParser::from_file(path)?))
-    }
-
-    /// Initializes a `CertParser` from a byte string.
-    fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D) -> Result<Self> {
-        Ok(Self::from(PacketParser::from_bytes(data)?))
+        Ok(Self::from(PacketParser::from_buffered_reader(reader.into_boxed())?))
     }
 }
 
@@ -868,7 +852,7 @@ impl<'a> CertParser<'a> {
         if failed {
             // There was at least one packet that doesn't belong in a
             // Cert.  Fail now.
-            let err = Error::UnsupportedCert2(
+            let err = Error::UnsupportedCert(
                 "Packet sequence includes non-Cert packets.".into(),
                 packets);
             t!("Invalid certificate: {}", err);
@@ -1326,7 +1310,8 @@ mod test {
 
         fn cert_cmp(a: &Result<Cert>, b: &Vec<Packet>)
         {
-            let a : Vec<Packet> = a.as_ref().unwrap().clone().into();
+            let a =
+                a.as_ref().unwrap().clone().into_packets().collect::<Vec<_>>();
 
             for (i, (a, b)) in a.iter().zip(b).enumerate() {
                 if a != b {
@@ -1343,7 +1328,7 @@ mod test {
         let (cert, _) =
             CertBuilder::general_purpose(None, Some("alice@example.org"))
             .generate()?;
-        let cert : Vec<Packet> = cert.into();
+        let cert = cert.into_packets().collect::<Vec<_>>();
 
         // A userid packet.
         let userid : Packet = cert.clone()
@@ -1828,7 +1813,7 @@ mod test {
                 None, Some("a@example.org"))
             .generate()?;
         let cert_1_packets: Vec<Packet>
-            = cert_1.into_packets2().collect();
+            = cert_1.into_packets().collect();
 
         let (cert_2, _) =
             CertBuilder::general_purpose(

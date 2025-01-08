@@ -8,14 +8,13 @@ use anyhow::Context;
 use buffered_reader::BufferedReader;
 
 use openpgp::cert::Cert;
-use openpgp::parse::Parse;
+use openpgp::parse::{Cookie, Parse};
 use openpgp::types::HashAlgorithm::SHA1;
 use openpgp::Result;
 use sequoia_openpgp as openpgp;
 
 use std::convert::TryInto;
 use std::fmt::Display;
-use std::io::Read;
 
 /// GnuPG Keybox
 ///
@@ -76,11 +75,13 @@ impl<'a> Keybox<'a> {
 }
 
 impl<'a> Parse<'a, Keybox<'a>> for Keybox<'a> {
-    fn from_reader<R: 'a + Read + Send + Sync>(reader: R) -> Result<Self> {
-        let bio = buffered_reader::Generic::new(reader, None);
+    fn from_buffered_reader<R>(reader: R) -> Result<Self>
+    where
+        R: BufferedReader<Cookie> + 'a,
+    {
         Ok(Keybox {
             offset: 0,
-            reader: Box::new(bio),
+            reader: buffered_reader::Adapter::new(reader).into_boxed(),
         })
     }
 }

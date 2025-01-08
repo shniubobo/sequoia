@@ -2343,10 +2343,12 @@ mod test {
             reader.read_to_end(&mut buf)?;
 
             let message = crate::Message::from_bytes(&buf)?;
-            assert_eq!(message.children().count(), 3);
+            assert_eq!(message.packets().children().count(), 3);
 
             // First, an one-pass-signature packet.
-            if let Some(Packet::OnePassSig(ops)) = message.path_ref(&[0]) {
+            if let Some(Packet::OnePassSig(ops)) =
+                message.packets().path_ref(&[0])
+            {
                 assert_eq!(ops.hash_algo(), hash);
             } else {
                 panic!("expected an OPS packet");
@@ -2356,7 +2358,9 @@ mod test {
             assert_eq!(message.body().unwrap().body(), reference.as_ref());
 
             // And, the signature.
-            if let Some(Packet::Signature(sig)) = message.path_ref(&[2]) {
+            if let Some(Packet::Signature(sig)) =
+                message.packets().path_ref(&[2])
+            {
                 assert_eq!(sig.hash_algo(), hash);
             } else {
                 panic!("expected an signature packet");

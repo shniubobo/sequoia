@@ -10,7 +10,6 @@ use anyhow::Context;
 use sequoia_openpgp as openpgp;
 
 use openpgp::*;
-use openpgp::cert::prelude::*;
 use openpgp::crypto::{KeyPair, SessionKey};
 use openpgp::types::SymmetricAlgorithm;
 use openpgp::parse::{

@@ -453,7 +453,7 @@ impl AutocryptSetupMessage {
 
 
     // Generates a new passcode in "numeric9x4" format.
-    fn passcode_gen() -> Password {
+    fn passcode_gen() -> Result<Password> {
         use openpgp::crypto::mem;
         // Generate a random passcode.
 
@@ -461,7 +461,7 @@ impl AutocryptSetupMessage {
         // approximately 119 bits of information.  120 bits = 15
         // bytes.
         let mut p_as_vec = mem::Protected::from(vec![0; 15]);
-        openpgp::crypto::random(&mut p_as_vec[..]);
+        openpgp::crypto::random(&mut p_as_vec[..])?;
 
         // Turn it into a 128-bit number.
         let mut p_as_u128 = 0u128;
@@ -480,21 +480,22 @@ impl AutocryptSetupMessage {
             p_as_u128 /= 10;
         }
 
-        p.into()
+        Ok(p.into())
     }
 
     /// If there is no passcode, generates one.
-    fn passcode_ensure(&mut self) {
+    fn passcode_ensure(&mut self) -> Result<()> {
         if self.passcode.is_some() {
-            return;
+            return Ok(());
         }
 
-        let passcode = Self::passcode_gen();
+        let passcode = Self::passcode_gen()?;
         self.passcode_format = Some("numeric9x4".into());
         self.passcode_begin = passcode.map(|p| {
             Some(str::from_utf8(&p[..2]).unwrap().into())
         });
         self.passcode = Some(passcode);
+        Ok(())
     }
 
     /// Generates the Autocrypt Setup Message.
@@ -508,7 +509,7 @@ impl AutocryptSetupMessage {
         // SEIP packet contains a literal data packet whose content is
         // the inner message.
 
-        self.passcode_ensure();
+        self.passcode_ensure()?;
 
         let mut headers : Vec<(&str, &str)> = Vec::new();
         if let Some(ref format) = self.passcode_format {
@@ -953,7 +954,7 @@ mod test {
         let passcode_len = 36 + (36 / 4 - 1);
 
         for _ in 0..samples {
-            let p = AutocryptSetupMessage::passcode_gen();
+            let p = AutocryptSetupMessage::passcode_gen().unwrap();
             p.map(|p| {
                 assert_eq!(p.len(), passcode_len);
 

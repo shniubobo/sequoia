@@ -23,8 +23,6 @@
 
 use std::convert::TryFrom;
 use std::fmt;
-use std::io;
-use std::path::Path;
 
 use buffered_reader::BufferedReader;
 
@@ -362,34 +360,7 @@ impl<'a> Parse<'a, Message> for Message {
     where
         R: BufferedReader<Cookie> + 'a,
     {
-        Self::try_from(PacketPile::from_buffered_reader(reader)?)
-    }
-
-    /// Reads a `Message` from the specified reader.
-    ///
-    /// See [`Message::try_from`] for more details.
-    ///
-    ///   [`Message::try_from`]: Message::try_from()
-    fn from_reader<R: 'a + io::Read + Send + Sync>(reader: R) -> Result<Self> {
-        Self::try_from(PacketPile::from_reader(reader)?)
-    }
-
-    /// Reads a `Message` from the specified file.
-    ///
-    /// See [`Message::try_from`] for more details.
-    ///
-    ///   [`Message::try_from`]: Message::try_from()
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        Self::try_from(PacketPile::from_file(path)?)
-    }
-
-    /// Reads a `Message` from `buf`.
-    ///
-    /// See [`Message::try_from`] for more details.
-    ///
-    ///   [`Message::try_from`]: Message::try_from()
-    fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D) -> Result<Self> {
-        Self::try_from(PacketPile::from_bytes(data)?)
+        Self::try_from(PacketPile::from_buffered_reader(reader.into_boxed())?)
     }
 }
 
@@ -440,6 +411,11 @@ impl Message {
 
         // No literal data packet found.
         None
+    }
+
+    /// Returns a reference to the message's packets.
+    pub fn packets(&self) -> &PacketPile {
+        &self.pile
     }
 }
 
@@ -515,14 +491,6 @@ impl TryFrom<Vec<Packet>> for Message {
 impl From<Message> for PacketPile {
     fn from(m: Message) -> Self {
         m.pile
-    }
-}
-
-impl ::std::ops::Deref for Message {
-    type Target = PacketPile;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pile
     }
 }
 

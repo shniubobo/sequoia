@@ -6,14 +6,13 @@
 //! [S-Expressions]: https://people.csail.mit.edu/rivest/Sexp.txt
 
 use std::cmp;
-use std::io::{Read, Write};
-use std::path::Path;
+use std::io::Write;
 use std::rc::Rc;
 
 use buffered_reader::{self, BufferedReader};
 use lalrpop_util::{lalrpop_mod, ParseError};
 use sequoia_openpgp as openpgp;
-use openpgp::parse::Parse;
+use openpgp::parse::{Cookie, Parse};
 
 use openpgp::Error;
 use crate::Result;
@@ -31,14 +30,11 @@ lalrpop_mod!(
 );
 
 impl<'a> Parse<'a, Sexp> for Sexp {
-    fn from_reader<R: 'a + Read + Send + Sync>(reader: R) -> Result<Sexp> {
-        Self::from_bytes(
-            buffered_reader::Generic::new(reader, None).data_eof()?)
-    }
-
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Sexp> {
-        Self::from_bytes(
-            buffered_reader::File::open(path)?.data_eof()?)
+    fn from_buffered_reader<R>(mut reader: R) -> Result<Self>
+    where
+        R: BufferedReader<Cookie> + 'a,
+    {
+        Self::from_bytes(reader.data_eof()?)
     }
 
     fn from_bytes<D: AsRef<[u8]> + ?Sized>(data: &'a D) -> Result<Sexp> {

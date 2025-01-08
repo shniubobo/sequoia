@@ -1531,7 +1531,7 @@ impl<'a, P, R, R2> ValidAmalgamation<'a, Key<P, R>>
           R2: Copy,
           Self: PrimaryKey<'a, P, R>,
 {
-    fn cert(&self) -> &ValidCert<'a> {
+    fn valid_cert(&self) -> &ValidCert<'a> {
         assert!(std::ptr::eq(self.ka.cert(), self.cert.cert()));
         &self.cert
     }
@@ -1668,7 +1668,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     {
         if ! self.primary() {
             // First, check the certificate.
-            self.cert().alive()
+            self.valid_cert().alive()
                 .context("The certificate is not live")?;
         }
 
@@ -2078,7 +2078,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
             // userid.  We need to be careful not to change the
             // primary userid, so we make it explicit using the
             // primary userid subpacket.
-            for userid in self.cert().userids().revoked(false) {
+            for userid in self.valid_cert().userids().revoked(false) {
                 // To extend the validity of the subkey, create a new
                 // binding signature with updated key validity period.
                 let binding_signature = userid.binding_signature();
@@ -2087,7 +2087,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
                     .set_signature_creation_time(now)?
                     .set_key_validity_period(expiration)?
                     .set_primary_userid(
-                        self.cert().primary_userid().map(|primary| {
+                        self.valid_cert().primary_userid().map(|primary| {
                             userid.userid() == primary.userid()
                         }).unwrap_or(false))?;
 
@@ -2850,8 +2850,8 @@ mod test {
             .generate()?;
 
         // Remove the direct key signatures.
-        let cert = Cert::from_packets(Vec::from(cert)
-            .into_iter()
+        let cert = Cert::from_packets(
+            cert.as_tsk().into_packets()
             .filter(|p| ! matches!(
                         p,
                         Packet::Signature(s) if s.typ() == SignatureType::DirectKey

@@ -959,7 +959,7 @@ where
     fn from(ka: ValidErasedKeyAmalgamation<'a, P>) -> SubkeyBuilder<'a> {
         let key = ka.key().clone().role_into_subordinate();
         SubkeyBuilder::new_with(
-            ka.cert().clone(), key, ka.binding_signature().clone())
+            ka.valid_cert().clone(), key, ka.binding_signature().clone())
     }
 }
 

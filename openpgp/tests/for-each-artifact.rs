@@ -141,18 +141,18 @@ mod for_each_artifact {
             assert_eq!(v, w,
                        "Serialize and SerializeInto disagree on {:?}", p);
 
-            // Check that Cert::into_packets2() and Cert::to_vec()
-            // agree.  (Cert::into_packets2() returns no secret keys if
+            // Check that Cert::into_packets() and Cert::to_vec()
+            // agree.  (Cert::into_packets() returns no secret keys if
             // secret key material is present; Cert::to_vec only ever
             // returns public keys.)
             let v = p.to_vec()?;
             let mut buf = Vec::new();
-            for p in p.clone().into_packets2() {
+            for p in p.clone().into_packets() {
                 p.serialize(&mut buf)?;
             }
             if let Err(_err) = diff_serialized(&buf, &v) {
                 panic!("Checking that \
-                        Cert::into_packets2() \
+                        Cert::into_packets() \
                         and Cert::to_vec() agree.");
             }
 
@@ -185,12 +185,11 @@ mod for_each_artifact {
                         and Cert::to_vec() agree.");
             }
 
-            // Check that Cert::into_packets() and
+            // Check that TSK::into_packets() and
             // Cert::as_tsk().to_vec() agree.
             let v = p.as_tsk().to_vec()?;
             let mut buf = Vec::new();
-            #[allow(deprecated)]
-            for p in p.into_packets() {
+            for p in p.as_tsk().into_packets() {
                 p.serialize(&mut buf)?;
             }
             if let Err(_err) = diff_serialized(&buf, &v) {

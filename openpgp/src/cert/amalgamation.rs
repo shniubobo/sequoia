@@ -419,7 +419,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # use openpgp::policy::StandardPolicy;
     /// #
     /// fn f(ua: &ValidUserIDAmalgamation) {
-    ///     let cert = ua.cert();
+    ///     let vcert = ua.valid_cert();
     ///     // ...
     /// }
     /// # fn main() -> openpgp::Result<()> {
@@ -434,7 +434,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// #     Ok(())
     /// # }
     /// ```
-    fn cert(&self) -> &ValidCert<'a>;
+    fn valid_cert(&self) -> &ValidCert<'a>;
 
     /// Returns the amalgamation's reference time.
     ///
@@ -552,7 +552,8 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # }
     /// ```
     fn direct_key_signature(&self) -> Result<&'a Signature> {
-        self.cert().cert.primary.binding_signature(self.policy(), self.time())
+        self.valid_cert().cert().primary_key()
+            .binding_signature(self.policy(), self.time())
     }
 
     /// Returns the component's revocation status as of the amalgamation's
@@ -2303,7 +2304,7 @@ impl<'a, C> ValidateAmalgamation<'a, C> for ValidComponentAmalgamation<'a, C> {
 }
 
 impl<'a, C> ValidAmalgamation<'a, C> for ValidComponentAmalgamation<'a, C> {
-    fn cert(&self) -> &ValidCert<'a> {
+    fn valid_cert(&self) -> &ValidCert<'a> {
         assert!(std::ptr::eq(self.ca.cert(), self.cert.cert()));
         &self.cert
     }

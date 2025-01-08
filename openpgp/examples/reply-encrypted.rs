@@ -49,7 +49,6 @@ use anyhow::Context;
 use sequoia_openpgp as openpgp;
 
 use openpgp::{KeyID, Fingerprint};
-use openpgp::cert::prelude::*;
 use openpgp::packet::prelude::*;
 use openpgp::crypto::{KeyPair, SessionKey};
 use openpgp::types::SymmetricAlgorithm;

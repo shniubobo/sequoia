@@ -1,8 +1,6 @@
 use std::convert::TryFrom;
 use std::fmt;
 use std::vec;
-use std::io;
-use std::path::Path;
 use std::iter::FromIterator;
 use std::iter::IntoIterator;
 
@@ -123,17 +121,6 @@ impl<'a> Parse<'a, PacketPile> for PacketPile {
     /// Deserializes the OpenPGP message stored in the file named by
     /// `path`.
     ///
-    /// See `from_reader` for more details and caveats.
-    fn from_buffered_reader<R>(reader: R) -> Result<PacketPile>
-    where
-        R: BufferedReader<Cookie> + 'a,
-    {
-        PacketPile::from_cookie_reader(reader.into_boxed())
-    }
-
-    /// Deserializes the OpenPGP message stored in a `std::io::Read`
-    /// object.
-    ///
     /// Although this method is easier to use to parse a sequence of
     /// OpenPGP packets than a [`PacketParser`] or a
     /// [`PacketPileParser`], this interface buffers the whole message
@@ -144,28 +131,11 @@ impl<'a> Parse<'a, PacketPile> for PacketPile {
     ///
     ///   [`PacketParser`]: crate::parse::PacketParser
     ///   [`PacketPileParser`]: crate::parse::PacketPileParser
-    fn from_reader<R: 'a + io::Read + Send + Sync>(reader: R) -> Result<PacketPile> {
-        let bio = buffered_reader::Generic::with_cookie(
-            reader, None, Cookie::default());
-        PacketPile::from_cookie_reader(Box::new(bio))
-    }
-
-    /// Deserializes the OpenPGP message stored in the file named by
-    /// `path`.
-    ///
-    /// See `from_reader` for more details and caveats.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<PacketPile> {
-        PacketPile::from_cookie_reader(
-            Box::new(buffered_reader::File::with_cookie(path, Cookie::default())?))
-    }
-
-    /// Deserializes the OpenPGP message stored in the provided buffer.
-    ///
-    /// See `from_reader` for more details and caveats.
-    fn from_bytes<D: AsRef<[u8]> + ?Sized>(data: &'a D) -> Result<PacketPile> {
-        let bio = buffered_reader::Memory::with_cookie(
-            data.as_ref(), Cookie::default());
-        PacketPile::from_cookie_reader(Box::new(bio))
+    fn from_buffered_reader<R>(reader: R) -> Result<PacketPile>
+    where
+        R: BufferedReader<Cookie> + 'a,
+    {
+        PacketPile::from_cookie_reader(reader.into_boxed())
     }
 }
 
@@ -529,7 +499,7 @@ impl From<Cert> for PacketPile {
     /// If any packets include secret key material, that secret key
     /// material is included in the resulting `PacketPile`.  In
     /// contrast, when serializing a `Cert`, or converting a cert to
-    /// packets with [`Cert::into_packets2`], the secret key material
+    /// packets with [`Cert::into_packets`], the secret key material
     /// not included.
     ///
     /// Note: This will change in sequoia-openpgp version 2, which

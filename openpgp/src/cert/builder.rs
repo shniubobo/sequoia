@@ -2044,7 +2044,7 @@ mod tests {
     #[test]
     fn primary_user_things() -> Result<()> {
         fn count_primary_user_things(c: Cert) -> usize {
-            c.into_packets2().map(|p| match p {
+            c.into_packets().map(|p| match p {
                 Packet::Signature(s) if s.primary_userid().unwrap_or(false)
                     => 1,
                 _ => 0,

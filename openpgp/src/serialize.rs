@@ -133,7 +133,6 @@
 use std::io::{self, Write};
 use std::cmp;
 use std::convert::{TryFrom, TryInto};
-use std::ops::Deref;
 
 use super::*;
 
@@ -3663,22 +3662,22 @@ impl seal::Sealed for Message {}
 impl Marshal for Message {
     /// Writes a serialized version of the specified `Message` to `o`.
     fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
-        (self.deref() as &dyn Marshal).serialize(o)
+        Marshal::serialize(self.packets(), o)
     }
 }
 
 impl SerializeInto for Message {}
 impl MarshalInto for Message {
     fn serialized_len(&self) -> usize {
-        (self.deref() as &dyn MarshalInto).serialized_len()
+        MarshalInto::serialized_len(self.packets())
     }
 
     fn serialize_into(&self, buf: &mut [u8]) -> Result<usize> {
-        (self.deref() as &dyn MarshalInto).serialize_into(buf)
+        MarshalInto::serialize_into(self.packets(), buf)
     }
 
     fn export_into(&self, buf: &mut [u8]) -> Result<usize> {
-        (self.deref() as &dyn MarshalInto).export_into(buf)
+        MarshalInto::export_into(self.packets(), buf)
     }
 }
 

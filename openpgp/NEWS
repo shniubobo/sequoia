@@ -42,10 +42,25 @@
      error if that set ever gets empty
    - stream::Signer::hash_algo now returns an error if the given
      algorithm is not acceptable for the set of signers
+   - Error::UnsupportedCert2 renamed to Error::UnsupportedCert
+   - TSK::set_filter now requires the filter to be Send + Sync
+   - TSK::into_packets now returns an iterator that is Send + Sync
+   - Cert no longer implements conversion into Vec<Packet>
+   - Cert no longer implements IntoIterator
+   - Cert::into_packets2 renamed to Cert::into_packets
+   - ValidAmalgamation::cert renamed to ValidAmalgamation::valid_cert
+   - Message no longer derefs to PacketPile, use Message::packets
+   - CertRevocationBuilder no longer derefs to SignatureBuilder
+   - SubkeyRevocationBuilder no longer derefs to SignatureBuilder
+   - UserIDRevocationBuilder no longer derefs to SignatureBuilder
+   - UserAttributeRevocationBuilder no longer derefs to SignatureBuilder
+   - Parse::from_buffered_reader is now mandatory
+   - Parse::from_reader is no longer mandatory
 
 ** New functionality
    - Signature::hash_userid_attestation
    - Signature::hash_user_attribute_attestation
+   - Message::packets
 
 * Changes in 2.0.0.alpha.0
   The major new feature is the support for RFC9580, which modernizes

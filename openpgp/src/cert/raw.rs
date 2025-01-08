@@ -68,10 +68,8 @@
 use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fmt;
-use std::io::Read;
-use std::path::Path;
 
-use buffered_reader::{BufferedReader, Dup, EOF, File, Generic, Memory};
+use buffered_reader::{BufferedReader, Dup, EOF, Memory};
 
 use crate::Fingerprint;
 use crate::KeyID;
@@ -456,26 +454,22 @@ impl<'a> Parse<'a, RawCert<'a>> for RawCert<'a> {
     where
         R: BufferedReader<Cookie> + 'a
     {
-        let mut parser = RawCertParser::from_buffered_reader(reader)?;
-        if let Some(cert_result) = parser.next() {
-            if parser.next().is_some() {
-                Err(crate::Error::MalformedCert(
-                    "Additional packets found, is this a keyring?".into()
-                ).into())
+        fn parse<'a>(reader: Box<dyn BufferedReader<Cookie> + 'a>) -> Result<RawCert<'a>> {
+            let mut parser = RawCertParser::from_buffered_reader(reader)?;
+            if let Some(cert_result) = parser.next() {
+                if parser.next().is_some() {
+                    Err(crate::Error::MalformedCert(
+                        "Additional packets found, is this a keyring?".into()
+                    ).into())
+                } else {
+                    cert_result
+                }
             } else {
-                cert_result
+                Err(crate::Error::MalformedCert("No data".into()).into())
             }
-        } else {
-            Err(crate::Error::MalformedCert("No data".into()).into())
         }
-    }
 
-    /// Returns the first RawCert encountered in the reader.
-    ///
-    /// Returns an error if there are multiple certificates.
-    fn from_reader<R: 'a + Read + Send + Sync>(reader: R) -> Result<Self> {
-        let br = Generic::with_cookie(reader, None, Cookie::default());
-        Self::from_buffered_reader(br)
+        parse(reader.into_boxed())
     }
 }
 
@@ -587,8 +581,7 @@ pub struct RawCertParser<'a>
 assert_send_and_sync!(RawCertParser<'_>);
 
 impl<'a> RawCertParser<'a> {
-    fn new<R>(reader: R) -> Result<Self>
-    where R: 'a + BufferedReader<Cookie>
+    fn new(reader: Box<dyn BufferedReader<Cookie> + 'a>) -> Result<Self>
     {
         // Check that we can read the first header and that it is
         // reasonable.  Note: an empty keyring is not an error; we're
@@ -664,23 +657,14 @@ impl<'a> Parse<'a, RawCertParser<'a>> for RawCertParser<'a>
     where
         R: BufferedReader<Cookie> + 'a
     {
-        RawCertParser::new(reader)
-    }
-
-    /// Initializes a `RawCertParser` from a `Read`er.
-    fn from_reader<R: 'a + Read + Send + Sync>(reader: R) -> Result<Self> {
-        RawCertParser::new(Generic::with_cookie(reader, None, Default::default()))
-    }
-
-    /// Initializes a `RawCertParser` from a `File`.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        RawCertParser::new(File::with_cookie(path, Default::default())?)
+        RawCertParser::new(reader.into_boxed())
     }
 
     /// Initializes a `RawCertParser` from a byte string.
     fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D) -> Result<Self> {
         let data = data.as_ref();
-        let mut p = RawCertParser::new(Memory::with_cookie(data, Default::default()))?;
+        let mut p = RawCertParser::new(
+            Memory::with_cookie(data, Default::default()).into_boxed())?;
 
         // If we are dearmoring the input, then the slice doesn't
         // reflect the raw packets.
@@ -1044,8 +1028,8 @@ mod test {
             return;
         }
 
-        let a: Vec<Packet> = a.into();
-        let b: Vec<Packet> = b.into();
+        let a = a.into_tsk().into_packets().collect::<Vec<_>>();
+        let b = b.into_tsk().into_packets().collect::<Vec<_>>();
 
         for (i, (a, b)) in a.iter().zip(b.iter()).enumerate() {
             if a != b {
@@ -1128,13 +1112,13 @@ mod test {
                 assert_eq!(c.fingerprint(), r.fingerprint());
 
                 eprintln!("CertParser says:");
-                for (i, p) in c.clone().into_iter().enumerate() {
+                for (i, p) in c.clone().into_tsk().into_packets().enumerate() {
                     eprintln!("  - {}. {}", i, p.tag());
                 }
 
                 let rp = Cert::from_bytes(r.as_bytes()).unwrap();
                 eprintln!("RawCertParser says:");
-                for (i, p) in rp.clone().into_iter().enumerate() {
+                for (i, p) in rp.clone().into_tsk().into_packets().enumerate() {
                     eprintln!("  - {}. {}", i, p.tag());
                 }
 
@@ -1241,7 +1225,7 @@ mod test {
         let (cert, _) =
             CertBuilder::general_purpose(None, Some("alice@example.org"))
             .generate()?;
-        let cert : Vec<Packet> = cert.into();
+        let cert = cert.into_packets().collect::<Vec<_>>();
 
         // A userid packet.
         let userid : Packet = cert.clone()
@@ -1530,7 +1514,7 @@ mod test {
                 None, Some("a@example.org"))
             .generate()?;
         let cert_1_packets: Vec<Packet>
-            = cert_1.into_packets2().collect();
+            = cert_1.into_packets().collect();
 
         let (cert_2, _) =
             CertBuilder::general_purpose(

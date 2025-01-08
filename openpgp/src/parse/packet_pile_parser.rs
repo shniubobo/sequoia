@@ -1,7 +1,5 @@
 use std::convert::TryFrom;
-use std::io;
 use std::ops::{Deref, DerefMut};
-use std::path::Path;
 
 use crate::{
     Result,
@@ -223,32 +221,6 @@ impl<'a> Parse<'a, PacketPileParser<'a>> for PacketPileParser<'a> {
         R: BufferedReader<Cookie> + 'a
     {
         PacketPileParser::from_cookie_reader(reader.into_boxed())
-    }
-
-    /// Creates a `PacketPileParser` to parse the OpenPGP message stored
-    /// in the `io::Read` object.
-    fn from_reader<R: io::Read + 'a + Send + Sync>(reader: R)
-             -> Result<PacketPileParser<'a>> {
-        let bio = Box::new(buffered_reader::Generic::with_cookie(
-            reader, None, Cookie::default()));
-        PacketPileParser::from_cookie_reader(bio)
-    }
-
-    /// Creates a `PacketPileParser` to parse the OpenPGP message stored
-    /// in the file named by `path`.
-    fn from_file<P: AsRef<Path>>(path: P)
-            -> Result<PacketPileParser<'a>> {
-        PacketPileParser::from_cookie_reader(
-            Box::new(buffered_reader::File::with_cookie(path, Cookie::default())?))
-    }
-
-    /// Creates a `PacketPileParser` to parse the OpenPGP message stored
-    /// in the provided buffer.
-    fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D)
-            -> Result<PacketPileParser<'a>> {
-        let bio = Box::new(buffered_reader::Memory::with_cookie(
-            data.as_ref(), Cookie::default()));
-        PacketPileParser::from_cookie_reader(bio)
     }
 }
 

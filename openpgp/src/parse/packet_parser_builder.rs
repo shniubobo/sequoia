@@ -1,6 +1,3 @@
-use std::io;
-use std::path::Path;
-
 use buffered_reader::BufferedReader;
 
 use crate::Result;
@@ -109,29 +106,6 @@ impl<'a> Parse<'a, PacketParserBuilder<'a>> for PacketParserBuilder<'a> {
         R: BufferedReader<Cookie> + 'a,
     {
         PacketParserBuilder::from_cookie_reader(reader.into_boxed())
-    }
-
-    /// Creates a `PacketParserBuilder` for an OpenPGP message stored
-    /// in a `std::io::Read` object.
-    fn from_reader<R: io::Read + 'a + Send + Sync>(reader: R) -> Result<Self> {
-        PacketParserBuilder::from_cookie_reader(
-            Box::new(buffered_reader::Generic::with_cookie(
-                reader, None, Cookie::default())))
-    }
-
-    /// Creates a `PacketParserBuilder` for an OpenPGP message stored
-    /// in the file named `path`.
-    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        PacketParserBuilder::from_cookie_reader(
-            Box::new(buffered_reader::File::with_cookie(path, Cookie::default())?))
-    }
-
-    /// Creates a `PacketParserBuilder` for an OpenPGP message stored
-    /// in the specified buffer.
-    fn from_bytes<D: AsRef<[u8]> + ?Sized>(data: &'a D) -> Result<PacketParserBuilder<'a>> {
-        PacketParserBuilder::from_cookie_reader(
-            Box::new(buffered_reader::Memory::with_cookie(
-                data.as_ref(), Cookie::default())))
     }
 }
 

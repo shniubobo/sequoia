@@ -312,7 +312,7 @@ impl Cert {
 /// ```
 pub struct TSK<'a> {
     pub(crate) cert: Cow<'a, Cert>,
-    filter: Box<dyn Fn(&key::UnspecifiedSecret) -> bool + 'a>,
+    filter: Box<dyn Fn(&key::UnspecifiedSecret) -> bool + Send + Sync + 'a>,
     emit_stubs: bool,
 }
 
@@ -374,7 +374,7 @@ impl<'a> TSK<'a> {
     /// Decomposes the TSK.
     pub(crate) fn decompose(self)
                             -> (Cow<'a, Cert>,
-                                Box<dyn 'a + Fn(&key::UnspecifiedSecret) -> bool>,
+                                Box<dyn Fn(&key::UnspecifiedSecret) -> bool + Send + Sync + 'a>,
                                 bool)
     {
         (self.cert, self.filter, self.emit_stubs)
@@ -422,7 +422,7 @@ impl<'a> TSK<'a> {
     /// # Ok(()) }
     /// ```
     pub fn set_filter<P>(mut self, predicate: P) -> Self
-        where P: 'a + Fn(&key::UnspecifiedSecret) -> bool
+        where P: Fn(&key::UnspecifiedSecret)-> bool + Send + Sync + 'a
     {
         self.filter = Box::new(predicate);
         self
