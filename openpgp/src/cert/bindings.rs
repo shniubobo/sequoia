@@ -61,8 +61,8 @@ impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     /// let binding = subkey.bind(&mut keypair, &cert, builder)?;
     ///
     /// // Now merge the key and binding signature into the Cert.
-    /// let cert = cert.insert_packets(vec![Packet::from(subkey),
-    ///                                    binding.into()])?;
+    /// let cert = cert.insert_packets2(vec![Packet::from(subkey),
+    ///                                    binding.into()])?.0;
     ///
     /// // Check that we have an encryption subkey.
     /// assert_eq!(cert.keys().with_policy(p, None).alive().revoked(false)
@@ -112,8 +112,8 @@ impl UserID {
     /// let binding = userid.bind(&mut keypair, &cert, builder)?;
     ///
     /// // Now merge the User ID and binding signature into the Cert.
-    /// let cert = cert.insert_packets(vec![Packet::from(userid),
-    ///                                    binding.into()])?;
+    /// let cert = cert.insert_packets2(vec![Packet::from(userid),
+    ///                                    binding.into()])?.0;
     ///
     /// // Check that we have a User ID.
     /// assert_eq!(cert.userids().len(), 1);
@@ -172,7 +172,7 @@ impl UserID {
     ///              None, None)?;
     ///
     /// // `certification` can now be used, e.g. by merging it into `bob`.
-    /// let bob = bob.insert_packets(certification)?;
+    /// let bob = bob.insert_packets2(certification)?.0;
     ///
     /// // Check that we have a certification on the User ID.
     /// assert_eq!(bob.userids().nth(0).unwrap()
@@ -246,8 +246,8 @@ impl UserAttribute {
     /// let binding = user_attr.bind(&mut keypair, &cert, builder)?;
     ///
     /// // Now merge the user attribute and binding signature into the Cert.
-    /// let cert = cert.insert_packets(vec![Packet::from(user_attr),
-    ///                                    binding.into()])?;
+    /// let cert = cert.insert_packets2(vec![Packet::from(user_attr),
+    ///                                    binding.into()])?.0;
     ///
     /// // Check that we have a user attribute.
     /// assert_eq!(cert.user_attributes().count(), 1);
@@ -310,7 +310,7 @@ impl UserAttribute {
     ///              None, None)?;
     ///
     /// // `certification` can now be used, e.g. by merging it into `bob`.
-    /// let bob = bob.insert_packets(certification)?;
+    /// let bob = bob.insert_packets2(certification)?.0;
     ///
     /// // Check that we have a certification on the User ID.
     /// assert_eq!(bob.user_attributes().nth(0).unwrap()

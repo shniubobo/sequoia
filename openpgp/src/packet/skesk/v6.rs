@@ -6,8 +6,6 @@
 //!
 //! [Section 5.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.3
 
-use std::ops::{Deref, DerefMut};
-
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
@@ -50,20 +48,6 @@ pub struct SKESK6 {
     aead_iv: Box<[u8]>,
 }
 assert_send_and_sync!(SKESK6);
-
-impl Deref for SKESK6 {
-    type Target = SKESK4;
-
-    fn deref(&self) -> &Self::Target {
-        &self.skesk4
-    }
-}
-
-impl DerefMut for SKESK6 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.skesk4
-    }
-}
 
 impl SKESK6 {
     /// Creates a new SKESK version 6 packet.
@@ -165,6 +149,26 @@ impl SKESK6 {
         Ok(plain)
     }
 
+    /// Gets the symmetric encryption algorithm.
+    pub fn symmetric_algo(&self) -> SymmetricAlgorithm {
+        self.skesk4.sym_algo
+    }
+
+    /// Sets the symmetric encryption algorithm.
+    pub fn set_symmetric_algo(&mut self, algo: SymmetricAlgorithm) -> SymmetricAlgorithm {
+        ::std::mem::replace(&mut self.skesk4.sym_algo, algo)
+    }
+
+    /// Gets the key derivation method.
+    pub fn s2k(&self) -> &S2K {
+        &self.skesk4.s2k
+    }
+
+    /// Sets the key derivation method.
+    pub fn set_s2k(&mut self, s2k: S2K) -> S2K {
+        ::std::mem::replace(&mut self.skesk4.s2k, s2k)
+    }
+
     /// Gets the AEAD algorithm.
     pub fn aead_algo(&self) -> AEADAlgorithm {
         self.aead_algo
@@ -192,7 +196,7 @@ impl SKESK6 {
 
     /// Sets the encrypted session key.
     pub fn set_esk(&mut self, esk: Box<[u8]>) -> Box<[u8]> {
-        ::std::mem::replace(&mut self.esk, Ok(Some(esk)))
+        ::std::mem::replace(&mut self.skesk4.esk, Ok(Some(esk)))
             .expect("v6 SKESK can always be parsed")
             .expect("v6 SKESK packets always have an ESK")
     }

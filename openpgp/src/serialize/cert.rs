@@ -929,11 +929,11 @@ mod test {
                 .preserve_signature_creation_time().unwrap()
                 .set_exportable_certification(false).unwrap()).unwrap();
 
-        let cert = cert.insert_packets(vec![
+        let cert = cert.insert_packets2(vec![
             Packet::SecretSubkey(key), key_binding.into(),
             uid.into(), uid_binding.into(),
             ua.into(), ua_binding.into(),
-        ]).unwrap();
+        ]).unwrap().0;
 
         assert_eq!(cert.subkeys().count(), 1);
         cert.subkeys().next().unwrap().binding_signature(p, None).unwrap();

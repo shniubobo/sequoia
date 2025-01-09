@@ -1655,7 +1655,7 @@ impl CertBuilder<'_> {
         }
 
         // Now add the new components and canonicalize once.
-        let cert = cert.insert_packets(acc)?;
+        let cert = cert.insert_packets2(acc)?.0;
 
         let revocation = CertRevocationBuilder::new()
             .set_signature_creation_time(creation_time)?
@@ -1862,7 +1862,7 @@ mod tests {
         assert_eq!(cert.revocation_status(p, None),
                    RevocationStatus::NotAsFarAsWeKnow);
 
-        let cert = cert.insert_packets(revocation.clone()).unwrap();
+        let cert = cert.insert_packets2(revocation.clone()).unwrap().0;
         assert_eq!(cert.revocation_status(p, None),
                    RevocationStatus::Revoked(vec![ &revocation ]));
     }
@@ -2031,7 +2031,7 @@ mod tests {
         let sig = signature::SignatureBuilder::new(SignatureType::DirectKey)
             .set_signature_creation_time(then)?
             .sign_hash(&mut primary_signer, hash)?;
-        let cert = cert.insert_packets(sig)?;
+        let cert = cert.insert_packets2(sig)?.0;
 
         assert!(cert.with_policy(p, then)?.primary_userid().is_err());
         assert_eq!(cert.revocation_keys(p).collect::<HashSet<_>>(),
@@ -2149,7 +2149,7 @@ mod tests {
             .certify(&mut keypair, &cert,
                      SignatureType::PositiveCertification,
                      None, None)?;
-        let cert = cert.insert_packets(certification)?;
+        let cert = cert.insert_packets2(certification)?.0;
 
         macro_rules! check {
             ($cert: expr, $export: ident, $expected: expr) => {
@@ -2194,7 +2194,7 @@ mod tests {
             .certify(&mut keypair, &cert,
                      SignatureType::PositiveCertification,
                      None, None)?;
-        let cert = cert.insert_packets(certification)?;
+        let cert = cert.insert_packets2(certification)?.0;
 
         macro_rules! check {
             ($cert: expr, $export: ident, $expected: expr) => {

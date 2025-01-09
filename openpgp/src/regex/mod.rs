@@ -137,7 +137,7 @@
 //!         &mut ca_signer,
 //!         alice.primary_key().component(),
 //!         alice_userid)?;
-//! let alice = alice.insert_packets(alice_certification.clone())?;
+//! let alice = alice.insert_packets2(alice_certification.clone())?.0;
 //! # assert!(alice.clone().into_packets().any(|p| {
 //! #   match p {
 //! #       Packet::Signature(sig) => sig == alice_certification,
@@ -156,7 +156,7 @@
 //!         &mut ca_signer,
 //!         bob.primary_key().component(),
 //!         bob_userid)?;
-//! let bob = bob.insert_packets(bob_certification.clone())?;
+//! let bob = bob.insert_packets2(bob_certification.clone())?.0;
 //! # assert!(bob.clone().into_packets().any(|p| {
 //! #   match p {
 //! #       Packet::Signature(sig) => sig == bob_certification,
@@ -180,7 +180,7 @@
 //!         &mut carol_signer,
 //!         ca.primary_key().component(),
 //!         ca_userid)?;
-//! let ca = ca.insert_packets(ca_tsig.clone())?;
+//! let ca = ca.insert_packets2(ca_tsig.clone())?.0;
 //! # assert!(ca.clone().into_packets().any(|p| {
 //! #   match p {
 //! #       Packet::Signature(sig) => sig == ca_tsig,

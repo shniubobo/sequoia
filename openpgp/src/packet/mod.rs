@@ -1010,7 +1010,7 @@ fn packet_path_iter() {
 ///     .set_signature_creation_time(t2)?;
 /// let sig = userid.bind(&mut signer, &cert, sig)?;
 ///
-/// let cert = cert.insert_packets(vec![Packet::from(userid), sig.into()])?;
+/// let cert = cert.insert_packets2(vec![Packet::from(userid), sig.into()])?.0;
 /// # assert_eq!(cert.with_policy(p, t2)?.userids().count(), 2);
 /// # Ok(()) }
 /// ```
@@ -1283,7 +1283,7 @@ impl DerefMut for Signature {
 /// let sigs = cert.set_expiration_time(p, None, &mut keypair,
 ///                                     Some(time::SystemTime::now()))?;
 ///
-/// let cert = cert.insert_packets(sigs)?;
+/// let cert = cert.insert_packets2(sigs)?.0;
 /// // It's expired now.
 /// assert!(cert.with_policy(p, None)?.alive().is_err());
 /// # Ok(())
@@ -1638,7 +1638,7 @@ impl<R: key::KeyRole> Key<key::SecretParts, R> {
     /// // Merge the keys into the certificate.  Note: `Cert::insert_packets`
     /// // prefers added versions of keys.  So, the encrypted version
     /// // will override the decrypted version.
-    /// let cert = cert.insert_packets(encrypted_keys)?;
+    /// let cert = cert.insert_packets2(encrypted_keys)?.0;
     ///
     /// // Now the every key's secret key material is encrypted.  We'll
     /// // demonstrate this using the primary key:

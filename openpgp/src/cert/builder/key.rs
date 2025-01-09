@@ -389,7 +389,7 @@ impl KeyBuilder {
 ///             .attach()
 ///     })
 ///     .collect::<Result<Vec<Vec<Packet>>, _>>()?;
-/// let cert = cert.insert_packets(packets.into_iter().flatten())?;
+/// let cert = cert.insert_packets2(packets.into_iter().flatten())?.0;
 ///
 /// let vc = cert.with_policy(p, now)?;
 /// # assert_eq!(vc.keys().subkeys().count(), 2);
@@ -930,7 +930,7 @@ impl<'a> SubkeyBuilder<'a> {
     pub fn attach_cert(self) -> Result<Cert> {
         let cert = self.vc.cert().clone();
         let packets = self.attach()?;
-        Ok(cert.insert_packets(packets)?)
+        Ok(cert.insert_packets2(packets)?.0)
     }
 }
 

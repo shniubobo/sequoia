@@ -739,7 +739,7 @@ mod test {
             .buffer_unread_content()
             .try_into().unwrap();
 
-        while ppp.is_some() {
+        while ppp.packet().is_ok() {
             ppp.recurse().unwrap();
         }
         let pile = ppp.finish();
@@ -753,7 +753,7 @@ mod test {
             .buffer_unread_content()
             .try_into().unwrap();
 
-        while let Ok(pp) = ppp.as_ref() {
+        while let Ok(pp) = ppp.packet().as_ref() {
             eprintln!("{:?}", pp);
             ppp.recurse().unwrap();
         }

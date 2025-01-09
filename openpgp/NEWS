@@ -56,11 +56,18 @@
    - UserAttributeRevocationBuilder no longer derefs to SignatureBuilder
    - Parse::from_buffered_reader is now mandatory
    - Parse::from_reader is no longer mandatory
+   - SKESK6 no longer derefs to SKESK4
+   - PacketPileParser no longer derefs to PacketParserResult
 
 ** New functionality
    - Signature::hash_userid_attestation
    - Signature::hash_user_attribute_attestation
    - Message::packets
+   - PacketPileParser::packet
+   - PacketPileParser::packet_mut
+
+** Deprecated functionality
+   - Cert::insert_packets, use Cert::insert_packets2 instead
 
 * Changes in 2.0.0.alpha.0
   The major new feature is the support for RFC9580, which modernizes

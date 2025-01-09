@@ -1184,7 +1184,7 @@ impl<'a> UserIDAmalgamation<'a> {
     /// #             &mut alice_signer,
     /// #             bob.primary_key().key(),
     /// #             &UserID::from(bob_userid))?;
-    /// #     bob = bob.insert_packets(certification)?;
+    /// #     bob = bob.insert_packets2(certification)?.0;
     /// #
     /// #     let ua = bob.userids().next().expect("have a user id");
     /// #     assert_eq!(
@@ -1365,10 +1365,10 @@ impl<'a> UserIDAmalgamation<'a> {
     /// #         &mut alice_signer,
     /// #         bob.primary_key().key(),
     /// #         &UserID::from(bob_userid))?;
-    /// # let bob = bob.insert_packets([
+    /// # let bob = bob.insert_packets2([
     /// #     Packet::from(UserID::from(bob_userid)),
     /// #     Packet::from(certification),
-    /// # ])?;
+    /// # ])?.0;
     /// let ua = bob.userids().next().expect("have user id");
     ///
     /// let revs = ua.valid_third_party_revocations_by_key(
@@ -1444,7 +1444,7 @@ impl<'a> UserIDAmalgamation<'a> {
     ///     = bob.userids().next().unwrap().userid().bind(
     ///         &mut alice_signer, &bob,
     ///         SignatureBuilder::new(SignatureType::GenericCertification))?;
-    /// let bob = bob.insert_packets(vec![alice_certifies_bob.clone()])?;
+    /// let bob = bob.insert_packets2(vec![alice_certifies_bob.clone()])?.0;
     ///
     /// // Have Bob attest that certification.
     /// let bobs_uid = bob.userids().next().unwrap();
@@ -1454,7 +1454,7 @@ impl<'a> UserIDAmalgamation<'a> {
     ///         None,
     ///         &mut bob_signer,
     ///         bobs_uid.certifications())?;
-    /// let bob = bob.insert_packets(attestations)?;
+    /// let bob = bob.insert_packets2(attestations)?.0;
     ///
     /// assert_eq!(bob.bad_signatures().count(), 0);
     /// assert_eq!(bob.userids().next().unwrap().certifications().next(),
@@ -1927,7 +1927,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     ///     = bob.userids().next().unwrap().userid().bind(
     ///         &mut alice_signer, &bob,
     ///         SignatureBuilder::new(SignatureType::GenericCertification))?;
-    /// let bob = bob.insert_packets(vec![alice_certifies_bob.clone()])?;
+    /// let bob = bob.insert_packets2(vec![alice_certifies_bob.clone()])?.0;
     ///
     /// // Have Bob attest that certification.
     /// let bobs_uid = bob.userids().next().unwrap();
@@ -1936,7 +1936,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     ///         policy,
     ///         &mut bob_signer,
     ///         bobs_uid.certifications())?;
-    /// let bob = bob.insert_packets(attestations)?;
+    /// let bob = bob.insert_packets2(attestations)?.0;
     ///
     /// assert_eq!(bob.bad_signatures().count(), 0);
     /// assert_eq!(bob.userids().next().unwrap().certifications().next(),
@@ -2502,7 +2502,7 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification)?;
+        let carol = carol.insert_packets2(certification)?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2522,7 +2522,7 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification)?;
+        let carol = carol.insert_packets2(certification)?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2536,7 +2536,7 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification)?;
+        let carol = carol.insert_packets2(certification)?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2608,7 +2608,7 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification.clone())?;
+        let carol = carol.insert_packets2(certification.clone())?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2637,7 +2637,7 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification.clone())?;
+        let carol = carol.insert_packets2(certification.clone())?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2667,7 +2667,7 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification.clone())?;
+        let carol = carol.insert_packets2(certification.clone())?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2698,7 +2698,7 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification.clone())?;
+        let carol = carol.insert_packets2(certification.clone())?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2737,7 +2737,7 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &UserID::from(carol_userid))?;
-        let carol = carol.insert_packets(certification.clone())?;
+        let carol = carol.insert_packets2(certification.clone())?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2824,10 +2824,10 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &carol_userid)?;
-        let carol = carol.insert_packets([
+        let carol = carol.insert_packets2([
             Packet::from(carol_userid.clone()),
             Packet::from(certification.clone()),
-        ])?;
+        ])?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2852,10 +2852,10 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &carol_userid)?;
-        let carol = carol.insert_packets([
+        let carol = carol.insert_packets2([
             Packet::from(carol_userid.clone()),
             Packet::from(certification.clone()),
-        ])?;
+        ])?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2879,10 +2879,10 @@ mod test {
                 &mut alice_signer,
                 carol.primary_key().key(),
                 &carol_userid)?;
-        let carol = carol.insert_packets([
+        let carol = carol.insert_packets2([
             Packet::from(carol_userid.clone()),
             Packet::from(certification.clone()),
-        ])?;
+        ])?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2907,10 +2907,10 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &carol_userid)?;
-        let carol = carol.insert_packets([
+        let carol = carol.insert_packets2([
             Packet::from(carol_userid.clone()),
             Packet::from(certification.clone()),
-        ])?;
+        ])?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");
@@ -2939,10 +2939,10 @@ mod test {
                 &mut bob_signer,
                 carol.primary_key().key(),
                 &carol_userid)?;
-        let carol = carol.insert_packets([
+        let carol = carol.insert_packets2([
             Packet::from(carol_userid.clone()),
             Packet::from(certification.clone()),
-        ])?;
+        ])?.0;
 
         // Check that it is returned.
         let ua = carol.userids().next().expect("have a user id");

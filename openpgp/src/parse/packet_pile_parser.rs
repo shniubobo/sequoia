@@ -1,5 +1,4 @@
 use std::convert::TryFrom;
-use std::ops::{Deref, DerefMut};
 
 use crate::{
     Result,
@@ -8,6 +7,7 @@ use crate::{
 };
 use crate::parse::{
     PacketParserBuilder,
+    PacketParserEOF,
     PacketParserResult,
     PacketParser,
     Parse,
@@ -61,7 +61,7 @@ use buffered_reader::BufferedReader;
 /// let mut ppp =
 ///     PacketPileParser::from_bytes(
 ///         b"\xcb\x12b\x00\x00\x00\x00\x00Hello world.")?;
-/// while ppp.is_some() {
+/// while ppp.packet().is_ok() {
 ///     // Start parsing the next packet, recursing.
 ///     ppp.recurse()?;
 /// }
@@ -95,7 +95,7 @@ use buffered_reader::BufferedReader;
 ///         b"\xcb\x12b\x00\x00\x00\x00\x00Hello world.")?
 ///     .buffer_unread_content();
 /// let mut ppp = PacketPileParser::try_from(ppb)?;
-/// while ppp.is_some() {
+/// while ppp.packet().is_ok() {
 ///     // Start parsing the next packet, recursing.
 ///     ppp.recurse()?;
 /// }
@@ -124,7 +124,7 @@ use buffered_reader::BufferedReader;
 /// let mut ppp =
 ///     PacketPileParser::from_bytes(
 ///         b"\xcb\x12b\x00\x00\x00\x00\x00Hello world.")?;
-/// while let Ok(pp) = ppp.as_mut() {
+/// while let Ok(pp) = ppp.packet_mut() {
 ///     if let Packet::Literal(_) = pp.packet {
 ///         // Buffer this packet's body.
 ///         pp.buffer_unread_content()?;
@@ -159,7 +159,7 @@ use buffered_reader::BufferedReader;
 /// let mut ppp =
 ///     PacketPileParser::from_bytes(
 ///         b"\xcb\x12b\x00\x00\x00\x00\x00Hello world.")?;
-/// while let Ok(pp) = ppp.as_mut() {
+/// while let Ok(pp) = ppp.packet_mut() {
 ///     if let Packet::Literal(_) = pp.packet {
 ///         // Stream the body.
 ///         let mut buf = Vec::new();
@@ -190,20 +190,6 @@ pub struct PacketPileParser<'a> {
     pile: PacketPile,
 }
 assert_send_and_sync!(PacketPileParser<'_>);
-
-impl<'a> Deref for PacketPileParser<'a> {
-    type Target = PacketParserResult<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.ppr
-    }
-}
-
-impl<'a> DerefMut for PacketPileParser<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.ppr
-    }
-}
 
 impl<'a> TryFrom<PacketParserBuilder<'a>> for PacketPileParser<'a> {
     type Error = anyhow::Error;
@@ -267,6 +253,21 @@ impl<'a> PacketPileParser<'a> {
         container.children_mut().unwrap().push(packet);
     }
 
+    /// Returns a reference to the current packet.
+    pub fn packet(&self)
+                  -> std::result::Result<&PacketParser<'a>, &PacketParserEOF>
+    {
+        self.ppr.as_ref()
+    }
+
+    /// Returns a mutable reference to the current packet.
+    pub fn packet_mut<>(&mut self)
+                        -> std::result::Result<&mut PacketParser<'a>,
+                                               &mut PacketParserEOF<'a>>
+    {
+        self.ppr.as_mut()
+    }
+
     /// Finishes parsing the current packet and starts parsing the
     /// next one, recursing if possible.
     ///
@@ -294,7 +295,7 @@ impl<'a> PacketPileParser<'a> {
     /// let message_data: &[u8] = // ...
     /// #    include_bytes!("../../tests/data/messages/compressed-data-algo-0.pgp");
     /// let mut ppp = PacketPileParser::from_bytes(message_data)?;
-    /// while let Ok(pp) = ppp.as_ref() {
+    /// while let Ok(pp) = ppp.packet() {
     ///     // Do something interesting with `pp` here.
     ///
     ///     // Start parsing the next packet, recursing.
@@ -347,7 +348,7 @@ impl<'a> PacketPileParser<'a> {
     /// let message_data: &[u8] = // ...
     /// #    include_bytes!("../../tests/data/messages/compressed-data-algo-0.pgp");
     /// let mut ppp = PacketPileParser::from_bytes(message_data)?;
-    /// while let Ok(pp) = ppp.as_ref() {
+    /// while let Ok(pp) = ppp.packet() {
     ///     // Do something interesting with `pp` here.
     ///
     ///     // Start parsing the next packet.
@@ -392,7 +393,7 @@ impl<'a> PacketPileParser<'a> {
     /// let message_data: &[u8] = // ...
     /// #    include_bytes!("../../tests/data/messages/compressed-data-algo-0.pgp");
     /// let mut ppp = PacketPileParser::from_bytes(message_data)?;
-    /// while let Ok(pp) = ppp.as_ref() {
+    /// while let Ok(pp) = ppp.packet() {
     ///     match pp.packet {
     ///         Packet::CompressedData(_) =>
     ///             assert_eq!(ppp.recursion_depth(), Some(0)),
@@ -434,7 +435,7 @@ impl<'a> PacketPileParser<'a> {
     /// let message_data: &[u8] = // ...
     /// #    include_bytes!("../../tests/data/messages/compressed-data-algo-0.pgp");
     /// let mut ppp = PacketPileParser::from_bytes(message_data)?;
-    /// while ppp.is_some() {
+    /// while ppp.packet().is_ok() {
     ///     // Start parsing the next packet.
     ///     ppp.next()?;
     /// }
@@ -485,7 +486,7 @@ fn test_recurse() -> Result<()> {
     let mut count = 0;
     let mut ppp =
         PacketPileParser::from_bytes(crate::tests::key("public-key.gpg"))?;
-    while ppp.is_some() {
+    while ppp.packet().is_ok() {
         count += 1;
         ppp.recurse().unwrap();
     }
@@ -500,7 +501,7 @@ fn test_next() -> Result<()> {
     let mut count = 0;
     let mut ppp =
         PacketPileParser::from_bytes(crate::tests::key("public-key.gpg"))?;
-    while ppp.is_some() {
+    while ppp.packet().is_ok() {
         count += 1;
         ppp.next().unwrap();
     }
@@ -524,7 +525,7 @@ fn message_parser_reader_interface() {
     let mut ppp = PacketPileParser::from_bytes(
         crate::tests::message("compressed-data-algo-1.gpg")).unwrap();
     let mut count = 0;
-    while let Ok(pp) = ppp.as_mut() {
+    while let Ok(pp) = ppp.packet_mut() {
         if let Packet::Literal(_) = pp.packet {
             assert_eq!(count, 1); // The *second* packet.
 
