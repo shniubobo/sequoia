@@ -12,8 +12,8 @@ The low-level API can be found in the [openpgp](./openpgp) crate.
 This crate
 aims to provide a complete implementation of OpenPGP as defined by RFC
 4880 as well as several extensions (e.g., RFC 6637, which describes
-ECC cryptography for OpenPGP, and RFC 4880bis, the draft of the next
-OpenPGP standard).  This includes support for unbuffered message
+ECC cryptography for OpenPGP, and RFC 9580, the next OpenPGP standard).
+This includes support for unbuffered message
 processing.
 
 The [openpgp](./openpgp) crate tries hard to avoid dictating how
