@@ -1391,10 +1391,10 @@ mod tests {
         // Create and sign a revocation certificate.
         let mut signer = cert.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;
-        let user_id = cert.userids().next().unwrap();
+        let user_id = cert.userids().next().unwrap().userid();
         let builder = SignatureBuilder::new(SignatureType::CertificationRevocation);
         let revocation_builder: UserIDRevocationBuilder = builder.try_into()?;
-        let sig = revocation_builder.build(&mut signer, &cert, &user_id, None)?;
+        let sig = revocation_builder.build(&mut signer, &cert, user_id, None)?;
         assert_eq!(sig.typ(), SignatureType::CertificationRevocation);
         Ok(())
     }
@@ -1434,10 +1434,11 @@ mod tests {
         // Create and sign a revocation certificate.
         let mut signer = cert.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;
-        let user_attribute = cert.user_attributes().next().unwrap();
+        let user_attribute =
+            cert.user_attributes().next().unwrap().user_attribute();
         let builder = SignatureBuilder::new(SignatureType::CertificationRevocation);
         let revocation_builder: UserAttributeRevocationBuilder = builder.try_into()?;
-        let sig = revocation_builder.build(&mut signer, &cert, &user_attribute, None)?;
+        let sig = revocation_builder.build(&mut signer, &cert, user_attribute, None)?;
         assert_eq!(sig.typ(), SignatureType::CertificationRevocation);
         Ok(())
     }

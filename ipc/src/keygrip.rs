@@ -84,7 +84,7 @@ impl Keygrip {
     /// #   W2hrBY5x0sZ8H7JlAP47mCfCuRVBqyaePuzKbxLJeLe2BpDdc0n2izMVj8t9Cg==
     /// #   =QetZ
     /// #   -----END PGP PUBLIC KEY BLOCK-----".parse()?;
-    /// assert_eq!(Keygrip::of(cert.primary_key().mpis())?.to_string(),
+    /// assert_eq!(Keygrip::of(cert.primary_key().key().mpis())?.to_string(),
     ///            "DD143ABA8D1D7D09875D6209E01BCF020788FF77");
     /// # Ok(()) }
     /// ```

@@ -91,7 +91,7 @@ pub(crate) trait Syncable : Sync {}
 ///     .set_cipher_suite(CipherSuite::Cv25519)
 ///     .generate()?;
 ///
-/// assert_eq!(cert.primary_key().pk_algo(), PublicKeyAlgorithm::EdDSA);
+/// assert_eq!(cert.primary_key().key().pk_algo(), PublicKeyAlgorithm::EdDSA);
 /// # Ok(()) }
 /// ```
 ///

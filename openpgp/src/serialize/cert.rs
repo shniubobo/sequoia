@@ -334,7 +334,7 @@ impl PartialEq for TSK<'_> {
                    && (other.filter)(b.key().parts_as_secret().expect("has_secret")))
             {
                 // Both have secrets.  Compare secrets.
-                (true, true) => if a.optional_secret() != b.optional_secret() {
+                (true, true) => if a.key().optional_secret() != b.key().optional_secret() {
                     return false;
                 },
                 // No secrets.  Equal iff both or neither emit stubs.
@@ -417,7 +417,7 @@ impl<'a> TSK<'a> {
     ///     .serialize(&mut buf)?;
     ///
     /// let cert_ = Cert::from_bytes(&buf)?;
-    /// assert!(! cert_.primary_key().has_secret());
+    /// assert!(! cert_.primary_key().key().has_secret());
     /// assert_eq!(cert_.keys().with_policy(p, None).alive().revoked(false).secret().count(), 1);
     /// # Ok(()) }
     /// ```
@@ -483,11 +483,11 @@ impl<'a> TSK<'a> {
     /// #            Some(packet::Tag::SecretKey));
     /// let cert_ = Cert::from_bytes(&buf)?;
     /// // The primary key has an "encrypted" stub.
-    /// assert!(cert_.primary_key().has_secret());
+    /// assert!(cert_.primary_key().key().has_secret());
     /// assert_eq!(cert_.keys().with_policy(p, None)
     ///            .alive().revoked(false).unencrypted_secret().count(), 1);
     /// # if let Some(SecretKeyMaterial::Encrypted(sec)) =
-    /// #     cert_.primary_key().optional_secret()
+    /// #     cert_.primary_key().key().optional_secret()
     /// # {
     /// #     assert_eq!(sec.algo(), SymmetricAlgorithm::Unencrypted);
     /// #     if let S2K::Private { tag, .. } = sec.s2k() {
@@ -1035,7 +1035,7 @@ mod test {
         assert_eq!(cert_.keys().with_policy(p, None)
                    .alive().revoked(false).unencrypted_secret().count(), 1);
         if let Some(SecretKeyMaterial::Encrypted(sec)) =
-            cert_.primary_key().optional_secret()
+            cert_.primary_key().key().optional_secret()
         {
             assert_eq!(sec.algo(), SymmetricAlgorithm::Unencrypted);
             if let S2K::Private { tag, .. } = sec.s2k() {

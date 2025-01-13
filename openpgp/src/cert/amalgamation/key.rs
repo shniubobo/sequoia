@@ -155,7 +155,7 @@
 //! #         .generate()?;
 //! #     let timestamp = None;
 //! #     let issuer = cert.with_policy(p, None)?.keys()
-//! #         .for_signing().nth(0).unwrap().fingerprint();
+//! #         .for_signing().nth(0).unwrap().key().fingerprint();
 //! #     let mut i = 0;
 //! let cert = cert.with_policy(p, timestamp)?;
 //! if let RevocationStatus::Revoked(_) = cert.revocation_status() {
@@ -533,11 +533,11 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::PrimaryRole>>
 {
     type V = ValidPrimaryKeyAmalgamation<'a, P>;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T)
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T)
         -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>
     {
-        let ka : ErasedKeyAmalgamation<P> = self.into();
+        let ka : ErasedKeyAmalgamation<P> = self.clone().into();
         Ok(ka.with_policy(policy, time)?
                .try_into().expect("conversion is symmetric"))
     }
@@ -553,11 +553,11 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::SubordinateRole>>
 {
     type V = ValidSubordinateKeyAmalgamation<'a, P>;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T)
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T)
         -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>
     {
-        let ka : ErasedKeyAmalgamation<P> = self.into();
+        let ka : ErasedKeyAmalgamation<P> = self.clone().into();
         Ok(ka.with_policy(policy, time)?
                .try_into().expect("conversion is symmetric"))
     }
@@ -573,7 +573,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
 {
     type V = ValidErasedKeyAmalgamation<'a, P>;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T)
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T)
         -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>
     {
@@ -591,7 +591,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
         let cert = self.ca.cert();
         let vka = ValidErasedKeyAmalgamation {
             ka: KeyAmalgamation {
-                ca: self.ca.parts_into_public(),
+                ca: self.ca.clone().parts_into_public(),
                 primary: self.primary,
             },
             // We need some black magic to avoid infinite
@@ -1465,7 +1465,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::PrimaryRole>>
 {
     type V = Self;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized
     {
@@ -1484,7 +1484,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::SubordinateRole>>
 {
     type V = Self;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized
     {
@@ -1504,7 +1504,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
 {
     type V = Self;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized
     {
@@ -1564,7 +1564,7 @@ impl<'a, P, R, R2> ValidAmalgamation<'a, Key<P, R>>
         let mut keys = std::collections::HashSet::new();
 
         let policy = self.policy();
-        let pk_sec = self.cert().primary_key().hash_algo_security();
+        let pk_sec = self.cert().primary_key().key().hash_algo_security();
 
         // All valid self-signatures.
         let sec = self.hash_algo_security;
@@ -2093,7 +2093,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
 
                 sigs.push(builder.sign_userid_binding(primary_signer,
                                                       self.cert().primary_key().component(),
-                                                      &userid)?);
+                                                      userid.userid())?);
             }
         } else {
             // To extend the validity of the subkey, create a new
@@ -2108,7 +2108,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
                          .set_hash_algo(self.binding_signature.hash_algo())
                          .sign_primary_key_binding(
                              subkey_signer,
-                             &self.cert().primary_key(),
+                             self.cert().primary_key().key(),
                              self.key().role_as_subordinate())?)
                 } else {
                     return Err(Error::InvalidArgument(
@@ -2253,7 +2253,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
         let expiration =
             if let Some(e) = expiration.map(crate::types::normalize_systemtime)
         {
-            let ct = self.creation_time();
+            let ct = self.key().creation_time();
             match e.duration_since(ct) {
                 Ok(v) => Some(v),
                 Err(_) => return Err(Error::InvalidArgument(

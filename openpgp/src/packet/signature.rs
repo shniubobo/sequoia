@@ -3874,12 +3874,12 @@ mod test {
 
             let cert = Cert::from_bytes(crate::tests::key(test.key)).unwrap();
 
-            if ! cert.keys().all(|k| k.pk_algo().is_supported()) {
+            if ! cert.keys().all(|ka| ka.key().pk_algo().is_supported()) {
                 eprintln!("Skipping because one algorithm is not supported");
                 continue;
             }
 
-            if let Some(curve) = match cert.primary_key().mpis() {
+            if let Some(curve) = match cert.primary_key().key().mpis() {
                 mpi::PublicKey::EdDSA { curve, .. } => Some(curve),
                 mpi::PublicKey::ECDSA { curve, .. } => Some(curve),
                 _ => None,
@@ -3993,12 +3993,12 @@ mod test {
             eprintln!("{}...", key);
             let cert = Cert::from_bytes(crate::tests::key(key)).unwrap();
 
-            if ! cert.primary_key().pk_algo().is_supported() {
+            if ! cert.primary_key().key().pk_algo().is_supported() {
                 eprintln!("Skipping because we don't support the algo");
                 continue;
             }
 
-            if let Some(curve) = match cert.primary_key().mpis() {
+            if let Some(curve) = match cert.primary_key().key().mpis() {
                 mpi::PublicKey::EdDSA { curve, .. } => Some(curve),
                 mpi::PublicKey::ECDSA { curve, .. } => Some(curve),
                 _ => None,
@@ -4309,7 +4309,7 @@ mod test {
                               false)?
                 .sign_userid_binding(&mut primary_signer,
                                      alice.primary_key().component(),
-                                     &alice.userids().next().unwrap()) {
+                                     alice.userids().next().unwrap().userid()) {
                     Ok(v) => v,
                     Err(e) => {
                         eprintln!("Failed to make {} signatures on top of \

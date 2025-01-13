@@ -283,7 +283,7 @@ impl KeyPair {
 
                     let sig = loop {
                         let mut k: Protected = vec![0; LEN].into();
-                        crate::crypto::random(&mut k);
+                        crate::crypto::random(&mut k)?;
                         let k = Scalar::reduce_bytes(
                             GA::try_from_slice(&k)?);
                         if let Ok(s) = key.try_sign_prehashed(k, &dig) {
@@ -308,7 +308,7 @@ impl KeyPair {
 
                     let sig = loop {
                         let mut k: Protected = vec![0; LEN].into();
-                        crate::crypto::random(&mut k);
+                        crate::crypto::random(&mut k)?;
                         let k = Scalar::reduce_bytes(
                             GA::try_from_slice(&k)?);
                         if let Ok(s) = key.try_sign_prehashed(k, &dig) {
@@ -333,7 +333,7 @@ impl KeyPair {
 
                     let sig = loop {
                         let mut k: Protected = vec![0; LEN].into();
-                        crate::crypto::random(&mut k);
+                        crate::crypto::random(&mut k)?;
                         let k = Scalar::reduce_bytes(
                             GA::try_from_slice(&k)?);
                         if let Ok(s) = key.try_sign_prehashed(k, &dig) {

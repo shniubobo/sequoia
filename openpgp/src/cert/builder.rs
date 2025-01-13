@@ -52,13 +52,13 @@ pub use key::{
 ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
 ///         .set_cipher_suite(CipherSuite::Cv25519)
 ///         .generate()?;
-/// assert_eq!(ecc.primary_key().pk_algo(), PublicKeyAlgorithm::EdDSA);
+/// assert_eq!(ecc.primary_key().key().pk_algo(), PublicKeyAlgorithm::EdDSA);
 ///
 /// let (rsa, _) =
 ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
 ///         .set_cipher_suite(CipherSuite::RSA4k)
 ///         .generate()?;
-/// assert_eq!(rsa.primary_key().pk_algo(), PublicKeyAlgorithm::RSAEncryptSign);
+/// assert_eq!(rsa.primary_key().key().pk_algo(), PublicKeyAlgorithm::RSAEncryptSign);
 /// # Ok(())
 /// # }
 /// ```
@@ -580,13 +580,13 @@ impl CertBuilder<'_> {
     ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
     ///         .set_cipher_suite(CipherSuite::Cv25519)
     ///         .generate()?;
-    /// assert_eq!(ecc.primary_key().pk_algo(), PublicKeyAlgorithm::EdDSA);
+    /// assert_eq!(ecc.primary_key().key().pk_algo(), PublicKeyAlgorithm::EdDSA);
     ///
     /// let (rsa, _) =
     ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
     ///         .set_cipher_suite(CipherSuite::RSA2k)
     ///         .generate()?;
-    /// assert_eq!(rsa.primary_key().pk_algo(), PublicKeyAlgorithm::RSAEncryptSign);
+    /// assert_eq!(rsa.primary_key().key().pk_algo(), PublicKeyAlgorithm::RSAEncryptSign);
     /// # Ok(())
     /// # }
     /// ```
@@ -656,13 +656,13 @@ impl CertBuilder<'_> {
     ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
     ///         .set_profile(openpgp::Profile::RFC9580)?
     ///         .generate()?;
-    /// assert_eq!(key.primary_key().version(), 6);
+    /// assert_eq!(key.primary_key().key().version(), 6);
     ///
     /// let (key, _) =
     ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
     ///         .set_profile(openpgp::Profile::RFC4880)?
     ///         .generate()?;
-    /// assert_eq!(key.primary_key().version(), 4);
+    /// assert_eq!(key.primary_key().key().version(), 4);
     /// # Ok(())
     /// # }
     /// ```
@@ -701,7 +701,7 @@ impl CertBuilder<'_> {
     /// assert_eq!(cert.userids().count(), 2);
     /// let mut userids = cert.with_policy(p, None)?.userids().collect::<Vec<_>>();
     /// // Sort lexicographically.
-    /// userids.sort_by(|a, b| a.value().cmp(b.value()));
+    /// userids.sort_by(|a, b| a.userid().value().cmp(b.userid().value()));
     /// assert_eq!(userids[0].userid(),
     ///            &UserID::from("Alice Lovelace <alice@example.org>"));
     /// assert_eq!(userids[1].userid(),
@@ -784,7 +784,7 @@ impl CertBuilder<'_> {
     /// assert_eq!(cert.userids().count(), 2);
     /// let mut userids = cert.with_policy(policy, None)?.userids().collect::<Vec<_>>();
     /// // Sort lexicographically.
-    /// userids.sort_by(|a, b| a.value().cmp(b.value()));
+    /// userids.sort_by(|a, b| a.userid().value().cmp(b.userid().value()));
     /// assert_eq!(userids[0].userid(),
     ///            &UserID::from("Alice Lovelace <alice@example.org>"));
     /// assert_eq!(userids[1].userid(),
@@ -1387,7 +1387,7 @@ impl CertBuilder<'_> {
     ///         .generate()?;
     ///
     /// for ka in cert.keys() {
-    ///     assert!(ka.has_secret());
+    ///     assert!(ka.key().has_secret());
     /// }
     /// # Ok(()) }
     /// ```
@@ -1796,14 +1796,14 @@ mod tests {
             .set_cipher_suite(CipherSuite::RSA3k)
             .set_cipher_suite(CipherSuite::Cv25519)
             .generate().unwrap();
-        assert_eq!(cert1.primary_key().pk_algo(), PublicKeyAlgorithm::EdDSA);
+        assert_eq!(cert1.primary_key().key().pk_algo(), PublicKeyAlgorithm::EdDSA);
 
         let (cert2, _) = CertBuilder::new()
             .set_cipher_suite(CipherSuite::RSA3k)
             .add_userid("test2@example.com")
             .add_transport_encryption_subkey()
             .generate().unwrap();
-        assert_eq!(cert2.primary_key().pk_algo(),
+        assert_eq!(cert2.primary_key().key().pk_algo(),
                    PublicKeyAlgorithm::RSAEncryptSign);
         assert_eq!(cert2.subkeys().next().unwrap().key().pk_algo(),
                    PublicKeyAlgorithm::RSAEncryptSign);
@@ -1815,7 +1815,7 @@ mod tests {
         let (cert1, _) = CertBuilder::new()
             .add_userid("test2@example.com")
             .generate().unwrap();
-        assert_eq!(cert1.primary_key().pk_algo(),
+        assert_eq!(cert1.primary_key().key().pk_algo(),
                    PublicKeyAlgorithm::EdDSA);
         assert!(cert1.subkeys().next().is_none());
         assert!(cert1.with_policy(p, None).unwrap().primary_userid().unwrap()
@@ -1887,7 +1887,7 @@ mod tests {
             .set_cipher_suite(CipherSuite::Cv25519)
             .set_password(Some(String::from("streng geheim").into()))
             .generate().unwrap();
-        assert!(cert.primary_key().optional_secret().unwrap().is_encrypted());
+        assert!(cert.primary_key().key().optional_secret().unwrap().is_encrypted());
     }
 
     #[test]
@@ -1950,7 +1950,7 @@ mod tests {
             .add_signing_subkey()
             .generate().unwrap();
 
-        assert_eq!(cert.primary_key().creation_time(), UNIX_EPOCH);
+        assert_eq!(cert.primary_key().key().creation_time(), UNIX_EPOCH);
         assert_eq!(cert.primary_key().with_policy(p, None).unwrap()
                    .binding_signature()
                    .signature_creation_time().unwrap(), UNIX_EPOCH);
@@ -2027,7 +2027,7 @@ mod tests {
             .into_keypair()?;
         let mut hash = HashAlgorithm::SHA512.context()?
             .for_signature(primary_signer.public().version());
-        cert.primary_key().hash(&mut hash)?;
+        cert.primary_key().key().hash(&mut hash)?;
         let sig = signature::SignatureBuilder::new(SignatureType::DirectKey)
             .set_signature_creation_time(then)?
             .sign_hash(&mut primary_signer, hash)?;
@@ -2120,7 +2120,7 @@ mod tests {
                 SignatureBuilder::new(positive).set_primary_userid(true)?)?
             .generate()?;
         let vc = c.with_policy(p, None)?;
-        assert_eq!(vc.primary_userid()?.value(), b"bar");
+        assert_eq!(vc.primary_userid()?.userid().value(), b"bar");
         assert_eq!(count_primary_user_things(c), 1);
 
         Ok(())
@@ -2146,6 +2146,7 @@ mod tests {
         let mut keypair = bob.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;
         let certification = cert.userids().nth(0).unwrap()
+            .userid()
             .certify(&mut keypair, &cert,
                      SignatureType::PositiveCertification,
                      None, None)?;
@@ -2191,6 +2192,7 @@ mod tests {
         let mut keypair = cert.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;
         let certification = cert.userids().nth(0).unwrap()
+            .userid()
             .certify(&mut keypair, &cert,
                      SignatureType::PositiveCertification,
                      None, None)?;

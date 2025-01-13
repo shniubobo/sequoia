@@ -58,6 +58,7 @@ pub trait Aead : seal::Sealed {
     fn encrypt_seal(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()>;
 
     /// Length of the digest in bytes.
+    #[allow(dead_code)] // Used in debug assertions.
     fn digest_size(&self) -> usize;
 
     /// Decrypt one chunk `src` to `dst` and verify that the digest is

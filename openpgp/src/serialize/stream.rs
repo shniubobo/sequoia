@@ -4257,7 +4257,7 @@ mod test {
                 .and_then(|vcert| vcert.keys().for_signing().supported().next())
             {
                 use crate::crypto::mpi::PublicKey;
-                match k.mpis() {
+                match k.key().mpis() {
                     PublicKey::ECDSA { curve, .. } |
                     PublicKey::EdDSA { curve, .. }
                     if ! curve.is_supported() => {
@@ -4326,7 +4326,7 @@ mod test {
                 key.with_policy(&p, None)?.keys().subkeys().supported().next()
             {
                 use crate::crypto::mpi::PublicKey;
-                match k.mpis() {
+                match k.key().mpis() {
                     PublicKey::ECDH { curve, .. } if ! curve.is_supported() => {
                         eprintln!("Skipping {} because we don't support \
                                    the curve {}", path, curve);

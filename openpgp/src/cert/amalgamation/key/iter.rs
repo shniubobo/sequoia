@@ -392,7 +392,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// #     let (cert, _) =
     /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #         .generate()?;
-    /// # let key_handle = cert.primary_key().key_handle();
+    /// # let key_handle = cert.primary_key().key().key_handle();
     /// # let mut i = 0;
     /// for ka in cert.keys().key_handle(key_handle) {
     ///     // Use it.
@@ -439,7 +439,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// #     let (cert, _) =
     /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #         .generate()?;
-    /// # let key_handles = &[cert.primary_key().key_handle()][..];
+    /// # let key_handles = &[cert.primary_key().key().key_handle()][..];
     /// # let mut i = 0;
     /// for ka in cert.keys().key_handles2(key_handles) {
     ///     // Use it.
@@ -1570,7 +1570,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// #     let (cert, _) =
     /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #         .generate()?;
-    /// # let key_handle = cert.primary_key().key_handle();
+    /// # let key_handle = cert.primary_key().key().key_handle();
     /// # let mut i = 0;
     /// for ka in cert.keys().with_policy(p, None).key_handle(key_handle) {
     ///     // Use it.
@@ -1621,7 +1621,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// #     let (cert, _) =
     /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #         .generate()?;
-    /// # let key_handles = &[cert.primary_key().key_handle()][..];
+    /// # let key_handles = &[cert.primary_key().key().key_handle()][..];
     /// # let mut i = 0;
     /// for ka in cert.keys().with_policy(p, None).key_handles2(key_handles) {
     ///     // Use it.

@@ -1548,7 +1548,7 @@ impl<'a> Policy for StandardPolicy<'a> {
         use crate::crypto::mpi::PublicKey;
 
         #[allow(deprecated)]
-        let a = match (ka.pk_algo(), ka.mpis().bits()) {
+        let a = match (ka.key().pk_algo(), ka.key().mpis().bits()) {
             // RSA.
             (RSAEncryptSign, Some(b))
                 | (RSAEncrypt, Some(b))
@@ -1587,7 +1587,7 @@ impl<'a> Policy for StandardPolicy<'a> {
 
             // ECC.
             (ECDH, _) | (ECDSA, _) | (EdDSA, _) => {
-                let curve = match ka.mpis() {
+                let curve = match ka.key().mpis() {
                     PublicKey::EdDSA { curve, .. } => curve,
                     PublicKey::ECDSA { curve, .. } => curve,
                     PublicKey::ECDH { curve, .. } => curve,
@@ -1621,7 +1621,7 @@ impl<'a> Policy for StandardPolicy<'a> {
             .context("Policy rejected asymmetric algorithm")?;
 
         // Check ECDH KDF and KEK parameters.
-        if let PublicKey::ECDH { hash, sym, .. } = ka.mpis() {
+        if let PublicKey::ECDH { hash, sym, .. } = ka.key().mpis() {
             self.symmetric_algorithm(*sym)
                 .context("Policy rejected ECDH \
                           key encapsulation algorithm")?;
@@ -2652,7 +2652,7 @@ mod test {
                 use crate::types::PublicKeyAlgorithm::*;
 
                 eprintln!("algo: {} is {}",
-                          ka.fingerprint(), ka.key().pk_algo());
+                          ka.key().fingerprint(), ka.key().pk_algo());
                 if ka.key().pk_algo() == RSAEncryptSign {
                     Err(anyhow::anyhow!("RSA!"))
                 } else {
@@ -2737,7 +2737,7 @@ mod test {
             eprintln!("Expect verification to be {}",
                       if good { "good" } else { "bad" });
             for (i, k) in cert.keys().enumerate() {
-                eprintln!("  {}. {}", i, k.fingerprint());
+                eprintln!("  {}. {}", i, k.key().fingerprint());
             }
 
             let msg = b"Hello, World";

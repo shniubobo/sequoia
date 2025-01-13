@@ -175,15 +175,6 @@ pub type UserAttributeBundle = ComponentBundle<UserAttribute>;
 pub type UnknownBundle = ComponentBundle<Unknown>;
 
 
-impl<C> Deref for ComponentBundle<C>
-{
-    type Target = C;
-
-    fn deref(&self) -> &Self::Target {
-        &self.component
-    }
-}
-
 impl<C> ComponentBundle<C> {
     /// Creates a new component.
     ///
@@ -468,7 +459,7 @@ impl<C> ComponentBundle<C> {
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
-    ///               i, ka.fingerprint(),
+    ///               i, ka.key().fingerprint(),
     ///               ka.bundle().self_signatures().count());
     /// }
     /// # Ok(()) }
@@ -598,7 +589,7 @@ impl<C> ComponentBundle<C> {
     /// #     .generate()?;
     /// for (i, uid) in cert.userids().enumerate() {
     ///     eprintln!("UserID #{} ({:?}) has {:?} attestation key signatures",
-    ///               i, uid.email(),
+    ///               i, uid.userid().email(),
     ///               uid.attestations().count());
     /// }
     /// # Ok(()) }
@@ -634,7 +625,7 @@ impl<C> ComponentBundle<C> {
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
-    ///               i, ka.fingerprint(),
+    ///               i, ka.key().fingerprint(),
     ///               ka.signatures().count());
     /// }
     /// # Ok(()) }
@@ -897,6 +888,11 @@ impl<P: key::KeyParts, R: key::KeyRole> ComponentBundle<Key<P, R>> {
     pub(crate) fn set_role(&mut self, role: key::KeyRoleRT) {
         self.key_mut().set_role(role);
     }
+
+    /// Forwarder for the conversion macros.
+    pub(crate) fn has_secret(&self) -> bool {
+        self.key().has_secret()
+    }
 }
 
 impl<P: key::KeyParts> ComponentBundle<Key<P, key::PrimaryRole>> {
@@ -967,7 +963,7 @@ impl<P: key::KeyParts> ComponentBundle<Key<P, key::SubordinateRole>> {
     /// // Display the subkeys' revocation status.
     /// for ka in cert.keys().subkeys() {
     ///     eprintln!(" Revocation status of {}: {:?}",
-    ///               ka.fingerprint(), ka.revocation_status(p, None));
+    ///               ka.key().fingerprint(), ka.revocation_status(p, None));
     /// }
     /// # Ok(()) }
     /// ```

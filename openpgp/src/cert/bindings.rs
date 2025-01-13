@@ -168,6 +168,7 @@ impl UserID {
     /// // Alice now certifies the binding between `bob@example.org` and `bob`.
     /// let certification =
     ///     bob.userids().nth(0).unwrap()
+    ///     .userid()
     ///     .certify(&mut keypair, &bob, SignatureType::PositiveCertification,
     ///              None, None)?;
     ///
@@ -306,6 +307,7 @@ impl UserAttribute {
     /// // Alice now certifies the binding between `bob@example.org` and `bob`.
     /// let certification =
     ///     bob.user_attributes().nth(0).unwrap()
+    ///     .user_attribute()
     ///     .certify(&mut keypair, &bob, SignatureType::PositiveCertification,
     ///              None, None)?;
     ///

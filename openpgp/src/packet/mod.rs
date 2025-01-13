@@ -1621,7 +1621,7 @@ impl<R: key::KeyRole> Key<key::SecretParts, R> {
     /// // Encrypt every key.
     /// let mut encrypted_keys: Vec<Packet> = Vec::new();
     /// for ka in cert.keys().secret() {
-    ///     assert!(ka.has_unencrypted_secret());
+    ///     assert!(ka.key().has_unencrypted_secret());
     ///
     ///     // Encrypt the key's secret key material.
     ///     let key = ka.key().clone().encrypt_secret(&"1234".into())?;

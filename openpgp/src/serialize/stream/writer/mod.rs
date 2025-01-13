@@ -87,12 +87,14 @@ pub(crate) trait Stackable<'a, C> : io::Write + fmt::Debug {
     fn inner_ref(&self) -> Option<&(dyn Stackable<'a, C> + Send + Sync)>;
 
     /// Sets the cookie and returns the old value.
+    #[allow(dead_code)]
     fn cookie_set(&mut self, cookie: C) -> C;
 
     /// Returns a reference to the cookie.
     fn cookie_ref(&self) -> &C;
 
     /// Returns a mutable reference to the cookie.
+    #[allow(dead_code)]
     fn cookie_mut(&mut self) -> &mut C;
 
     /// Returns the number of bytes written to this filter.

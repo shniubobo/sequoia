@@ -18,6 +18,7 @@ use buffered_reader::BufferedReader;
 /// Block modes govern how a block cipher processes data spanning multiple blocks.
 pub(crate) trait Mode: Send + Sync {
     /// Block size of the underlying cipher in bytes.
+    #[allow(dead_code)] // Used in some backends.
     fn block_size(&self) -> usize;
 
     /// Encrypt a single block `src` to a ciphertext block `dst`.

@@ -1586,7 +1586,7 @@ mod test {
 
         assert_eq!(
             raw.keys().map(|k| k.fingerprint()).collect::<Vec<_>>(),
-            cert.keys().map(|k| k.fingerprint()).collect::<Vec<_>>());
+            cert.keys().map(|k| k.key().fingerprint()).collect::<Vec<_>>());
 
         assert_eq!(
             raw.userids().collect::<Vec<_>>(),

@@ -2752,7 +2752,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                             }
 
                             let cert = ka.cert();
-                            let fingerprint = ka.fingerprint();
+                            let fingerprint = ka.key().fingerprint();
                             let ka = match ka.with_policy(self.policy, sig_time) {
                                 Err(policy_err) => {
                                     t!("{:02X}{:02X}: key {} rejected by policy: {}",
@@ -2779,7 +2779,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                 }
                             } else if let Err(error) = ka.alive() {
                                 t!("{:02X}{:02X}: key {} not alive: {}",
-                                   sigid[0], sigid[1], ka.fingerprint(), error);
+                                   sigid[0], sigid[1], ka.key().fingerprint(), error);
                                 VerificationErrorInternal::BadKey {
                                     ka,
                                     error,
@@ -2799,7 +2799,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                 RevocationStatus::Revoked(rev) = ka.revocation_status()
                             {
                                 t!("{:02X}{:02X}: key {} revoked: {:?}",
-                                   sigid[0], sigid[1], ka.fingerprint(), rev);
+                                   sigid[0], sigid[1], ka.key().fingerprint(), rev);
                                 VerificationErrorInternal::BadKey {
                                     ka,
                                     error: Error::InvalidKey(
@@ -2808,7 +2808,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                 }
                             } else if ! ka.for_signing() {
                                 t!("{:02X}{:02X}: key {} not signing capable",
-                                   sigid[0], sigid[1], ka.fingerprint());
+                                   sigid[0], sigid[1], ka.key().fingerprint());
                                 VerificationErrorInternal::BadKey {
                                     ka,
                                     error: Error::InvalidKey(
@@ -2862,7 +2862,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                             }
                                         } else {
                                             t!("{:02X}{:02X}: good checksum using {}",
-                                               sigid[0], sigid[1], ka.fingerprint());
+                                               sigid[0], sigid[1], ka.key().fingerprint());
                                             results.push_verification_result(
                                                 Ok(GoodChecksum {
                                                     sig,
@@ -2874,7 +2874,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                                     }
                                     Err(error) => {
                                         t!("{:02X}{:02X} using {}: error: {}",
-                                           sigid[0], sigid[1], ka.fingerprint(), error);
+                                           sigid[0], sigid[1], ka.key().fingerprint(), error);
                                         VerificationErrorInternal::BadSignature {
                                             ka,
                                             error,
@@ -3341,7 +3341,7 @@ pub(crate) mod test {
                 key.with_policy(&p, None)?.keys().subkeys().supported().next()
             {
                 use crate::crypto::mpi::PublicKey;
-                match k.mpis() {
+                match k.key().mpis() {
                     PublicKey::ECDH { curve, .. } if ! curve.is_supported() => {
                         eprintln!("Skipping {} because we don't support \
                                    the curve {}", alg, curve);

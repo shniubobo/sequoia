@@ -144,7 +144,7 @@ impl KeyBuilder {
     /// NTP is widely used, empirically it seems that some virtual
     /// machines have laggy clocks.
     pub fn subkey(self, vc: ValidCert) -> Result<SubkeyBuilder<'_>> {
-        let profile = match vc.primary_key().version() {
+        let profile = match vc.primary_key().key().version() {
             4 => Profile::RFC4880,
             6 => Profile::RFC9580,
             n => return Err(Error::InvalidOperation(format!(
@@ -452,7 +452,7 @@ impl<'a> SubkeyBuilder<'a> {
                 vc.keys().subkeys().revoked(false).alive()
                     // Fallback to sorting by fingerprint to ensure
                     // this is deterministic.
-                    .max_by_key(|ka| (ka.key().creation_time(), ka.fingerprint()))
+                    .max_by_key(|ka| (ka.key().creation_time(), ka.key().fingerprint()))
                     .map(|ka| {
                         let sig = ka.binding_signature().clone();
                         let e = sig.key_validity_period().map(|v| {
@@ -469,7 +469,7 @@ impl<'a> SubkeyBuilder<'a> {
                 // time.
                 (SignatureBuilder::new(SignatureType::SubkeyBinding),
                  vc.primary_key().key_validity_period().map(|v| {
-                     vc.primary_key().creation_time() + v
+                     vc.primary_key().key().creation_time() + v
                  }))
             });
 
@@ -861,7 +861,7 @@ impl<'a> SubkeyBuilder<'a> {
                     backsig = backsig.preserve_signature_creation_time()?;
                 }
                 let backsig = backsig.sign_primary_key_binding(
-                    &mut *subkey_signer, &vc.primary_key(), &subkey)?;
+                    &mut *subkey_signer, vc.primary_key().key(), &subkey)?;
                 builder = builder.set_embedded_signature(backsig)?;
             } else {
                 // We don't need the embedded signature, remove it.
@@ -1018,8 +1018,8 @@ mod test {
         eprintln!("t2: {:?}", t2);
         assert!(vc_post.keys().all(|ka| {
             eprintln!("{}: {:?} -> {:?}",
-                      ka.fingerprint(),
-                      ka.creation_time(),
+                      ka.key().fingerprint(),
+                      ka.key().creation_time(),
                       ka.key_expiration_time());
             ka.key_expiration_time() == Some(t2)
         }));

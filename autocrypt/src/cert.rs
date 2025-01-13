@@ -55,7 +55,7 @@ mod tests {
     fn autocrypt_v1() {
         let (cert1, _) = cert_builder(Autocrypt::V1, Some("Foo"))
             .generate().unwrap();
-        assert_eq!(cert1.primary_key().pk_algo(),
+        assert_eq!(cert1.primary_key().key().pk_algo(),
                    PublicKeyAlgorithm::RSAEncryptSign);
         assert_eq!(cert1.keys().subkeys().next().unwrap().key().pk_algo(),
                    PublicKeyAlgorithm::RSAEncryptSign);
@@ -66,7 +66,7 @@ mod tests {
     fn autocrypt_v1_1() {
         let (cert1, _) = cert_builder(Autocrypt::V1_1, Some("Foo"))
             .generate().unwrap();
-        assert_eq!(cert1.primary_key().pk_algo(),
+        assert_eq!(cert1.primary_key().key().pk_algo(),
                    PublicKeyAlgorithm::EdDSA);
         assert_eq!(cert1.keys().subkeys().next().unwrap().key().pk_algo(),
                    PublicKeyAlgorithm::ECDH);

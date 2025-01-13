@@ -898,8 +898,8 @@ mod tests {
                 crate::tests::file(&format!("{}/{}.pgp", base, test)))
                 .expect("valid cert");
 
-            for key in cert.keys().secret() {
-                let keygrip = Keygrip::of(key.key().mpis()).expect("has a keygrip");
+            for key in cert.keys().secret().map(|ka| ka.key()) {
+                let keygrip = Keygrip::of(key.mpis()).expect("has a keygrip");
                 eprintln!("Checking {}-{}", test, keygrip);
 
                 if let key::SecretKeyMaterial::Unencrypted(k) = key.secret() {
@@ -934,9 +934,9 @@ mod tests {
                 crate::tests::file(&format!("{}/{}", base, test)))
                 .expect("valid cert");
 
-            for key in cert.keys().secret() {
+            for key in cert.keys().secret().map(|ka| ka.key()) {
                 let keygrip
-                    = Keygrip::of(key.key().mpis()).expect("has a keygrip");
+                    = Keygrip::of(key.mpis()).expect("has a keygrip");
 
                 eprintln!("Checking {}: {} ({})",
                           test, key.fingerprint(), keygrip);

@@ -969,7 +969,7 @@ impl Cert {
     /// #     .generate()?;
     /// println!("{}'s User IDs:", cert.fingerprint());
     /// for ua in cert.userids() {
-    ///     println!("  {}", String::from_utf8_lossy(ua.value()));
+    ///     println!("  {}", String::from_utf8_lossy(ua.userid().value()));
     /// }
     /// # // Add a User ID without a binding signature and make sure
     /// # // it is still returned.
@@ -1105,10 +1105,10 @@ impl Cert {
     ///          cert.unknowns().count());
     /// for ua in cert.unknowns() {
     ///     println!("  Unknown component with tag {} ({}), error: {}",
-    ///              ua.tag(), u8::from(ua.tag()), ua.error());
+    ///              ua.unknown().tag(), u8::from(ua.unknown().tag()), ua.unknown().error());
     /// }
     /// # assert_eq!(cert.unknowns().count(), 1);
-    /// # assert_eq!(cert.unknowns().nth(0).unwrap().tag(), tag);
+    /// # assert_eq!(cert.unknowns().nth(0).unwrap().unknown().tag(), tag);
     /// # Ok(())
     /// # }
     /// ```
@@ -1197,7 +1197,7 @@ impl Cert {
     {
         let mut keys = std::collections::HashSet::new();
 
-        let pk_sec = self.primary_key().hash_algo_security();
+        let pk_sec = self.primary_key().key().hash_algo_security();
 
         // All user ids.
         self.userids()
@@ -2736,7 +2736,7 @@ impl Cert {
     /// assert!(changed);
     /// assert_eq!(cert.unknowns().count(), 1);
     /// for p in cert.unknowns() {
-    ///     assert_eq!(p.tag(), tag);
+    ///     assert_eq!(p.unknown().tag(), tag);
     /// }
     ///
     ///
@@ -2780,7 +2780,7 @@ impl Cert {
     /// assert!(changed);
     ///
     /// // The secret key material is stripped.
-    /// assert!(! cert.primary_key().has_secret());
+    /// assert!(! cert.primary_key().key().has_secret());
     /// #     Ok(())
     /// # }
     /// ```
@@ -3244,14 +3244,14 @@ impl Cert {
     /// assert_eq!(cert.userids().count(), 2);
     ///
     /// let cert = cert.retain_userids(|ua| {
-    ///     if let Ok(Some(address)) = ua.email() {
+    ///     if let Ok(Some(address)) = ua.userid().email() {
     ///         address == "alice@example.org" // Only keep this one.
     ///     } else {
     ///         false                          // Drop malformed userids.
     ///     }
     /// });
     /// assert_eq!(cert.userids().count(), 1);
-    /// assert_eq!(cert.userids().nth(0).unwrap().email()?.unwrap(),
+    /// assert_eq!(cert.userids().nth(0).unwrap().userid().email()?.unwrap(),
     ///            "alice@example.org");
     /// # Ok(()) }
     /// ```
@@ -3647,17 +3647,9 @@ pub struct ValidCert<'a> {
 }
 assert_send_and_sync!(ValidCert<'_>);
 
-impl<'a> std::ops::Deref for ValidCert<'a> {
-    type Target = Cert;
-
-    fn deref(&self) -> &Self::Target {
-        self.cert
-    }
-}
-
 impl<'a> fmt::Display for ValidCert<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.fingerprint())
+        write!(f, "{}", self.cert().fingerprint())
     }
 }
 
@@ -3938,7 +3930,7 @@ impl<'a> ValidCert<'a> {
     /// #
     /// let primary = vc.primary_key();
     /// // The certificate's fingerprint *is* the primary key's fingerprint.
-    /// assert_eq!(vc.fingerprint(), primary.fingerprint());
+    /// assert_eq!(vc.cert().fingerprint(), primary.key().fingerprint());
     /// # Ok(()) }
     pub fn primary_key(&self)
         -> ValidPrimaryKeyAmalgamation<'a, key::PublicParts>
@@ -4047,7 +4039,7 @@ impl<'a> ValidCert<'a> {
     /// // There is only one User ID.  It must be the primary User ID.
     /// let vc = cert.with_policy(p, t1)?;
     /// let alice = vc.primary_userid().unwrap();
-    /// assert_eq!(alice.value(), b"Alice");
+    /// assert_eq!(alice.userid().value(), b"Alice");
     /// // By default, the primary User ID flag is set.
     /// assert!(alice.binding_signature().primary_userid().is_some());
     ///
@@ -4067,7 +4059,7 @@ impl<'a> ValidCert<'a> {
     /// // Alice should still be the primary User ID, because it has the
     /// // primary User ID flag set.
     /// let alice = cert.with_policy(p, t2)?.primary_userid().unwrap();
-    /// assert_eq!(alice.value(), b"Alice");
+    /// assert_eq!(alice.userid().value(), b"Alice");
     ///
     ///
     /// // Add another User ID, whose binding signature's creation
@@ -4082,7 +4074,7 @@ impl<'a> ValidCert<'a> {
     /// // It should now be the primary User ID, because it is the
     /// // newest User ID with the primary User ID bit is set.
     /// let carol = cert.with_policy(p, t2)?.primary_userid().unwrap();
-    /// assert_eq!(carol.value(), b"Carol");
+    /// assert_eq!(carol.userid().value(), b"Carol");
     /// # Ok(()) }
     pub fn primary_userid(&self) -> Result<ValidUserIDAmalgamation<'a>>
     {
@@ -4642,7 +4634,7 @@ mod test {
             .unwrap();
 
         let mut userids = cert.userids()
-            .map(|u| String::from_utf8_lossy(u.value()).into_owned())
+            .map(|u| String::from_utf8_lossy(u.userid().value()).into_owned())
             .collect::<Vec<String>>();
         userids.sort();
 
@@ -4671,7 +4663,7 @@ mod test {
             Cert::from_bytes(crate::tests::key("dkg-sigs-out-of-order.pgp")).unwrap();
 
         let mut userids = cert.userids()
-            .map(|u| String::from_utf8_lossy(u.value()).into_owned())
+            .map(|u| String::from_utf8_lossy(u.userid().value()).into_owned())
             .collect::<Vec<String>>();
         userids.sort();
 
@@ -5107,7 +5099,7 @@ mod test {
         );
     }
     fn check_set_validity_period(policy: &dyn Policy, cert: Cert) -> Cert {
-        let now = cert.primary_key().creation_time();
+        let now = cert.primary_key().key().creation_time();
         let a_sec = time::Duration::new(1, 0);
 
         let expiry_orig = cert.primary_key().with_policy(policy, now).unwrap()
@@ -6392,7 +6384,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         let mut cert_plain_secrets = cert_encrypted_secrets.clone();
         for ka in cert_encrypted_secrets.keys().secret() {
-            assert!(! ka.has_unencrypted_secret());
+            assert!(! ka.key().has_unencrypted_secret());
             let key = ka.key().clone().decrypt_secret(&pw)?;
             assert!(key.has_unencrypted_secret());
 
@@ -6406,18 +6398,18 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
                 cert_plain_secrets.insert_packets2(vec![key])?.0;
         }
         assert!(
-            cert_plain_secrets.keys().all(|ka| ka.has_unencrypted_secret()));
+            cert_plain_secrets.keys().all(|ka| ka.key().has_unencrypted_secret()));
 
         // Merge unencrypted secrets into encrypted secrets.
         let cert = cert_encrypted_secrets.clone().merge_public_and_secret(
             cert_plain_secrets.clone())?;
-        assert!(cert.keys().all(|ka| ka.has_unencrypted_secret()));
+        assert!(cert.keys().all(|ka| ka.key().has_unencrypted_secret()));
 
         // Merge encrypted secrets into unencrypted secrets.
         let cert = cert_plain_secrets.clone().merge_public_and_secret(
             cert_encrypted_secrets.clone())?;
         assert!(cert.keys().all(|ka| ka.has_secret()
-                                && ! ka.has_unencrypted_secret()));
+                                && ! ka.key().has_unencrypted_secret()));
 
         Ok(())
     }
@@ -6469,7 +6461,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
             .generate()?;
         let p = &P::new();
         let cert_at = cert.with_policy(p,
-                                       cert.primary_key().creation_time()
+                                       cert.primary_key().key().creation_time()
                                        + time::Duration::new(300, 0))
             .unwrap();
         assert_eq!(cert_at.userids().count(), 0);
@@ -6487,7 +6479,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         ])?.0;
 
         let cert_at = cert.with_policy(p,
-                                       cert.primary_key().creation_time()
+                                       cert.primary_key().key().creation_time()
                                        + time::Duration::new(300, 0))
             .unwrap();
         assert_eq!(cert_at.userids().count(), 1);
@@ -6506,7 +6498,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         let mut p = P::new();
         p.accept_hash(HashAlgorithm::SHA1);
-        let cert_at = cert.with_policy(&p, cert.primary_key().creation_time())
+        let cert_at = cert.with_policy(&p, cert.primary_key().key().creation_time())
             .unwrap();
         assert_eq!(cert_at.userids().count(), 1);
         assert_eq!(cert_at.keys().count(), 1);
@@ -7017,7 +7009,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         // Make sure there is a subkey with the same fingerprint as
         // the primary key.
         assert!(cert.keys().subkeys().any(|k| {
-            k.fingerprint() == cert.primary_key().fingerprint()
+            k.key().fingerprint() == cert.primary_key().key().fingerprint()
         }));
 
         // Make sure the self sig is valid, too.
@@ -7025,7 +7017,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         let vc = cert.with_policy(p, None)?;
         assert!(vc.keys().subkeys().any(|k| {
-            k.fingerprint() == vc.primary_key().fingerprint()
+            k.key().fingerprint() == vc.primary_key().key().fingerprint()
         }));
 
         Ok(())

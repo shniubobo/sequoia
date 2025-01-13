@@ -854,7 +854,7 @@ mod test {
             .expect("Failed to parse key material.");
         assert_eq!(cert.fingerprint(),
                    "156962B0F3115069ACA970C68E3B03A279B772D6".parse().unwrap());
-        assert_eq!(cert.userids().next().unwrap().value(),
+        assert_eq!(cert.userids().next().unwrap().userid().value(),
                    &b"holger krekel <holger@merlinux.eu>"[..]);
 
 
@@ -879,7 +879,7 @@ mod test {
             .expect("Failed to parse key material.");
         assert_eq!(cert.fingerprint(),
                    "D4AB192964F76A7F8F8A9B357BD18320DEADFA11".parse().unwrap());
-        assert_eq!(cert.userids().next().unwrap().value(),
+        assert_eq!(cert.userids().next().unwrap().userid().value(),
                    &b"Vincent Breitmoser <look@my.amazin.horse>"[..]);
 
 
@@ -904,7 +904,7 @@ mod test {
             .expect("Failed to parse key material.");
         assert_eq!(cert.fingerprint(),
                    "4F9F89F5505AC1D1A260631CDB1187B9DD5F693B".parse().unwrap());
-        assert_eq!(cert.userids().next().unwrap().value(),
+        assert_eq!(cert.userids().next().unwrap().userid().value(),
                    &b"Patrick Brunschwig <patrick@enigmail.net>"[..]);
 
         let ac2 = AutocryptHeaders::from_bytes(
@@ -937,7 +937,7 @@ mod test {
             .expect("Failed to parse key material.");
         assert_eq!(cert.fingerprint(),
                    "C4BC2DDB38CCE96485EBE9C2F20691179038E5C6".parse().unwrap());
-        assert_eq!(cert.userids().next().unwrap().value(),
+        assert_eq!(cert.userids().next().unwrap().userid().value(),
                 &b"Daniel Kahn Gillmor <dkg@fifthhorseman.net>"[..]);
 
     }

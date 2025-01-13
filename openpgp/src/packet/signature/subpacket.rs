@@ -5204,11 +5204,11 @@ impl signature::SignatureBuilder {
     /// // Create the binding signatures.
     /// let mut sigs = Vec::new();
     ///
-    /// for key in cert.with_policy(p, None)?.keys().subkeys() {
+    /// for ka in cert.with_policy(p, None)?.keys().subkeys() {
     ///     // This reuses any existing backsignature.
-    ///     let sig = SignatureBuilder::from(key.binding_signature().clone())
+    ///     let sig = SignatureBuilder::from(ka.binding_signature().clone())
     ///         .set_key_validity_period(std::time::Duration::new(10 * 60, 0))?
-    ///         .sign_subkey_binding(&mut signer, None, &key)?;
+    ///         .sign_subkey_binding(&mut signer, None, ka.key())?;
     ///     sigs.push(sig);
     /// }
     ///
@@ -5314,13 +5314,13 @@ impl signature::SignatureBuilder {
     /// // Create the binding signatures.
     /// let mut sigs = Vec::new();
     ///
-    /// for key in cert.with_policy(p, None)?.keys().subkeys() {
+    /// for ka in cert.with_policy(p, None)?.keys().subkeys() {
     ///     // This reuses any existing backsignature.
-    ///     let sig = SignatureBuilder::from(key.binding_signature().clone())
-    ///         .set_key_expiration_time(&key,
+    ///     let sig = SignatureBuilder::from(ka.binding_signature().clone())
+    ///         .set_key_expiration_time(ka.key(),
     ///                                  time::SystemTime::now()
     ///                                  + time::Duration::new(10 * 60, 0))?
-    ///         .sign_subkey_binding(&mut signer, None, &key)?;
+    ///         .sign_subkey_binding(&mut signer, None, ka.key())?;
     ///     sigs.push(sig);
     /// }
     ///
@@ -5492,7 +5492,7 @@ impl signature::SignatureBuilder {
     ///     .expect("CertBuilder always includes a direct key signature");
     /// let sig = SignatureBuilder::from(template.clone())
     ///     .set_revocation_key(vec![
-    ///         RevocationKey::new(bob.primary_key().pk_algo(), bob.fingerprint(), false),
+    ///         RevocationKey::new(bob.primary_key().key().pk_algo(), bob.fingerprint(), false),
     ///     ])?
     ///     .sign_direct_key(&mut alices_signer, None)?;
     /// # assert_eq!(sig
@@ -5752,15 +5752,15 @@ impl signature::SignatureBuilder {
     ///     .clone().parts_into_secret()?.into_keypair()?;
     ///
     /// let vc = cert.with_policy(p, None)?;
-    /// let userid = vc.primary_userid().expect("Added a User ID");
+    /// let ua = vc.primary_userid().expect("Added a User ID");
     ///
-    /// let template = userid.binding_signature();
+    /// let template = ua.binding_signature();
     /// let sig = SignatureBuilder::from(template.clone())
     ///     .set_notation("proof@metacode.biz", "https://metacode.biz/@wiktor",
     ///                   NotationDataFlags::empty().set_human_readable(), false)?
     ///     .add_notation("proof@metacode.biz", "https://news.ycombinator.com/user?id=wiktor-k",
     ///                   NotationDataFlags::empty().set_human_readable(), false)?
-    ///     .sign_userid_binding(&mut signer, None, &userid)?;
+    ///     .sign_userid_binding(&mut signer, None, ua.userid())?;
     /// # assert_eq!(sig
     /// #    .hashed_area()
     /// #    .iter()
@@ -5846,15 +5846,15 @@ impl signature::SignatureBuilder {
     ///     .clone().parts_into_secret()?.into_keypair()?;
     ///
     /// let vc = cert.with_policy(p, None)?;
-    /// let userid = vc.primary_userid().expect("Added a User ID");
+    /// let ua = vc.primary_userid().expect("Added a User ID");
     ///
-    /// let template = userid.binding_signature();
+    /// let template = ua.binding_signature();
     /// let sig = SignatureBuilder::from(template.clone())
     ///     .add_notation("proof@metacode.biz", "https://metacode.biz/@wiktor",
     ///                   NotationDataFlags::empty().set_human_readable(), false)?
     ///     .add_notation("proof@metacode.biz", "https://news.ycombinator.com/user?id=wiktor-k",
     ///                   NotationDataFlags::empty().set_human_readable(), false)?
-    ///     .sign_userid_binding(&mut signer, None, &userid)?;
+    ///     .sign_userid_binding(&mut signer, None, ua.userid())?;
     /// # assert_eq!(sig
     /// #    .hashed_area()
     /// #    .iter()

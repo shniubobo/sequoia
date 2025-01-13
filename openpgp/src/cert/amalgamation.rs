@@ -332,7 +332,7 @@ pub trait ValidateAmalgamation<'a, C: 'a>: seal::Sealed {
     /// Uses the specified `Policy` and reference time with the amalgamation.
     ///
     /// If `time` is `None`, the current time is used.
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized;
 }
@@ -370,7 +370,7 @@ trait ValidateAmalgamationRelaxed<'a, C: 'a> {
     ///
     ///   - To check if the user id is valid, we need to check that
     ///     the corresponding certificate is valid.
-    fn with_policy_relaxed<T>(self, policy: &'a dyn Policy, time: T,
+    fn with_policy_relaxed<T>(&self, policy: &'a dyn Policy, time: T,
                               valid_cert: bool) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized;
@@ -997,7 +997,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
             .filter(|(_certification, ct, hard)| {
                 // Make sure the certification was created after the
                 // certificate, unless they are hard revocations.
-                self.cert.primary_key().creation_time() <= *ct || *hard
+                self.cert.primary_key().key().creation_time() <= *ct || *hard
             })
             .filter(|(certification, _ct, _hard)| {
                 // Make sure the certification conforms to the policy.
@@ -1043,7 +1043,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
 
 macro_rules! impl_with_policy {
     ($func:ident, $value:ident $(, $arg:ident: $type:ty )*) => {
-        fn $func<T>(self, policy: &'a dyn Policy, time: T, $($arg: $type, )*)
+        fn $func<T>(&self, policy: &'a dyn Policy, time: T, $($arg: $type, )*)
             -> Result<Self::V>
             where T: Into<Option<time::SystemTime>>,
                   Self: Sized
@@ -1061,7 +1061,7 @@ macro_rules! impl_with_policy {
             // we know the certificate is valid (unless the caller
             // doesn't care).
             Ok(ValidComponentAmalgamation {
-                ca: self,
+                ca: self.clone(),
                 cert: ValidCert {
                     cert,
                     policy,
@@ -1476,7 +1476,7 @@ impl<'a> UserIDAmalgamation<'a> {
         // Hash the components like in a binding signature.
         let mut hash = HashAlgorithm::default().context()?
             .for_signature(primary_signer.public().version());
-        self.cert().primary_key().hash(&mut hash)?;
+        self.cert().primary_key().key().hash(&mut hash)?;
         self.userid().hash(&mut hash)?;
 
         // Check if there is a previous attestation.  If so, we need
@@ -1560,7 +1560,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
         // Hash the components like in a binding signature.
         let mut hash = HashAlgorithm::default().context()?
             .for_signature(primary_signer.public().version());
-        self.cert().primary_key().hash(&mut hash)?;
+        self.cert().primary_key().key().hash(&mut hash)?;
         self.user_attribute().hash(&mut hash)?;
 
         // Check if there is a previous attestation.  If so, we need
@@ -1769,7 +1769,7 @@ where C: IntoIterator<Item = S>,
 ///     } else {
 ///         // Print information about the User ID.
 ///         eprintln!("{}: preferred symmetric algorithms: {:?}",
-///                   String::from_utf8_lossy(u.value()),
+///                   String::from_utf8_lossy(u.userid().value()),
 ///                   u.preferred_symmetric_algorithms());
 ///     }
 /// }
@@ -2292,7 +2292,7 @@ impl<'a, C> seal::Sealed for ValidComponentAmalgamation<'a, C> {}
 impl<'a, C> ValidateAmalgamation<'a, C> for ValidComponentAmalgamation<'a, C> {
     type V = Self;
 
-    fn with_policy<T>(self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
+    fn with_policy<T>(&self, policy: &'a dyn Policy, time: T) -> Result<Self::V>
         where T: Into<Option<time::SystemTime>>,
               Self: Sized,
     {
@@ -2336,7 +2336,7 @@ impl<'a, C> ValidAmalgamation<'a, C> for ValidComponentAmalgamation<'a, C> {
         let mut keys = std::collections::HashSet::new();
 
         let policy = self.policy();
-        let pk_sec = self.cert().primary_key().hash_algo_security();
+        let pk_sec = self.cert().primary_key().key().hash_algo_security();
 
         // All valid self-signatures.
         let sec = self.hash_algo_security;

@@ -71,7 +71,7 @@ assert_send_and_sync!(RevocationKey);
 
 impl From<&Cert> for RevocationKey {
     fn from(cert: &Cert) -> Self {
-        RevocationKey::new(cert.primary_key().pk_algo(),
+        RevocationKey::new(cert.primary_key().key().pk_algo(),
                            cert.fingerprint(),
                            false)
     }

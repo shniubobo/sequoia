@@ -196,7 +196,7 @@
 //! // Should should be able to authenticate Alice.
 //! let alice_ua = alice.with_policy(p, None)?
 //!     .userids().nth(0).expect("Added a User ID");
-//! # assert!(res.matches_userid(&alice_ua));
+//! # assert!(res.matches_userid(alice_ua.userid()));
 //! let mut authenticated = false;
 //! for c in alice_ua.certifications() {
 //!     if c.get_issuers().into_iter().any(|h| h.aliases(ca.key_handle())) {
@@ -205,7 +205,7 @@
 //!             alice.primary_key().key(),
 //!             alice_ua.userid()).is_ok()
 //!         {
-//!             authenticated |= res.matches_userid(&alice_ua);
+//!             authenticated |= res.matches_userid(alice_ua.userid());
 //!         }
 //!     }
 //! }
@@ -216,7 +216,7 @@
 //! // scope (some.org, not example.com).
 //! let bob_ua = bob.with_policy(p, None)?
 //!     .userids().nth(0).expect("Added a User ID");
-//! # assert!(! res.matches_userid(&bob_ua));
+//! # assert!(! res.matches_userid(bob_ua.userid()));
 //! let mut have_certification = false;
 //! let mut authenticated = false;
 //! for c in bob_ua.certifications() {
@@ -227,7 +227,7 @@
 //!             bob_ua.userid()).is_ok()
 //!         {
 //!             have_certification = true;
-//!             authenticated |= res.matches_userid(&bob_ua);
+//!             authenticated |= res.matches_userid(bob_ua.userid());
 //!         }
 //!     }
 //! }
