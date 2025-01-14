@@ -2670,7 +2670,7 @@ impl crate::packet::Signature {
                     | SignatureTarget
                     | PreferredAEADAlgorithms
                     | IntendedRecipient
-                    | AttestedCertifications
+                    | ApprovedCertifications
                     | PreferredAEADCiphersuites
                     | Reserved(_)
                     => false,
@@ -3419,7 +3419,7 @@ impl Signature {
         let mut hash =
             self.hash_algo().context()?.for_signature(self.version());
 
-        if self.attested_certifications()?
+        if self.approved_certifications()?
             .any(|d| d.len() != hash.digest_size())
         {
             return Err(Error::BadSignature(
@@ -3555,7 +3555,7 @@ impl Signature {
         let mut hash =
             self.hash_algo().context()?.for_signature(self.version());
 
-        if self.attested_certifications()?
+        if self.approved_certifications()?
             .any(|d| d.len() != hash.digest_size())
         {
             return Err(Error::BadSignature(

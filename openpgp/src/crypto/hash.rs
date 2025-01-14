@@ -1135,7 +1135,7 @@ impl Signature {
         where P: key::KeyParts,
     {
         match self.typ() {
-            SignatureType::AttestationKey => (),
+            SignatureType::CertificationApproval => (),
             _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
         }
 
@@ -1160,7 +1160,7 @@ impl Signature {
         where P: key::KeyParts,
     {
         match self.typ() {
-            SignatureType::AttestationKey => (),
+            SignatureType::CertificationApproval => (),
             _ => return Err(Error::UnsupportedSignatureType(self.typ()).into()),
         }
 

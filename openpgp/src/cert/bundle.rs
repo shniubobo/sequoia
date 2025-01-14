@@ -561,7 +561,8 @@ impl<C> ComponentBundle<C> {
         self.other_revocations.iter()
     }
 
-    /// Returns all of the component's Attestation Key Signatures.
+    /// Returns all of the component's Certification Approval Key
+    /// Signatures.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
@@ -571,9 +572,9 @@ impl<C> ComponentBundle<C> {
     /// A certificate owner can use Attestation Key Signatures to
     /// attest to third party certifications.  Currently, only userid
     /// and user attribute certifications can be attested.  See
-    /// [Attested Certification subpacket] for details.
+    /// [Approved Certifications subpacket] for details.
     ///
-    ///   [Attested Certification subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
+    ///   [Approved Certifications subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
     ///
     /// # Examples
     ///
@@ -590,12 +591,12 @@ impl<C> ComponentBundle<C> {
     /// for (i, uid) in cert.userids().enumerate() {
     ///     eprintln!("UserID #{} ({:?}) has {:?} attestation key signatures",
     ///               i, uid.userid().email(),
-    ///               uid.attestations().count());
+    ///               uid.approvals().count());
     /// }
     /// # Ok(()) }
     /// ```
-    pub fn attestations(&self)
-                      -> impl Iterator<Item = &Signature> + Send + Sync
+    pub fn approvals(&self)
+                     -> impl Iterator<Item = &Signature> + Send + Sync
     {
         self.attestations.iter_verified(None)
     }
@@ -635,7 +636,7 @@ impl<C> ComponentBundle<C> {
     {
         self.self_revocations()
             .chain(self.self_signatures())
-            .chain(self.attestations())
+            .chain(self.approvals())
             .chain(self.certifications())
             .chain(self.other_revocations())
     }

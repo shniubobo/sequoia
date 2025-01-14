@@ -1484,7 +1484,8 @@ impl<'a> UserIDAmalgamation<'a> {
         let old = self.clone()
             .with_policy(policy, time)
             .ok()
-            .and_then(|v| v.attestation_key_signatures().next().cloned());
+            .and_then(
+                |v| v.certification_approval_key_signatures().next().cloned());
 
         attest_certifications_common(hash, old, time, primary_signer,
                                      certifications)
@@ -1568,7 +1569,8 @@ impl<'a> UserAttributeAmalgamation<'a> {
         let old = self.clone()
             .with_policy(policy, time)
             .ok()
-            .and_then(|v| v.attestation_key_signatures().next().cloned());
+            .and_then(
+                |v| v.certification_approval_key_signatures().next().cloned());
 
         attest_certifications_common(hash, old, time, primary_signer,
                                      certifications)
@@ -1653,7 +1655,7 @@ where C: IntoIterator<Item = S>,
             creation_time = key_creation_time.min(now);
         }
 
-        let template = SignatureBuilder::new(SignatureType::AttestationKey)
+        let template = SignatureBuilder::new(SignatureType::CertificationApproval)
             .set_signature_creation_time(creation_time)?;
         template
 
@@ -1681,7 +1683,7 @@ where C: IntoIterator<Item = S>,
     for digests in attestations.chunks(digests_per_sig) {
         sigs.push(
             template.clone()
-                .set_attested_certifications(digests)?
+                .set_approved_certifications(digests)?
                 .sign_hash(primary_signer, hash.clone())?);
     }
 
@@ -1691,7 +1693,7 @@ where C: IntoIterator<Item = S>,
         assert!(sigs.is_empty());
         sigs.push(
             template
-                .set_attested_certifications(Option::<&[u8]>::None)?
+                .set_approved_certifications(Option::<&[u8]>::None)?
                 .sign_hash(primary_signer, hash.clone())?);
     }
 
@@ -1793,27 +1795,27 @@ assert_send_and_sync!(ValidComponentAmalgamation<'_, C> where C);
 pub type ValidUserIDAmalgamation<'a> = ValidComponentAmalgamation<'a, UserID>;
 
 impl<'a> ValidUserIDAmalgamation<'a> {
-    /// Returns the userid's attested third-party certifications.
+    /// Returns the user ID's approved third-party certifications.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
     /// Allows the certificate owner to attest to third party
-    /// certifications. See [Attested Certification subpacket] for
+    /// certifications. See [Approved Certification subpacket] for
     /// details.  This can be used to address certificate flooding
     /// concerns.
     ///
     /// This method only returns signatures that are valid under the
-    /// current policy and are attested by the certificate holder.
+    /// current policy and are approved by the certificate holder.
     ///
-    ///   [Attested Certification subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
-    pub fn attested_certifications(&self)
+    ///   [Approved Certification subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
+    pub fn approved_certifications(&self)
         -> impl Iterator<Item=&Signature> + Send + Sync
     {
         let mut hash_algo = None;
         let digests: std::collections::HashSet<_> =
-            self.attestation_key_signatures()
+            self.certification_approval_key_signatures()
             .filter_map(|sig| {
-                sig.attested_certifications().ok()
+                sig.approved_certifications().ok()
                     .map(|digest_iter| (sig, digest_iter))
             })
             .flat_map(|(sig, digest_iter)| {
@@ -1836,31 +1838,31 @@ impl<'a> ValidUserIDAmalgamation<'a> {
             })
     }
 
-    /// Returns set of active attestation key signatures.
+    /// Returns set of active certification approval key signatures.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
     /// Returns the set of signatures with the newest valid signature
     /// creation time.  Older signatures are not returned.  The sum of
-    /// all digests in these signatures are the set of attested
+    /// all digests in these signatures are the set of approved
     /// third-party certifications.
     ///
-    /// This interface is useful for pruning old attestation key
-    /// signatures when filtering a certificate.
+    /// This interface is useful for pruning old certification
+    /// approval key signatures when filtering a certificate.
     ///
     /// Note: This is a low-level interface.  Consider using
-    /// [`ValidUserIDAmalgamation::attested_certifications`] to
+    /// [`ValidUserIDAmalgamation::approved_certifications`] to
     /// iterate over all attested certifications.
     ///
-    ///   [`ValidUserIDAmalgamation::attested_certifications`]: ValidUserIDAmalgamation#method.attested_certifications
+    ///   [`ValidUserIDAmalgamation::approved_certifications`]: ValidUserIDAmalgamation#method.approved_certifications
     // The explicit link works around a bug in rustdoc.
-    pub fn attestation_key_signatures(&'a self)
+    pub fn certification_approval_key_signatures(&'a self)
         -> impl Iterator<Item=&'a Signature> + Send + Sync
     {
         let mut first = None;
 
         // The newest valid signature will be returned first.
-        self.attestations()
+        self.approvals()
         // First, filter out any invalid (e.g. too new) signatures.
             .filter(move |sig| self.cert.policy().signature(
                 sig,
@@ -1966,27 +1968,27 @@ pub type ValidUserAttributeAmalgamation<'a>
     = ValidComponentAmalgamation<'a, UserAttribute>;
 
 impl<'a> ValidUserAttributeAmalgamation<'a> {
-    /// Returns the user attributes's attested third-party certifications.
+    /// Returns the user attributes's approved third-party certifications.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
     /// Allows the certificate owner to attest to third party
-    /// certifications. See [Attested Certification subpacket] for
+    /// certifications. See [Approved Certifications subpacket] for
     /// details.  This can be used to address certificate flooding
     /// concerns.
     ///
     /// This method only returns signatures that are valid under the
-    /// current policy and are attested by the certificate holder.
+    /// current policy and are approved by the certificate holder.
     ///
-    ///   [Attested Certification subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
-    pub fn attested_certifications(&self)
+    ///   [Approved Certifications subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
+    pub fn approved_certifications(&self)
         -> impl Iterator<Item=&Signature> + Send + Sync
     {
         let mut hash_algo = None;
         let digests: std::collections::HashSet<_> =
-            self.attestation_key_signatures()
+            self.certification_approval_key_signatures()
             .filter_map(|sig| {
-                sig.attested_certifications().ok()
+                sig.approved_certifications().ok()
                     .map(|digest_iter| (sig, digest_iter))
             })
             .flat_map(|(sig, digest_iter)| {
@@ -2015,25 +2017,25 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
     ///
     /// Returns the set of signatures with the newest valid signature
     /// creation time.  Older signatures are not returned.  The sum of
-    /// all digests in these signatures are the set of attested
+    /// all digests in these signatures are the set of approved
     /// third-party certifications.
     ///
     /// This interface is useful for pruning old attestation key
     /// signatures when filtering a certificate.
     ///
     /// Note: This is a low-level interface.  Consider using
-    /// [`ValidUserAttributeAmalgamation::attested_certifications`] to
-    /// iterate over all attested certifications.
+    /// [`ValidUserAttributeAmalgamation::approved_certifications`] to
+    /// iterate over all approved certifications.
     ///
-    ///   [`ValidUserAttributeAmalgamation::attested_certifications`]: ValidUserAttributeAmalgamation#method.attested_certifications
+    ///   [`ValidUserAttributeAmalgamation::approved_certifications`]: ValidUserAttributeAmalgamation#method.approved_certifications
     // The explicit link works around a bug in rustdoc.
-    pub fn attestation_key_signatures(&'a self)
+    pub fn certification_approval_key_signatures(&'a self)
         -> impl Iterator<Item=&'a Signature> + Send + Sync
     {
         let mut first = None;
 
         // The newest valid signature will be returned first.
-        self.attestations()
+        self.approvals()
         // First, filter out any invalid (e.g. too new) signatures.
             .filter(move |sig| self.cert.policy().signature(
                 sig,

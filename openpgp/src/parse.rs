@@ -1971,7 +1971,7 @@ impl Subpacket {
                 SubpacketValue::IntendedRecipient(
                     Fingerprint::from_bytes(version, &bytes)?)
             },
-            SubpacketTag::AttestedCertifications => {
+            SubpacketTag::ApprovedCertifications => {
                 // If we don't know the hash algorithm, put all digest
                 // into one bucket.  That way, at least it will
                 // roundtrip.  It will never verify, because we don't
@@ -1982,7 +1982,7 @@ impl Subpacket {
 
                 if digest_size == 0 {
                     // Empty body with unknown hash algorithm.
-                    SubpacketValue::AttestedCertifications(
+                    SubpacketValue::ApprovedCertifications(
                         Vec::with_capacity(0))
                 } else {
                     if len % digest_size != 0 {
@@ -1991,7 +1991,7 @@ impl Subpacket {
                                 .into()).into());
                     }
                     let bytes = php.parse_bytes("attested crts", len)?;
-                    SubpacketValue::AttestedCertifications(
+                    SubpacketValue::ApprovedCertifications(
                         bytes.chunks(digest_size).map(Into::into).collect())
                 }
             },

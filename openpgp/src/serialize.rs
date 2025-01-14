@@ -1568,7 +1568,7 @@ impl Marshal for SubpacketValue {
                 _ => return Err(Error::InvalidArgument(
                     "Unknown kind of fingerprint".into()).into()),
             }
-            AttestedCertifications(digests) => {
+            ApprovedCertifications(digests) => {
                 for digest in digests {
                     o.write_all(digest)?;
                 }
@@ -1619,7 +1619,7 @@ impl MarshalInto for SubpacketValue {
             PreferredAEADAlgorithms(ref p) => p.len(),
             IntendedRecipient(ref fp) =>
                 1 + (fp as &dyn MarshalInto).serialized_len(),
-            AttestedCertifications(digests) =>
+            ApprovedCertifications(digests) =>
                 digests.iter().map(|d| d.len()).sum(),
             PreferredAEADCiphersuites(c) => c.len() * 2,
             Unknown { body, .. } => body.len(),

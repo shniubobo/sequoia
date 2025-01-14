@@ -61,6 +61,27 @@
    - ValidCert no longer derefs to Cert
    - ValidateAmalgamation::with_policy now takes a &self
    - ComponentBundle no longer derefs to the component
+   - SignatureType::AttestationKey renamed to
+     SignatureType::CertificationApproval
+   - SubpacketTag::AttestedCertifications renamed to
+     SubpacketTag::ApprovedCertifications
+   - SubpacketValue::AttestedCertifications renamed to
+     SubpacketValue::ApprovedCertifications
+   - ComponentBundle::attestations renamed to
+     ComponentBundle::approvals
+   - SubpacketAreas::attested_certifications renamed to
+     SubpacketAreas::approved_certifications
+   - SignatureBuilder::set_attested_certifications renamed to
+     SignatureBuilder::set_approved_certifications
+   - ValidUserIDAmalgamation::attested_certifications renamed to
+     ValidUserIDAmalgamation::approved_certifications
+   - ValidUserIDAmalgamation::attestation_key_signatures renamed to
+     ValidUserIDAmalgamation::certification_approval_key_signatures
+   - ValidUserAttributeAmalgamation::attested_certifications renamed
+     to ValidUserAttributeAmalgamation::approved_certifications
+   - ValidUserAttributeAmalgamation::attestation_key_signatures
+     renamed to
+     ValidUserAttributeAmalgamation::certification_approval_key_signatures
 
 ** New functionality
    - Signature::hash_userid_attestation

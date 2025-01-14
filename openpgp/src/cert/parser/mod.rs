@@ -935,7 +935,7 @@ fn split_sigs<C>(primary: &KeyHandle, b: &mut ComponentBundle<C>)
             || issuers.iter().any(|kh| kh.aliases(primary));
 
         use crate::SignatureType::*;
-        if typ == AttestationKey {
+        if typ == CertificationApproval {
             b.attestations.push(sig);
         } else if typ == KeyRevocation
             || typ == SubkeyRevocation

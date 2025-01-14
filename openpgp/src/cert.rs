@@ -515,7 +515,7 @@ pub trait Preferences<'a>: seal::Sealed {
 ///     for c in cert.userids() {
 ///         acc.push(c.userid().clone().into());
 ///         for s in c.self_signatures()   { acc.push(s.clone().into()) }
-///         for s in c.attestations()      { acc.push(s.clone().into()) }
+///         for s in c.approvals()         { acc.push(s.clone().into()) }
 ///         for s in c.certifications()    { acc.push(s.clone().into()) }
 ///         for s in c.self_revocations()  { acc.push(s.clone().into()) }
 ///         for s in c.other_revocations() { acc.push(s.clone().into()) }
@@ -525,7 +525,7 @@ pub trait Preferences<'a>: seal::Sealed {
 ///     for c in cert.user_attributes() {
 ///         acc.push(c.user_attribute().clone().into());
 ///         for s in c.self_signatures()   { acc.push(s.clone().into()) }
-///         for s in c.attestations()      { acc.push(s.clone().into()) }
+///         for s in c.approvals()         { acc.push(s.clone().into()) }
 ///         for s in c.certifications()    { acc.push(s.clone().into()) }
 ///         for s in c.self_revocations()  { acc.push(s.clone().into()) }
 ///         for s in c.other_revocations() { acc.push(s.clone().into()) }
@@ -1606,7 +1606,7 @@ impl Cert {
             check!(format!("userid \"{}\"",
                            String::from_utf8_lossy(ua.userid().value())),
                    ua, attestations, hash_userid_binding,
-                   AttestationKey,
+                   CertificationApproval,
                    ua.userid());
             check_3rd_party!(
                 format!("userid \"{}\"",
@@ -1637,7 +1637,7 @@ impl Cert {
                    binding.user_attribute());
             check!("user attribute",
                    binding, attestations, hash_user_attribute_binding,
-                   AttestationKey,
+                   CertificationApproval,
                    binding.user_attribute());
             check_3rd_party!(
                 "user attribute",
@@ -1942,7 +1942,7 @@ impl Cert {
                     }
                 },
 
-                crate::types::SignatureType::AttestationKey => {
+                crate::types::SignatureType::CertificationApproval => {
                     for binding in self.userids.iter_mut() {
                         check_one!(format!("userid \"{}\"",
                                            String::from_utf8_lossy(
@@ -7023,9 +7023,10 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         Ok(())
     }
 
-    /// Makes sure that attested key signatures are correctly handled.
+    /// Makes sure that certification approval key signatures are
+    /// correctly handled.
     #[test]
-    fn attested_key_signatures() -> Result<()> {
+    fn certificaton_approval_signatures() -> Result<()> {
         use crate::{
             packet::signature::SignatureBuilder,
             types::*,
@@ -7060,7 +7061,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
                    .certifications().count(), 1);
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 0);
+                   .approved_certifications().count(), 0);
 
         // Have Bob attest that certification.
         #[allow(deprecated)]
@@ -7079,32 +7080,32 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(bob.bad_signatures().count(), 0);
         assert_eq!(bob.userids().next().unwrap().certifications().next(),
                    Some(&alice_certifies_bob));
-        assert_eq!(bob.userids().next().unwrap().bundle().attestations().next().unwrap(),
+        assert_eq!(bob.userids().next().unwrap().bundle().approvals().next().unwrap(),
                    &attestation);
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
                    .certifications().count(), 1);
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 1);
+                   .approved_certifications().count(), 1);
 
         // Check that attested key signatures are kept over merges.
         let bob_ = bob.clone().merge_public(bob_pristine.clone())?;
         assert_eq!(bob_.bad_signatures().count(), 0);
         assert_eq!(bob_.userids().next().unwrap().certifications().next(),
                    Some(&alice_certifies_bob));
-        assert_eq!(bob_.userids().next().unwrap().bundle().attestations().next().unwrap(),
+        assert_eq!(bob_.userids().next().unwrap().bundle().approvals().next().unwrap(),
                    &attestation);
         assert_eq!(bob_.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 1);
+                   .approved_certifications().count(), 1);
 
         // And the other way around.
         let bob_ = bob_pristine.clone().merge_public(bob.clone())?;
         assert_eq!(bob_.bad_signatures().count(), 0);
         assert_eq!(bob_.userids().next().unwrap().certifications().next(),
                    Some(&alice_certifies_bob));
-        assert_eq!(bob_.userids().next().unwrap().bundle().attestations().next().unwrap(),
+        assert_eq!(bob_.userids().next().unwrap().bundle().approvals().next().unwrap(),
                    &attestation);
         assert_eq!(bob_.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 1);
+                   .approved_certifications().count(), 1);
 
         // Have Bob withdraw any prior attestations.
 
@@ -7124,12 +7125,12 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(bob.bad_signatures().count(), 0);
         assert_eq!(bob.userids().next().unwrap().certifications().next(),
                    Some(&alice_certifies_bob));
-        assert_eq!(bob.userids().next().unwrap().bundle().attestations().next().unwrap(),
+        assert_eq!(bob.userids().next().unwrap().bundle().approvals().next().unwrap(),
                    &attestation);
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
                    .certifications().count(), 1);
         assert_eq!(bob.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 0);
+                   .approved_certifications().count(), 0);
 
 
         Ok(())
@@ -7145,21 +7146,21 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(test.bad_signatures().count(), 0);
         assert_eq!(test.userids().next().unwrap().certifications().count(),
                    1);
-        assert_eq!(test.userids().next().unwrap().bundle().attestations().count(),
+        assert_eq!(test.userids().next().unwrap().bundle().approvals().count(),
                    1);
 
         let attestation =
-            test.userids().next().unwrap().bundle().attestations().next().unwrap();
+            test.userids().next().unwrap().bundle().approvals().next().unwrap();
 
         if DUMP {
-            for (i, d) in attestation.attested_certifications()?.enumerate() {
+            for (i, d) in attestation.approved_certifications()?.enumerate() {
                 crate::fmt::hex::Dumper::new(std::io::stderr(), "")
                     .write(d, format!("expected digest {}", i))?;
             }
         }
 
         let digests: std::collections::HashSet<_> =
-            attestation.attested_certifications()?.collect();
+            attestation.approved_certifications()?.collect();
 
         for (i, certification) in
             test.userids().next().unwrap().certifications().enumerate()
@@ -7181,7 +7182,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(test.with_policy(p, None)?.userids().next().unwrap()
                    .certifications().count(), 1);
         assert_eq!(test.with_policy(p, None)?.userids().next().unwrap()
-                   .attested_certifications().count(), 1);
+                   .approved_certifications().count(), 1);
 
         Ok(())
     }
@@ -7216,9 +7217,9 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         // Now we make sure the attestation signature was correctly reordered.
         assert_eq!(alice2.bad_signatures().count(), 0);
-        assert!(alice2.keys().all(|ka| ka.attestations().count() == 0));
+        assert!(alice2.keys().all(|ka| ka.approvals().count() == 0));
         let ua = alice2.userids().next().unwrap();
-        assert_eq!(ua.attestations().count(), 1);
+        assert_eq!(ua.approvals().count(), 1);
 
         Ok(())
     }

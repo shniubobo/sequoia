@@ -708,7 +708,7 @@ a_cutoff_list!(SubpacketTagCutoffList, SubpacketTag, 40,
                    REJECT,                 // 34. PreferredAEADAlgorithms.
                    ACCEPT,                 // 35. IntendedRecipient.
                    REJECT,                 // 36. Reserved.
-                   ACCEPT,                 // 37. AttestedCertifications.
+                   ACCEPT,                 // 37. ApprovedCertifications.
                    REJECT,                 // 38. Reserved.
                    ACCEPT,                 // 39. PreferredAEADCiphersuites.
                ]);

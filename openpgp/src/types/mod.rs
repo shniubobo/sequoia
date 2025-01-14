@@ -1629,14 +1629,14 @@ pub enum SignatureType {
     /// Positive certification of a User ID and Public-Key packet.
     PositiveCertification,
 
-    /// Attestation Key Signature (proposed).
+    /// Certification Approval Key Signature (experimental).
     ///
     /// Allows the certificate owner to attest to third party
     /// certifications. See [Certification Approval Key Signature] for
     /// details.
     ///
     ///   [Certification Approval Key Signature]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#name-certification-approval-key-
-    AttestationKey,
+    CertificationApproval,
 
     /// Subkey Binding Signature
     SubkeyBinding,
@@ -1670,7 +1670,7 @@ const SIGNATURE_TYPE_VARIANTS: [SignatureType; 16] = [
     SignatureType::PersonaCertification,
     SignatureType::CasualCertification,
     SignatureType::PositiveCertification,
-    SignatureType::AttestationKey,
+    SignatureType::CertificationApproval,
     SignatureType::SubkeyBinding,
     SignatureType::PrimaryKeyBinding,
     SignatureType::DirectKey,
@@ -1691,7 +1691,7 @@ impl From<u8> for SignatureType {
             0x11 => SignatureType::PersonaCertification,
             0x12 => SignatureType::CasualCertification,
             0x13 => SignatureType::PositiveCertification,
-            0x16 => SignatureType::AttestationKey,
+            0x16 => SignatureType::CertificationApproval,
             0x18 => SignatureType::SubkeyBinding,
             0x19 => SignatureType::PrimaryKeyBinding,
             0x1f => SignatureType::DirectKey,
@@ -1715,7 +1715,7 @@ impl From<SignatureType> for u8 {
             SignatureType::PersonaCertification => 0x11,
             SignatureType::CasualCertification => 0x12,
             SignatureType::PositiveCertification => 0x13,
-            SignatureType::AttestationKey => 0x16,
+            SignatureType::CertificationApproval => 0x16,
             SignatureType::SubkeyBinding => 0x18,
             SignatureType::PrimaryKeyBinding => 0x19,
             SignatureType::DirectKey => 0x1f,
@@ -1746,8 +1746,8 @@ impl fmt::Display for SignatureType {
                 f.write_str("CasualCertification"),
             SignatureType::PositiveCertification =>
                 f.write_str("PositiveCertification"),
-            SignatureType::AttestationKey =>
-                f.write_str("AttestationKey"),
+            SignatureType::CertificationApproval =>
+                f.write_str("CertificationApproval"),
             SignatureType::SubkeyBinding =>
                 f.write_str("SubkeyBinding"),
             SignatureType::PrimaryKeyBinding =>
