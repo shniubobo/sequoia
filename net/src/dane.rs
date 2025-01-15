@@ -181,7 +181,7 @@ fn generate_<'a>(cert: &ValidCert<'a>, fqdn: &str, ttl: Option<Duration>,
     // First, check which UserIDs are in `domain`.
     let mut addresses: Vec<_> =
         cert.userids().filter_map(|uidb| {
-            uidb.userid().email2().unwrap_or(None)
+            uidb.userid().email().unwrap_or(None)
                 .and_then(|e| EmailAddress::from(e).ok())
                 .filter(|e| e.domain == fqdn)
         })
@@ -209,7 +209,7 @@ fn generate_<'a>(cert: &ValidCert<'a>, fqdn: &str, ttl: Option<Duration>,
         // address, no user attribute.
         let mut cert = cert.cert().clone()
             .retain_userids(
-                |u| u.userid().email2().unwrap_or(None)
+                |u| u.userid().email().unwrap_or(None)
                     .and_then(|e| EmailAddress::from(e).ok())
                     .as_ref() == Some(&email))
             .retain_user_attributes(|_| false);

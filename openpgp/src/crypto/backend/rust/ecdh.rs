@@ -10,7 +10,7 @@ use p256::elliptic_curve::{
 use crate::{Error, Result};
 use crate::crypto::SessionKey;
 use crate::crypto::mem::Protected;
-use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap2};
+use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap};
 use crate::crypto::mpi::{self, Ciphertext, SecretKeyMaterial, MPI};
 use crate::packet::{key, Key};
 use crate::types::Curve;
@@ -181,6 +181,6 @@ pub fn decrypt<R>(recipient: &Key<key::PublicParts, R>,
         },
     };
 
-    decrypt_unwrap2(recipient.role_as_unspecified(), &S, ciphertext,
-                    plaintext_len)
+    decrypt_unwrap(recipient.role_as_unspecified(), &S, ciphertext,
+                   plaintext_len)
 }

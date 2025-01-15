@@ -170,7 +170,7 @@ fn parse_body<S: AsRef<str>>(body: &[u8], email_address: S)
         .filter(|cert| match cert {
             Ok(cert) => cert.userids()
                 .any(|uidb|
-                     if let Ok(Some(a)) = uidb.userid().email2() {
+                     if let Ok(Some(a)) = uidb.userid().email() {
                          a == email_address
                      } else { false }),
             Err(_) => true,
@@ -253,7 +253,7 @@ pub async fn get<S: AsRef<str>>(c: &reqwest::Client, email_address: S)
 fn get_cert_domains<'a>(domain: &'a str, cert: &ValidCert<'a>) -> impl Iterator<Item = Url> + 'a
 {
     cert.userids().filter_map(move |uidb| {
-        uidb.userid().email2().unwrap_or(None).and_then(|addr| {
+        uidb.userid().email().unwrap_or(None).and_then(|addr| {
             if EmailAddress::from(&addr).ok().map(|e| e.domain == domain)
                 .unwrap_or(false)
             {

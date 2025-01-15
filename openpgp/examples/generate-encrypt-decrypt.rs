@@ -58,7 +58,7 @@ fn encrypt(p: &dyn Policy, sink: &mut (dyn Write + Send + Sync),
     let message = Message::new(sink);
 
     // We want to encrypt a literal data packet.
-    let message = Encryptor2::for_recipients(message, recipients)
+    let message = Encryptor::for_recipients(message, recipients)
         .build()?;
 
     // Emit a literal data packet.

@@ -7,7 +7,7 @@ use crate::packet::{key, Key};
 use crate::types::Curve;
 use crate::{Error, Result};
 
-use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap2};
+use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap};
 
 use win_crypto_ng as cng;
 use cng::asymmetric::{Ecdh, AsymmetricKey, Export};
@@ -222,6 +222,6 @@ where
         }
     };
 
-    decrypt_unwrap2(recipient.role_as_unspecified(), &S, ciphertext,
-                    plaintext_len)
+    decrypt_unwrap(recipient.role_as_unspecified(), &S, ciphertext,
+                   plaintext_len)
 }

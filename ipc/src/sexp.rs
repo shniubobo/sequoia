@@ -170,7 +170,7 @@ impl Sexp {
                     let S: Protected = s_.decode_point(curve)?.0.into();
 
                     // Now finish the decryption.
-                    openpgp::crypto::ecdh::decrypt_unwrap2(
+                    openpgp::crypto::ecdh::decrypt_unwrap(
                         recipient.role_as_unspecified(), &S, ciphertext,
                         plaintext_len)
                 },

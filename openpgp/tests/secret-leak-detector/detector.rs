@@ -18,7 +18,7 @@ use sequoia_openpgp::{
         SKESK,
     },
     serialize::stream::{
-        Message, Encryptor2, LiteralWriter,
+        Message, Encryptor, LiteralWriter,
     },
     parse::{
         stream::*,
@@ -173,7 +173,7 @@ fn test_aes_256_encryption() {
 fn aes_256_encryption() -> Result<Vec<u8>> {
     let mut sink = Vec::new();
     let message = Message::new(&mut sink);
-    let message = Encryptor2::with_session_key(
+    let message = Encryptor::with_session_key(
         message, SymmetricAlgorithm::AES256, NEEDLE.into())?
         .add_passwords(Some(Password::from(NEEDLE)))
         .build()?;

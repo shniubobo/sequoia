@@ -12,7 +12,7 @@ use crate::openpgp::serialize::stream::Armorer;
 use crate::openpgp::types::KeyFlags;
 use crate::openpgp::parse::Parse;
 use crate::openpgp::serialize::stream::{
-    Message, LiteralWriter, Encryptor2,
+    Message, LiteralWriter, Encryptor,
 };
 use crate::openpgp::policy::StandardPolicy as P;
 
@@ -69,7 +69,7 @@ fn main() -> openpgp::Result<()> {
     let message = Armorer::new(message).build()?;
 
     // We want to encrypt a literal data packet.
-    let message = Encryptor2::for_recipients(message, recipients)
+    let message = Encryptor::for_recipients(message, recipients)
         .build().context("Failed to create encryptor")?;
 
     let mut message = LiteralWriter::new(message).build()

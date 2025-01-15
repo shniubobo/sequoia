@@ -116,12 +116,12 @@ pub(crate) fn encrypt_wrap<R>(recipient: &Key<key::PublicParts, R>,
 /// `recipient` is the message receiver's public key, `S` is the
 /// shared Diffie-Hellman secret used to encrypt `ciphertext`.
 #[allow(non_snake_case)]
-pub fn decrypt_unwrap2(recipient: &Key<key::PublicParts,
-                                       key::UnspecifiedRole>,
-                       S: &Protected,
-                       ciphertext: &mpi::Ciphertext,
-                       plaintext_len: Option<usize>)
-                       -> Result<SessionKey>
+pub fn decrypt_unwrap(recipient: &Key<key::PublicParts,
+                                      key::UnspecifiedRole>,
+                      S: &Protected,
+                      ciphertext: &mpi::Ciphertext,
+                      plaintext_len: Option<usize>)
+                      -> Result<SessionKey>
 {
     match (recipient.mpis(), ciphertext) {
         (mpi::PublicKey::ECDH { ref curve, ref hash, ref sym, ..},
@@ -152,18 +152,6 @@ pub fn decrypt_unwrap2(recipient: &Key<key::PublicParts,
             Err(Error::InvalidArgument(
                 "Expected an ECDH key and ciphertext".into()).into()),
     }
-}
-
-/// Unwraps a session key.
-#[allow(non_snake_case)]
-#[deprecated(note = "Use decrypt_unwrap2")]
-pub fn decrypt_unwrap<R>(recipient: &Key<key::PublicParts, R>,
-                         S: &Protected,
-                         ciphertext: &mpi::Ciphertext)
-    -> Result<SessionKey>
-    where R: key::KeyRole
-{
-    decrypt_unwrap2(recipient.role_as_unspecified(), S, ciphertext, None)
 }
 
 /// Derives a secret key for session key wrapping.

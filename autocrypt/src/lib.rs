@@ -37,7 +37,7 @@ use openpgp::parse::{
 };
 use openpgp::serialize::Serialize;
 use openpgp::serialize::stream::{
-    Message, LiteralWriter, Encryptor2,
+    Message, LiteralWriter, Encryptor,
 };
 use openpgp::crypto::Password;
 use openpgp::policy::Policy;
@@ -137,7 +137,7 @@ impl AutocryptHeader {
         let mut found_one = false;
         for uidb in cert.userids().with_policy(policy, None) {
             // XXX: Fix match once we have the rfc2822-name-addr.
-            if let Ok(Some(a)) = uidb.userid().email2() {
+            if let Ok(Some(a)) = uidb.userid().email() {
                 if a == addr {
                     acc.push(uidb.userid().clone().into());
                     acc.push(uidb.binding_signature().clone().into());
@@ -527,7 +527,7 @@ impl AutocryptSetupMessage {
         {
             // Passphrase-Format header with value numeric9x4
             let m = Message::new(&mut armor_writer);
-            let m = Encryptor2::with_passwords(
+            let m = Encryptor::with_passwords(
                 m, vec![self.passcode.clone().unwrap()]).build()?;
 
             let m = LiteralWriter::new(m).build()?;

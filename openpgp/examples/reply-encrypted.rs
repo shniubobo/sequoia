@@ -104,7 +104,7 @@ pub fn main() -> openpgp::Result<()> {
     }
 
     // We want to encrypt a literal data packet.
-    let message = Encryptor2::with_session_key(message, algo.expect("XXX seipdv2"), sk)?
+    let message = Encryptor::with_session_key(message, algo.expect("XXX seipdv2"), sk)?
         .build().context("Failed to create encryptor")?;
 
     let mut message = LiteralWriter::new(message).build()

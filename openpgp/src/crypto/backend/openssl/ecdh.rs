@@ -1,7 +1,7 @@
 //! Elliptic Curve Diffie-Hellman.
 use std::convert::{TryFrom, TryInto};
 
-use crate::crypto::ecdh::{decrypt_unwrap2, encrypt_wrap};
+use crate::crypto::ecdh::{decrypt_unwrap, encrypt_wrap};
 use crate::crypto::mpi;
 use crate::crypto::mpi::{Ciphertext, SecretKeyMaterial};
 use crate::crypto::SessionKey;
@@ -96,6 +96,6 @@ where
     deriver.set_peer(&recipient_key)?;
     let secret = deriver.derive_to_vec()?.into();
 
-    decrypt_unwrap2(recipient.role_as_unspecified(), &secret, ciphertext,
-                    plaintext_len)
+    decrypt_unwrap(recipient.role_as_unspecified(), &secret, ciphertext,
+                   plaintext_len)
 }

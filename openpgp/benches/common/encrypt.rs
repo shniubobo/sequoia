@@ -2,7 +2,7 @@ use sequoia_openpgp as openpgp;
 use openpgp::cert::Cert;
 use openpgp::policy::StandardPolicy;
 use openpgp::serialize::stream::{
-    Armorer, Encryptor2, LiteralWriter, Message, Signer,
+    Armorer, Encryptor, LiteralWriter, Message, Signer,
 };
 
 use std::io::Write;
@@ -14,7 +14,7 @@ pub fn encrypt_with_password(
 ) -> openpgp::Result<Vec<u8>> {
     let mut sink = vec![];
     let message =
-        Encryptor2::with_passwords(Message::new(&mut sink), Some(password))
+        Encryptor::with_passwords(Message::new(&mut sink), Some(password))
             .build()?;
     let mut w = LiteralWriter::new(message).build()?;
     w.write_all(bytes)?;
@@ -37,7 +37,7 @@ pub fn encrypt_to_cert(
         .for_transport_encryption()
         .for_storage_encryption();
     let message =
-        Encryptor2::for_recipients(Message::new(&mut sink), recipients)
+        Encryptor::for_recipients(Message::new(&mut sink), recipients)
             .build()?;
     let mut w = LiteralWriter::new(message).build()?;
     w.write_all(bytes)?;
@@ -99,7 +99,7 @@ pub fn encrypt_to_cert_and_sign(
 
     let message = Message::new(&mut sink);
     let message = Armorer::new(message).build()?;
-    let message = Encryptor2::for_recipients(message, recipients).build()?;
+    let message = Encryptor::for_recipients(message, recipients).build()?;
     let message = Signer::new(message, signing_keypair)
         //.add_intended_recipient(&recipient)
         .build()?;

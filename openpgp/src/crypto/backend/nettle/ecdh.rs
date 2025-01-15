@@ -4,7 +4,7 @@ use nettle::{ecc, ecdh, random::Yarrow};
 
 use crate::{Error, Result};
 use crate::crypto::SessionKey;
-use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap2};
+use crate::crypto::ecdh::{encrypt_wrap, decrypt_unwrap};
 use crate::crypto::mem::Protected;
 use crate::crypto::mpi::{MPI, PublicKey, SecretKeyMaterial, Ciphertext};
 use crate::packet::{key, Key};
@@ -173,8 +173,8 @@ pub fn decrypt<R>(recipient: &Key<key::PublicParts, R>,
                     Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
             };
 
-            decrypt_unwrap2(recipient.role_as_unspecified(), &S, ciphertext,
-                            plaintext_len)
+            decrypt_unwrap(recipient.role_as_unspecified(), &S, ciphertext,
+                           plaintext_len)
         }
 
         _ =>

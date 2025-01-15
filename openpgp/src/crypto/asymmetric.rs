@@ -353,7 +353,7 @@ impl Decryptor for KeyPair {
                     // (r, R) is the recipient's key pair.
                     let S = Backend::x25519_shared_point(&r, &V.try_into()?)?;
 
-                    crate::crypto::ecdh::decrypt_unwrap2(
+                    crate::crypto::ecdh::decrypt_unwrap(
                         self.public(), &S, ciphertext, plaintext_len)
                 },
 

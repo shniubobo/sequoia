@@ -84,6 +84,12 @@
      ValidUserAttributeAmalgamation::certification_approval_key_signatures
    - Packet::AED removed
    - packet::aed::AED1 removed
+   - serialize::stream::Encryptor2 renamed to Encryptor
+   - crypto::ecdh::decrypt_unwrap2 renamed to decrypt_unwrap2
+   - UserID::name2 renamed to UserID::name
+   - UserID::comment2 renamed to UserID::comment
+   - UserID::email2 renamed to UserID::email
+   - UserID::uri2 renamed to UserID::uri
 
 ** New functionality
    - Signature::hash_userid_attestation
