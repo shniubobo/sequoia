@@ -21,7 +21,6 @@
 //! ```
 
 pub use crate::packet::{
-    AED,
     Any,
     Body,
     CompressedData,
@@ -43,7 +42,6 @@ pub use crate::packet::{
     Unknown,
     UserAttribute,
     UserID,
-    aed::AED1,
     key,
     key::Key4,
     key::Key6,

@@ -402,7 +402,6 @@ impl PacketPile {
                 // The structured container types.
                 Packet::CompressedData(_)
                     | Packet::SEIP(_)
-                    | Packet::AED(_)
                     => (), // Ok.
                 _ => return Err(Error::IndexOutOfRange.into()),
             }

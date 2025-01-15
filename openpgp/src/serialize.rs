@@ -3102,7 +3102,7 @@ impl SEIP2 {
 
 impl seal::Sealed for SEIP2 {}
 impl Marshal for SEIP2 {
-    /// Writes a serialized version of the specified `AED`
+    /// Writes a serialized version of the specified `SEIPv2`
     /// packet to `o`.
     ///
     /// # Errors
@@ -3161,87 +3161,6 @@ impl NetLength for MDC {
 }
 
 impl MarshalInto for MDC {
-    fn serialized_len(&self) -> usize {
-        self.net_len()
-    }
-
-    fn serialize_into(&self, buf: &mut [u8]) -> Result<usize> {
-        generic_serialize_into(self, MarshalInto::serialized_len(self), buf)
-    }
-}
-
-impl seal::Sealed for AED {}
-impl Marshal for AED {
-    fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
-        match self {
-            AED::V1(ref p) => p.serialize(o),
-        }
-    }
-}
-
-impl MarshalInto for AED {
-    fn serialized_len(&self) -> usize {
-        match self {
-            AED::V1(ref p) => p.serialized_len(),
-        }
-    }
-
-    fn serialize_into(&self, buf: &mut [u8]) -> Result<usize> {
-        match self {
-            AED::V1(ref p) => p.serialize_into(buf),
-        }
-    }
-}
-
-impl AED1 {
-    /// Writes the headers of the `AED` data packet to `o`.
-    fn serialize_headers(&self, o: &mut dyn std::io::Write) -> Result<()> {
-        o.write_all(&[1, // Version.
-                      self.symmetric_algo().into(),
-                      self.aead().into(),
-                      self.chunk_size().trailing_zeros() as u8 - 6])?;
-        o.write_all(self.iv())?;
-        Ok(())
-    }
-}
-
-impl seal::Sealed for AED1 {}
-impl Marshal for AED1 {
-    /// Writes a serialized version of the specified `AED`
-    /// packet to `o`.
-    ///
-    /// # Errors
-    ///
-    /// Returns `Error::InvalidOperation` if this packet has children.
-    /// To construct an encrypted message, use
-    /// `serialize::stream::Encryptor`.
-    fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
-        match self.body() {
-            Body::Unprocessed(bytes) => {
-                self.serialize_headers(o)?;
-                o.write_all(bytes)?;
-                Ok(())
-            },
-            _ => Err(Error::InvalidOperation(
-                "Cannot encrypt, use serialize::stream::Encryptor".into())
-                     .into()),
-        }
-    }
-}
-
-impl NetLength for AED1 {
-    fn net_len(&self) -> usize {
-        match self.body() {
-            Body::Unprocessed(bytes) =>
-                4 // Headers.
-                + self.iv().len()
-                + bytes.len(),
-            _ => 0,
-        }
-    }
-}
-
-impl MarshalInto for AED1 {
     fn serialized_len(&self) -> usize {
         self.net_len()
     }
@@ -3316,7 +3235,6 @@ impl Marshal for Packet {
             Packet::SEIP(ref p) => p.serialize(o),
             #[allow(deprecated)]
             Packet::MDC(ref p) => p.serialize(o),
-            Packet::AED(ref p) => p.serialize(o),
             Packet::Padding(p) => p.serialize(o),
         }
     }
@@ -3359,7 +3277,6 @@ impl Marshal for Packet {
             Packet::SEIP(ref p) => p.export(o),
             #[allow(deprecated)]
             Packet::MDC(ref p) => p.export(o),
-            Packet::AED(ref p) => p.export(o),
             Packet::Padding(p) => p.export(o),
         }
     }
@@ -3386,7 +3303,6 @@ impl NetLength for Packet {
             Packet::SEIP(ref p) => p.net_len(),
             #[allow(deprecated)]
             Packet::MDC(ref p) => p.net_len(),
-            Packet::AED(AED::V1(p)) => p.net_len(),
             Packet::Padding(p) => p.net_len(),
         }
     }
@@ -3452,8 +3368,6 @@ enum PacketRef<'a> {
     SEIP(&'a packet::SEIP),
     /// Modification detection code packet.
     MDC(&'a packet::MDC),
-    /// AEAD Encrypted Data Packet.
-    AED(&'a packet::AED),
     /// Padding packet.
     Padding(&'a packet::Padding),
 }
@@ -3483,7 +3397,6 @@ impl<'a> PacketRef<'a> {
             PacketRef::SKESK(_) => Tag::SKESK,
             PacketRef::SEIP(_) => Tag::SEIP,
             PacketRef::MDC(_) => Tag::MDC,
-            PacketRef::AED(_) => Tag::AED,
             PacketRef::Padding(_) => Tag::Padding,
         }
     }
@@ -3529,7 +3442,6 @@ impl<'a> Marshal for PacketRef<'a> {
             PacketRef::SKESK(p) => p.serialize(o),
             PacketRef::SEIP(p) => p.serialize(o),
             PacketRef::MDC(p) => p.serialize(o),
-            PacketRef::AED(p) => p.serialize(o),
             PacketRef::Padding(p) => p.serialize(o),
         }
     }
@@ -3571,7 +3483,6 @@ impl<'a> Marshal for PacketRef<'a> {
             PacketRef::SKESK(p) => p.export(o),
             PacketRef::SEIP(p) => p.export(o),
             PacketRef::MDC(p) => p.export(o),
-            PacketRef::AED(p) => p.export(o),
             PacketRef::Padding(p) => p.export(o),
         }
     }
@@ -3597,7 +3508,6 @@ impl<'a> NetLength for PacketRef<'a> {
             PacketRef::SKESK(p) => p.net_len(),
             PacketRef::SEIP(p) => p.net_len(),
             PacketRef::MDC(p) => p.net_len(),
-            PacketRef::AED(AED::V1(p)) => p.net_len(),
             PacketRef::Padding(p) => p.net_len(),
         }
     }

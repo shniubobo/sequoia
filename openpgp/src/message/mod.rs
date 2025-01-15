@@ -449,7 +449,7 @@ impl TryFrom<PacketPile> for Message {
             }
 
             match packet {
-                Packet::CompressedData(_) | Packet::SEIP(_) | Packet::AED(_) =>
+                Packet::CompressedData(_) | Packet::SEIP(_) =>
                 {
                     // If a container's content is not unpacked, then
                     // we treat the content as an opaque message.
@@ -564,32 +564,32 @@ mod tests {
             },
 
             TestVector {
-                s: &[AED, Literal, Pop],
+                s: &[SEIPv2, Literal, Pop],
                 result: true,
             },
             TestVector {
-                s: &[CompressedData, AED, Literal, Pop, Pop],
+                s: &[CompressedData, SEIPv2, Literal, Pop, Pop],
                 result: true,
             },
             TestVector {
-                s: &[CompressedData, AED, CompressedData, Literal,
+                s: &[CompressedData, SEIPv2, CompressedData, Literal,
                      Pop, Pop, Pop],
                 result: true,
             },
             TestVector {
-                s: &[AED, Pop],
+                s: &[SEIPv2, Pop],
                 result: false,
             },
             TestVector {
-                s: &[SKESK, AED, Literal, Pop],
+                s: &[SKESK, SEIPv2, Literal, Pop],
                 result: true,
             },
             TestVector {
-                s: &[PKESK, AED, Literal, Pop],
+                s: &[PKESK, SEIPv2, Literal, Pop],
                 result: true,
             },
             TestVector {
-                s: &[SKESK, SKESK, AED, Literal, Pop],
+                s: &[SKESK, SKESK, SEIPv2, Literal, Pop],
                 result: true,
             },
 

@@ -123,7 +123,7 @@ impl SKESK6 {
     ///
     /// Returns a tuple containing a placeholder symmetric cipher and
     /// the key itself.  `SKESK6` packets do not contain the symmetric
-    /// cipher algorithm and instead rely on the `AED` packet that
+    /// cipher algorithm and instead rely on the `SEIPDv2` packet that
     /// contains it.
     pub fn decrypt(&self, password: &Password)
                    -> Result<SessionKey> {

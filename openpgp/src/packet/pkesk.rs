@@ -29,7 +29,7 @@ pub use v6::PKESK6;
 /// Holds an asymmetrically encrypted session key.
 ///
 /// The session key is used to decrypt the actual ciphertext, which is
-/// typically stored in a [SEIP] or [AED] packet.  See [Section 5.1 of
+/// typically stored in a [SEIP] packet.  See [Section 5.1 of
 /// RFC 4880] for details.
 ///
 /// A PKESK packet is not normally instantiated directly.  In most

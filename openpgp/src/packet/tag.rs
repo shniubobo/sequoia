@@ -51,9 +51,7 @@ pub enum Tag {
     SEIP,
     /// Modification Detection Code Packet.
     MDC,
-    /// AEAD Encrypted Data Packet.
-    ///
-    /// This feature is [experimental](crate#experimental-features).
+    /// Reserved ("AEAD Encrypted Data Packet").
     AED,
     /// Padding packet.
     Padding,

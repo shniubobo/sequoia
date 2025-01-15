@@ -137,103 +137,6 @@ pub trait Schedule: Send + Sync {
         F: FnMut(&[u8], &[u8]) -> R;
 }
 
-const AED1AD_PREFIX_LEN: usize = 5;
-pub(crate) struct AEDv1Schedule {
-    iv: Box<[u8]>,
-    ad: [u8; AED1AD_PREFIX_LEN],
-}
-
-impl AEDv1Schedule {
-    pub(crate) fn new(sym_algo: SymmetricAlgorithm,
-                      aead: AEADAlgorithm,
-                      chunk_size: usize,
-                      iv: &[u8]) -> Result<Self>
-    {
-        if !(MIN_CHUNK_SIZE..=MAX_CHUNK_SIZE).contains(&chunk_size) {
-            return Err(Error::InvalidArgument(
-                format!("Invalid AEAD chunk size: {}", chunk_size)).into());
-        }
-
-        Ok(Self {
-            iv: iv.into(),
-            ad: [
-                // Prefix.
-                0xd4, // Packet tag.
-                1,    // Version.
-                sym_algo.into(),
-                aead.into(),
-                chunk_size.trailing_zeros() as u8 - 6,
-            ],
-        })
-    }
-}
-
-impl Schedule for AEDv1Schedule {
-    fn next_chunk<F, R>(&self, index: u64, mut fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R,
-    {
-        // Prepare the associated data.
-        let mut ad = [0u8; AED1AD_PREFIX_LEN + 8];
-        ad[..AED1AD_PREFIX_LEN].copy_from_slice(&self.ad);
-        write_be_u64(&mut ad[AED1AD_PREFIX_LEN..],
-                     index);
-
-        // The nonce is computed by treating the starting
-        // initialization vector as a 16-octet, big-endian value and
-        // exclusive-oring the low eight octets of it with the chunk
-        // index.
-        let mut nonce_store = [0u8; MAX_NONCE_LEN];
-        let nonce_len = self.iv.len();
-        let nonce = &mut nonce_store[..nonce_len];
-        nonce.copy_from_slice(&self.iv);
-        let index_be: [u8; 8] = index.to_be_bytes();
-        for (i, o) in &mut nonce[nonce_len.saturating_sub(8)..].iter_mut()
-            .enumerate()
-        {
-            // The lower eight octets of the associated data
-            // are the big endian representation of the chunk
-            // index.
-            *o ^= index_be[i];
-        }
-
-        fun(nonce, &ad)
-    }
-
-    fn final_chunk<F, R>(&self, index: u64, length: u64, mut fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R,
-    {
-        // Prepare the associated data.
-        let mut ad = [0u8; AED1AD_PREFIX_LEN + 8 + 8];
-        ad[..AED1AD_PREFIX_LEN].copy_from_slice(&self.ad);
-        write_be_u64(&mut ad[AED1AD_PREFIX_LEN..AED1AD_PREFIX_LEN + 8],
-                     index);
-        write_be_u64(&mut ad[AED1AD_PREFIX_LEN + 8..],
-                     length);
-
-        // The nonce is computed by treating the starting
-        // initialization vector as a 16-octet, big-endian value and
-        // exclusive-oring the low eight octets of it with the chunk
-        // index.
-        let mut nonce_store = [0u8; MAX_NONCE_LEN];
-        let nonce_len = self.iv.len();
-        let nonce = &mut nonce_store[..nonce_len];
-        nonce.copy_from_slice(&self.iv);
-        let index_be: [u8; 8] = index.to_be_bytes();
-        for (i, o) in &mut nonce[nonce_len.saturating_sub(8)..].iter_mut()
-            .enumerate()
-        {
-            // The lower eight octets of the associated data
-            // are the big endian representation of the chunk
-            // index.
-            *o ^= index_be[i];
-        }
-
-        fun(nonce, &ad)
-    }
-}
-
 const SEIP2AD_PREFIX_LEN: usize = 5;
 pub(crate) struct SEIPv2Schedule {
     nonce: Box<[u8]>,
@@ -889,6 +792,7 @@ mod tests {
             for aead in [
                 AEADAlgorithm::EAX,
                 AEADAlgorithm::OCB,
+                AEADAlgorithm::GCM,
             ].iter().filter(|algo| algo.is_supported() && algo.supports_symmetric_algo(sym_algo)) {
                 let chunk_size = 64;
                 let mut key = vec![0; sym_algo.key_size().unwrap()];
@@ -899,7 +803,8 @@ mod tests {
 
                 let mut ciphertext = Vec::new();
                 {
-                    let schedule = AEDv1Schedule::new(
+                    let (message_key, schedule) = SEIPv2Schedule::new(
+                        &key,
                         *sym_algo,
                         *aead,
                         chunk_size,
@@ -908,7 +813,7 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       key.clone(),
+                                                       message_key,
                                                        &mut ciphertext)
                         .unwrap();
 
@@ -917,7 +822,8 @@ mod tests {
 
                 let mut plaintext = Vec::new();
                 {
-                    let schedule = AEDv1Schedule::new(
+                    let (message_key, schedule) = SEIPv2Schedule::new(
+                        &key,
                         *sym_algo,
                         *aead,
                         chunk_size,
@@ -926,7 +832,7 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       key,
+                                                       message_key,
                                                        Cursor::new(&ciphertext))
                         .unwrap();
 

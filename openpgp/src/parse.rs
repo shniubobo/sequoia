@@ -3679,52 +3679,6 @@ impl MDC {
 
 impl_parse_with_buffered_reader!(MDC);
 
-impl AED {
-    /// Parses the body of a AED packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
-        tracer!(TRACE, "AED::parse", php.recursion_depth());
-        make_php_try!(php);
-        let version = php_try!(php.parse_u8("version"));
-
-        match version {
-            1 => AED1::parse(php),
-            _ => php.fail("unknown version"),
-        }
-    }
-}
-
-impl_parse_with_buffered_reader!(AED);
-
-impl AED1 {
-    /// Parses the body of a AED packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
-        tracer!(TRACE, "AED1::parse", php.recursion_depth());
-        make_php_try!(php);
-        let cipher: SymmetricAlgorithm =
-            php_try!(php.parse_u8("sym_algo")).into();
-        let aead: AEADAlgorithm =
-            php_try!(php.parse_u8("aead_algo")).into();
-        let chunk_size = php_try!(php.parse_u8("chunk_size"));
-
-        // DRAFT 4880bis-08, section 5.16: "An implementation MUST
-        // support chunk size octets with values from 0 to 56.  Chunk
-        // size octets with other values are reserved for future
-        // extensions."
-        if chunk_size > 56 {
-            return php.fail("unsupported chunk size");
-        }
-        let chunk_size: u64 = 1 << (chunk_size + 6);
-
-        let iv_size = php_try!(aead.nonce_size());
-        let iv = php_try!(php.parse_bytes("iv", iv_size));
-
-        let aed = php_try!(Self::new(
-            cipher, aead, chunk_size, iv.into_boxed_slice()
-        ));
-        php.ok(aed.into()).map(|pp| pp.set_processed(false))
-    }
-}
-
 impl Padding {
     /// Parses the body of a padding packet.
     fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
@@ -5381,7 +5335,6 @@ impl <'a> PacketParser<'a> {
             Tag::SEIP =>                SEIP::parse(parser),
             Tag::MDC =>                 MDC::parse(parser),
             Tag::PKESK =>               PKESK::parse(parser),
-            Tag::AED =>                 AED::parse(parser),
             Tag::Padding =>             Padding::parse(parser),
             _ => Unknown::parse(parser,
                                 Error::UnsupportedPacketType(tag).into()),
@@ -5607,7 +5560,7 @@ impl <'a> PacketParser<'a> {
 
         match self.packet {
             // Packets that recurse.
-            Packet::CompressedData(_) | Packet::SEIP(_) | Packet::AED(_)
+            Packet::CompressedData(_) | Packet::SEIP(_)
                 if self.processed =>
             {
                 if self.recursion_depth() as u8
@@ -5667,7 +5620,7 @@ impl <'a> PacketParser<'a> {
                 | Packet::Marker(_) | Packet::Trust(_)
                 | Packet::UserID(_) | Packet::UserAttribute(_)
                 | Packet::Literal(_) | Packet::PKESK(_) | Packet::SKESK(_)
-                | Packet::SEIP(_) | Packet::MDC(_) | Packet::AED(_)
+                | Packet::SEIP(_) | Packet::MDC(_)
                 | Packet::CompressedData(_)
                 | Packet::Padding(_) => {
                 // Drop through.
@@ -5770,8 +5723,6 @@ impl <'a> PacketParser<'a> {
             Packet::SEIP(SEIP::V1(p)) =>
                 set_or_extend(rest, p.deref_mut(), self.processed),
             Packet::SEIP(SEIP::V2(p)) =>
-                set_or_extend(rest, p.deref_mut(), self.processed),
-            Packet::AED(AED::V1(p)) =>
                 set_or_extend(rest, p.deref_mut(), self.processed),
             p => {
                 if !rest.is_empty() {
@@ -6381,63 +6332,6 @@ impl<'a> PacketParser<'a> {
                 Ok(())
             },
 
-            Packet::AED(AED::V1(aed)) => {
-                let chunk_size =
-                    aead::chunk_size_usize(aed.chunk_size())?;
-
-                // Read the first chunk and check whether we can
-                // decrypt it using the provided key.  Don't actually
-                // consume them in case we can't.
-                {
-                    // We need a bit more than one chunk so that
-                    // `aead::Decryptor` won't see EOF and think that
-                    // it has a partial block and it needs to verify
-                    // the final chunk.
-                    let amount = aead::chunk_size_usize(
-                        aed.chunk_digest_size()?
-                        + aed.aead().digest_size()? as u64)?;
-
-                    let data = self.data(amount)?;
-                    let schedule = aead::AEDv1Schedule::new(
-                        aed.symmetric_algo(),
-                        aed.aead(),
-                        chunk_size,
-                        aed.iv())?;
-
-                    let dec = aead::Decryptor::new(
-                        aed.symmetric_algo(), aed.aead(), chunk_size,
-                        schedule, key.clone(),
-                        &data[..cmp::min(data.len(), amount)])?;
-                    let mut chunk = Vec::new();
-                    dec.take(aed.chunk_size() as u64).read_to_end(&mut chunk)?;
-                }
-
-                // Ok, we can decrypt the data.  Push a Decryptor and
-                // a HashedReader on the `BufferedReader` stack.
-
-                // This can't fail, because we create a decryptor
-                // above with the same parameters.
-                let schedule = aead::AEDv1Schedule::new(
-                    aed.symmetric_algo(),
-                    aed.aead(),
-                    chunk_size,
-                    aed.iv())?;
-
-                let reader = self.take_reader();
-                let mut reader = aead::BufferedReaderDecryptor::with_cookie(
-                    aed.symmetric_algo(), aed.aead(), chunk_size,
-                    schedule, key.clone(), reader, Cookie::default()).unwrap();
-                reader.cookie_mut().level = Some(self.recursion_depth());
-
-                t!("Pushing aead::Decryptor, level {:?}.",
-                   reader.cookie_ref().level);
-
-                self.reader = Box::new(reader);
-                self.processed = true;
-
-                Ok(())
-            },
-
             _ =>
                 Err(Error::InvalidOperation(
                     format!("Can't decrypt {:?} packets.",
@@ -6649,32 +6543,6 @@ mod test {
                 (Tag::MDC, &[ 1, 3 ]),
             ],
         },
-
-        // AEAD encrypted messages.
-        DecryptTest {
-            filename: "aed/msg-aes128-eax-chunk-size-64-password-123.pgp",
-            algo: SymmetricAlgorithm::AES128,
-            aead_algo: Some(AEADAlgorithm::EAX),
-            key_hex: "E88151F2B6F6F6F0AE6B56ED247AA61B",
-            plaintext: Data::File("a-cypherpunks-manifesto.txt"),
-            paths: &[
-                (Tag::SKESK, &[ 0 ]),
-                (Tag::AED, &[ 1 ]),
-                (Tag::Literal, &[ 1, 0 ]),
-            ],
-        },
-        DecryptTest {
-            filename: "aed/msg-aes128-eax-chunk-size-4194304-password-123.pgp",
-            algo: SymmetricAlgorithm::AES128,
-            aead_algo: Some(AEADAlgorithm::EAX),
-            key_hex: "918E6BF5C6CE4320D014735AF27BFA76",
-            plaintext: Data::File("a-cypherpunks-manifesto.txt"),
-            paths: &[
-                (Tag::SKESK, &[ 0 ]),
-                (Tag::AED, &[ 1 ]),
-                (Tag::Literal, &[ 1, 0 ]),
-            ],
-        },
     ];
 
     // Consume packets until we get to one in `keep`.
@@ -6754,7 +6622,7 @@ mod test {
 
                 pp.decrypt(Some(test.algo), &key).unwrap();
             } else {
-                panic!("Expected a SEIP/AED packet.  Got: {:?}", ppr);
+                panic!("Expected a SEIP packet.  Got: {:?}", ppr);
             }
 
             let mut ppr = consume_until(
@@ -6846,7 +6714,7 @@ mod test {
                 pp.possible_message().unwrap();
 
                 match pp.packet {
-                    Packet::SEIP(_) | Packet::AED(_) => {
+                    Packet::SEIP(_) => {
                         let key = crate::fmt::from_hex(test.key_hex, false)
                             .unwrap().into();
                         pp.decrypt(Some(test.algo), &key).unwrap();
@@ -7023,7 +6891,7 @@ mod test {
                 eprintln!("  {}: {:?}", pp.packet.tag(), pp.path());
 
                 match pp.packet {
-                    Packet::SEIP(_) | Packet::AED(_) => {
+                    Packet::SEIP(_) => {
                         let key = crate::fmt::from_hex(test.key_hex, false)
                             .unwrap().into();
 

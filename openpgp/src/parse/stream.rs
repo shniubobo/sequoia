@@ -118,7 +118,6 @@ use crate::{
     },
     packet::{
         key,
-        AED,
         OnePassSig,
         PKESK,
         SEIP,
@@ -2370,14 +2369,13 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
 
             let sym_algo_hint = match &pp.packet {
                 Packet::SEIP(SEIP::V2(seip)) => Some(seip.symmetric_algo()),
-                Packet::AED(AED::V1(aed)) => Some(aed.symmetric_algo()),
                 _ => None,
             };
 
             match pp.packet {
                 Packet::CompressedData(ref p) =>
                     v.structure.new_compression_layer(p.algo()),
-                Packet::SEIP(_) | Packet::AED(_) if v.mode == Mode::Decrypt => {
+                Packet::SEIP(_) if v.mode == Mode::Decrypt => {
                     t!("Found the encryption container");
 
                     // Get the symmetric algorithm from the decryption
@@ -2386,7 +2384,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                     let mut sym_algo = None;
                     {
                         let decryption_proxy = |algo, secret: &SessionKey| {
-                            // Take the algo from the AED packet over
+                            // Take the algo from the SEIPDv2 packet over
                             // the dummy one from the SKESK6 packet.
                             let algo = sym_algo_hint.or(algo);
                             let result = pp.decrypt(algo, secret);
@@ -2419,7 +2417,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                     };
 
                     v.policy.symmetric_algorithm(sym_algo)?;
-                    if let Packet::AED(AED::V1(p)) = &pp.packet {
+                    if let Packet::SEIP(SEIP::V2(p)) = &pp.packet {
                         v.policy.aead_algorithm(p.aead())?;
                     }
 
@@ -2428,7 +2426,7 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                         pp.packet.tag() == packet::Tag::SEIP
                             && pp.packet.version() == Some(1),
                         sym_algo,
-                        if let Packet::AED(AED::V1(p)) = &pp.packet {
+                        if let Packet::SEIP(SEIP::V2(p)) = &pp.packet {
                             Some(p.aead())
                         } else {
                             None

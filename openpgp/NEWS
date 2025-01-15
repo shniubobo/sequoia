@@ -82,6 +82,8 @@
    - ValidUserAttributeAmalgamation::attestation_key_signatures
      renamed to
      ValidUserAttributeAmalgamation::certification_approval_key_signatures
+   - Packet::AED removed
+   - packet::aed::AED1 removed
 
 ** New functionality
    - Signature::hash_userid_attestation

@@ -13,7 +13,6 @@ use xxhash_rust::xxh3::Xxh3;
 use crate::{
     Packet,
     packet::{
-        AED,
         Iter,
         SEIP,
     },
@@ -75,8 +74,8 @@ pub enum Body {
     ///     that we failed to process, say because we didn't support
     ///     the packet's version.
     ///
-    ///   - The packet is an encryption container ([`SEIP`] or
-    ///     [`AED`]) and the body is encrypted.
+    ///   - The packet is an encryption container ([`SEIP`]) and the
+    ///     body is encrypted.
     ///
     /// Note: if some of a packet's data is streamed, and the
     /// `PacketParser` is configured to buffer unread content, then
@@ -86,7 +85,6 @@ pub enum Body {
     ///   [`Literal`]: crate::packet::Literal
     ///   [`Unknown`]: crate::packet::Unknown
     ///   [`SEIP`]: crate::packet::SEIP
-    ///   [`AED`]: crate::packet::AED
     Unprocessed(Vec<u8>),
 
     /// Processed packed body.
@@ -406,7 +404,6 @@ impl Packet {
             Packet::CompressedData(p) => Some(p.deref()),
             Packet::SEIP(SEIP::V1(p)) => Some(p.deref()),
             Packet::SEIP(SEIP::V2(p)) => Some(p.deref()),
-            Packet::AED(AED::V1(p)) => Some(p.deref()),
             Packet::Literal(p) => Some(p.container_ref()),
             Packet::Unknown(p) => Some(p.container_ref()),
             _ => None,
@@ -420,7 +417,6 @@ impl Packet {
             Packet::CompressedData(p) => Some(p.deref_mut()),
             Packet::SEIP(SEIP::V1(p)) => Some(p.deref_mut()),
             Packet::SEIP(SEIP::V2(p)) => Some(p.deref_mut()),
-            Packet::AED(AED::V1(p)) => Some(p.deref_mut()),
             Packet::Literal(p) => Some(p.container_mut()),
             Packet::Unknown(p) => Some(p.container_mut()),
             _ => None,

@@ -218,7 +218,6 @@ pub mod pkesk;
 pub use pkesk::PKESK;
 mod mdc;
 pub use self::mdc::MDC;
-pub mod aed;
 mod padding;
 pub use self::padding::Padding;
 
@@ -288,8 +287,6 @@ pub enum Packet {
     /// Modification detection code packet.
     #[deprecated]
     MDC(MDC),
-    /// AEAD Encrypted Data Packet.
-    AED(AED),
     /// Padding packet.
     Padding(Padding),
 }
@@ -329,7 +326,6 @@ impl_into_iterator!(PKESK);
 impl_into_iterator!(SKESK);
 impl_into_iterator!(SEIP);
 impl_into_iterator!(MDC);
-impl_into_iterator!(AED);
 impl_into_iterator!(Key<P, R> where P: key::KeyParts, R: key::KeyRole);
 
 // Make it easy to pass an iterator of Packets to something expecting
@@ -367,7 +363,6 @@ impl Packet {
             Packet::SEIP(_) => Tag::SEIP,
             #[allow(deprecated)]
             Packet::MDC(_) => Tag::MDC,
-            Packet::AED(_) => Tag::AED,
             Packet::Padding(_) => Tag::Padding,
         }
     }
@@ -423,7 +418,6 @@ impl Packet {
             Packet::SEIP(p) => Some(p.version()),
             #[allow(deprecated)]
             Packet::MDC(_) => None,
-            Packet::AED(p) => Some(p.version()),
             Packet::Padding(_) => None,
         }
     }
@@ -465,7 +459,6 @@ impl Packet {
             Packet::SEIP(x) => Hash::hash(&x, state),
             #[allow(deprecated)]
             Packet::MDC(x) => Hash::hash(&x, state),
-            Packet::AED(x) => Hash::hash(&x, state),
             Packet::Unknown(x) => Hash::hash(&x, state),
             Packet::Padding(x) => Padding::hash(x, state),
         }
@@ -503,7 +496,6 @@ impl Packet {
             Packet::SEIP(SEIP::V2(packet)) => &packet.common,
             #[allow(deprecated)]
             Packet::MDC(ref packet) => &packet.common,
-            Packet::AED(AED::V1(packet)) => &packet.common,
             Packet::Padding(packet) => &packet.common,
         }
     }
@@ -531,7 +523,6 @@ impl fmt::Debug for Packet {
                 Packet::SEIP(v) => write!(f, "SEIP({:?})", v),
                 #[allow(deprecated)]
                 Packet::MDC(v) => write!(f, "MDC({:?})", v),
-                Packet::AED(AED::V1(v)) => write!(f, "AED({:?})", v),
                 Packet::Padding(v) => write!(f, "Padding({:?})", v),
             }
         }
@@ -674,7 +665,7 @@ impl std::hash::Hash for Common {
 /// Given a [`Packet`], an `Iter` iterates over the `Packet` and any
 /// `Packet`s that it contains.  For non-container `Packet`s, this
 /// just returns a reference to the `Packet` itself.  For [container
-/// `Packet`s] like [`CompressedData`], [`SEIP`], and [`AED`], this
+/// `Packet`s] like [`CompressedData`], and [`SEIP`], this
 /// walks the `Packet` hierarchy in depth-first order, and returns the
 /// `Packet`s the first time they are visited.  (Thus, the packet
 /// itself is always returned first.)
@@ -2094,48 +2085,6 @@ impl SEIP {
 impl From<SEIP> for Packet {
     fn from(p: SEIP) -> Self {
         Packet::SEIP(p)
-    }
-}
-
-/// Holds an AEAD encrypted data packet.
-///
-/// An AEAD packet holds encrypted data.  It is contains additional
-/// OpenPGP packets.  See [Section 5.16 of RFC 4880bis] for details.
-///
-/// [Section 5.16 of RFC 4880bis]: https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-05#section-5.16
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
-/// An AEAD packet is not normally instantiated directly.  In most
-/// cases, you'll create one as a side-effect of encrypting a message
-/// using the [streaming serializer], or parsing an encrypted message
-/// using the [`PacketParser`].
-///
-/// [streaming serializer]: crate::serialize::stream
-/// [`PacketParser`]: crate::parse::PacketParser
-///
-/// This feature is [experimental](super#experimental-features).
-#[non_exhaustive]
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub enum AED {
-    /// AED packet version 1.
-    V1(self::aed::AED1),
-}
-assert_send_and_sync!(AED);
-
-impl AED {
-    /// Gets the version.
-    pub fn version(&self) -> u8 {
-        match self {
-            AED::V1(_) => 1,
-        }
-    }
-}
-
-impl From<AED> for Packet {
-    fn from(p: AED) -> Self {
-        Packet::AED(p)
     }
 }
 

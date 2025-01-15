@@ -203,8 +203,7 @@ impl std::convert::TryFrom<Packet> for Unknown {
             // cannot recreate that from processed or structured
             // bodies.
             Packet::CompressedData(_)
-                | Packet::SEIP(_)
-                | Packet::AED(_) =>
+                | Packet::SEIP(_) =>
                 return Err(Self::Error::InvalidOperation(
                     format!("Cannot convert {} to unknown packets", tag))),
 
@@ -283,8 +282,7 @@ impl std::convert::TryFrom<Packet> for Unknown {
             // cannot recreate that from processed or structured
             // bodies.
             Packet::CompressedData(_)
-                | Packet::SEIP(_)
-                | Packet::AED(_) => unreachable!("handled above"),
+                | Packet::SEIP(_) => unreachable!("handled above"),
         }
     }
 }

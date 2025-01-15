@@ -17,7 +17,6 @@ use crate::packet::{
     SKESK,
     SEIP,
     MDC,
-    AED,
     Padding,
 };
 
@@ -137,7 +136,6 @@ impl_downcasts!(
     SKESK,
     SEIP,
     MDC,
-    AED,
     Padding,
 );
 
