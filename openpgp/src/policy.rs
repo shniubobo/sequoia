@@ -1599,8 +1599,7 @@ impl<'a> Policy for StandardPolicy<'a> {
                     Curve::NistP384 => NistP384,
                     Curve::NistP521 => NistP521,
                     Curve::BrainpoolP256 => BrainpoolP256,
-                    Curve::Unknown(_) if curve.is_brainpoolp384()
-                        => BrainpoolP384,
+                    Curve::BrainpoolP384 => BrainpoolP384,
                     Curve::BrainpoolP512 => BrainpoolP512,
                     Curve::Ed25519 => Cv25519,
                     Curve::Cv25519 => Cv25519,

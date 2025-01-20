@@ -52,9 +52,7 @@ impl Asymmetric for super::Backend {
         use Curve::*;
         match curve {
             NistP256 | NistP384 | NistP521 | Ed25519 | Cv25519 |
-            BrainpoolP256 | BrainpoolP512
-                => true,
-            Unknown(_) if curve.is_brainpoolp384() // XXX
+            BrainpoolP256 | BrainpoolP384 | BrainpoolP512
                 => true,
             Unknown(_)
                 => false,
@@ -602,7 +600,7 @@ impl Curve {
             NistP384 => Ok("secp384r1"),
             NistP521 => Ok("secp521r1"),
             BrainpoolP256 => Ok("brainpool256r1"),
-            Unknown(_) if self.is_brainpoolp384() => Ok("brainpool384r1"),
+            BrainpoolP384 => Ok("brainpool384r1"),
             BrainpoolP512 => Ok("brainpool512r1"),
             Ed25519 | // Handled differently.
             Cv25519 | // Handled differently.

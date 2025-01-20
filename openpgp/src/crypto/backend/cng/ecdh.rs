@@ -110,8 +110,8 @@ where
             encrypt_wrap(recipient, session_key, VB, &S)
         }
 
-        // Not implemented in Nettle
-        Curve::BrainpoolP256 | Curve::BrainpoolP512 =>
+        // Not implemented in CNG.
+        Curve::BrainpoolP256 | Curve::BrainpoolP384 | Curve::BrainpoolP512 =>
             Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
 
         // N/A

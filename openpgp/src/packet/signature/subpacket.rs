@@ -6637,7 +6637,7 @@ impl signature::SignatureBuilder {
     ///             .set_preferred_aead_algorithms(vec![ AEADAlgorithm::EAX ])?
     ///             .set_features(
     ///                 sig.features().unwrap_or_else(Features::sequoia)
-    ///                     .set_aead())?
+    ///                     .set_seipdv2())?
     ///             .sign_direct_key(&mut signer, None)?);
     /// }
     ///
@@ -6648,7 +6648,7 @@ impl signature::SignatureBuilder {
     ///             .set_preferred_aead_algorithms(vec![ AEADAlgorithm::EAX ])?
     ///             .set_features(
     ///                 sig.features().unwrap_or_else(Features::sequoia)
-    ///                     .set_aead())?
+    ///                     .set_seipdv2())?
     ///             .sign_userid_binding(&mut signer, pk, ua.userid())?);
     /// }
     ///

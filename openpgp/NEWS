@@ -90,6 +90,9 @@
    - UserID::comment2 renamed to UserID::comment
    - UserID::email2 renamed to UserID::email
    - UserID::uri2 renamed to UserID::uri
+   - Features::supports_aead removed
+   - Features::set_aead removed
+   - Features::clear_aead removed
 
 ** New functionality
    - Signature::hash_userid_attestation
@@ -97,6 +100,12 @@
    - Message::packets
    - PacketPileParser::packet
    - PacketPileParser::packet_mut
+   - crypto::PublicKeyAlgorithm
+   - crypto::Curve
+   - crypto::SymmetricAlgorithm
+   - crypto::AEADAlgorithm
+   - crypto::HashAlgorithm
+   - crypto::Curve::BrainpoolP384
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

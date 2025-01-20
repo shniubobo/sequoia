@@ -73,7 +73,7 @@ impl Asymmetric for super::Backend {
                 => true,
             Ed25519 | Cv25519
                 => true,
-            BrainpoolP256 | BrainpoolP512 | Unknown(_)
+            BrainpoolP256 | BrainpoolP384 | BrainpoolP512 | Unknown(_)
                 => false,
         }
     }
@@ -369,6 +369,7 @@ impl KeyPair {
                -> Result<SessionKey>
     {
         use crate::PublicKeyAlgorithm::*;
+        #[allow(deprecated)]
         match (self.public().mpis(), secret, ciphertext) {
             (mpi::PublicKey::RSA { e, n },
              mpi::SecretKeyMaterial::RSA { p, q, d, .. },

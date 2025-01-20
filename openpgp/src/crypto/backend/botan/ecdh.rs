@@ -35,14 +35,14 @@ pub fn encrypt<R>(recipient: &Key<key::PublicParts, R>,
                 Err(Error::InvalidArgument("implemented elsewhere".into()).into()),
 
             // N/A
-            Curve::Unknown(_) if ! curve.is_brainpoolp384() =>
+            Curve::Unknown(_) =>
                 Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
             Curve::Ed25519 =>
                 Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
 
             Curve::NistP256 | Curve::NistP384 | Curve::NistP521 |
             Curve::BrainpoolP256 |
-            Curve::Unknown(_) | // XXX: this is BrainpoolP384
+            Curve::BrainpoolP384 |
             Curve::BrainpoolP512 => {
                 // Obtain the recipient public key R
                 let R = &q.value();
@@ -87,7 +87,7 @@ pub fn decrypt<R>(recipient: &Key<key::PublicParts, R>,
                     Err(Error::InvalidArgument("implemented elsewhere".into()).into()),
 
                 // N/A
-                Curve::Unknown(_) if ! curve.is_brainpoolp384() => return
+                Curve::Unknown(_) => return
                     Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
                 Curve::Ed25519 => return
                     Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
@@ -95,7 +95,7 @@ pub fn decrypt<R>(recipient: &Key<key::PublicParts, R>,
 
                 Curve::NistP256 | Curve::NistP384 | Curve::NistP521 |
                 Curve::BrainpoolP256 |
-                Curve::Unknown(_) | // XXX: this is BrainpoolP384
+                Curve::BrainpoolP384 |
                 Curve::BrainpoolP512 => {
                     // Get the public part V of the ephemeral key.
                     let V = &e.value();

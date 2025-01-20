@@ -32,6 +32,7 @@ pub(crate) fn default_ecdh_kdf_hash(curve: &Curve) -> HashAlgorithm {
         Curve::NistP521 => HashAlgorithm::SHA512,
         // Extrapolated from RFC6637:
         Curve::BrainpoolP256 => HashAlgorithm::SHA256,
+        Curve::BrainpoolP384 => HashAlgorithm::SHA384,
         Curve::BrainpoolP512 => HashAlgorithm::SHA512,
         // Conservative default.
         Curve::Ed25519 // Odd: Not an encryption algo.
@@ -49,6 +50,7 @@ pub(crate) fn default_ecdh_kek_cipher(curve: &Curve) -> SymmetricAlgorithm {
         Curve::NistP521 => SymmetricAlgorithm::AES256,
         // Extrapolated from RFC6637:
         Curve::BrainpoolP256 => SymmetricAlgorithm::AES128,
+        Curve::BrainpoolP384 => SymmetricAlgorithm::AES192,
         Curve::BrainpoolP512 => SymmetricAlgorithm::AES256,
         // Conservative default.
         Curve::Ed25519 // Odd: Not an encryption algo.

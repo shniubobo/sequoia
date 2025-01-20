@@ -37,14 +37,14 @@ use crate::types::Bitfield;
 /// # fn main() -> Result<()> {
 /// let p = &StandardPolicy::new();
 ///
-/// # let (cert, _) =
-/// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
-/// #     .generate()?;
+/// let (cert, _) =
+///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     .generate()?;
 /// match cert.with_policy(p, None)?.primary_userid()?.features() {
 ///     Some(features) => {
 ///         println!("Certificate holder's supported features:");
 ///         assert!(features.supports_seipdv1());
-///         assert!(!features.supports_aead());
+///         assert!(features.supports_seipdv2());
 ///     }
 ///     None => {
 ///         println!("Certificate Holder did not specify any features.");
@@ -70,19 +70,12 @@ impl fmt::Debug for Features {
             f.write_str("SEIPDv2")?;
             need_comma = true;
         }
-        #[allow(deprecated)]
-        if self.supports_aead() {
-            if need_comma { f.write_str(", ")?; }
-            f.write_str("AEAD")?;
-            need_comma = true;
-        }
 
         // Now print any unknown features.
         for i in self.0.iter_set() {
             match i {
                 FEATURE_FLAG_SEIPDV1 => (),
                 FEATURE_FLAG_SEIPDV2 => (),
-                FEATURE_FLAG_AEAD => (),
                 i => {
                     if need_comma { f.write_str(", ")?; }
                     write!(f, "#{}", i)?;
@@ -172,17 +165,16 @@ impl Features {
     /// use openpgp::types::Features;
     ///
     /// # fn main() -> Result<()> {
-    /// // Feature flags 0 and 2.
-    /// let f = Features::new(&[0x5]);
+    /// // Feature flags 0 and 3.
+    /// let f = Features::new(&[0x9]);
     ///
     /// assert!(f.get(0));
     /// assert!(! f.get(1));
-    /// assert!(f.get(2));
-    /// assert!(! f.get(3));
+    /// assert!(! f.get(2));
+    /// assert!(f.get(3));
+    /// assert!(! f.get(4));
     /// assert!(! f.get(8));
     /// assert!(! f.get(80));
-    /// # assert!(f.supports_seipdv1());
-    /// # assert!(! f.supports_aead());
     /// # Ok(()) }
     /// ```
     pub fn get(&self, bit: usize) -> bool {
@@ -201,14 +193,15 @@ impl Features {
     /// use openpgp::types::Features;
     ///
     /// # fn main() -> Result<()> {
-    /// let f = Features::empty().set(0).set(2);
+    /// let f = Features::empty().set(0).set(3);
     ///
     /// assert!(f.get(0));
     /// assert!(! f.get(1));
-    /// assert!(f.get(2));
-    /// assert!(! f.get(3));
-    /// # assert!(f.supports_seipdv1());
-    /// # assert!(! f.supports_aead());
+    /// assert!(! f.get(2));
+    /// assert!(f.get(3));
+    /// assert!(! f.get(4));
+    /// assert!(! f.get(8));
+    /// assert!(! f.get(80));
     /// # Ok(()) }
     /// ```
     pub fn set(mut self, bit: usize) -> Self {
@@ -229,14 +222,12 @@ impl Features {
     /// use openpgp::types::Features;
     ///
     /// # fn main() -> Result<()> {
-    /// let f = Features::empty().set(0).set(2).clear(2);
+    /// let f = Features::empty().set(0).set(3).clear(3);
     ///
     /// assert!(f.get(0));
     /// assert!(! f.get(1));
     /// assert!(! f.get(2));
     /// assert!(! f.get(3));
-    /// # assert!(f.supports_seipdv1());
-    /// # assert!(! f.supports_aead());
     /// # Ok(()) }
     /// ```
     pub fn clear(mut self, bit: usize) -> Self {
@@ -382,78 +373,11 @@ impl Features {
     pub fn clear_seipdv2(self) -> Self {
         self.clear(FEATURE_FLAG_SEIPDV2)
     }
-
-    /// Returns whether the AEAD feature flag is set.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use sequoia_openpgp as openpgp;
-    /// # use openpgp::Result;
-    /// use openpgp::types::Features;
-    ///
-    /// # fn main() -> Result<()> {
-    /// let f = Features::empty();
-    ///
-    /// assert!(! f.supports_aead());
-    /// # Ok(()) }
-    /// ```
-    #[deprecated]
-    pub fn supports_aead(&self) -> bool {
-        self.get(FEATURE_FLAG_AEAD)
-    }
-
-    /// Sets the AEAD feature flag.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use sequoia_openpgp as openpgp;
-    /// # use openpgp::Result;
-    /// use openpgp::types::Features;
-    ///
-    /// # fn main() -> Result<()> {
-    /// let f = Features::empty().set_aead();
-    ///
-    /// assert!(f.supports_aead());
-    /// # assert!(f.get(1));
-    /// # Ok(()) }
-    /// ```
-    #[deprecated]
-    pub fn set_aead(self) -> Self {
-        self.set(FEATURE_FLAG_AEAD)
-    }
-
-    /// Clears the AEAD feature flag.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use sequoia_openpgp as openpgp;
-    /// # use openpgp::Result;
-    /// use openpgp::types::Features;
-    ///
-    /// # fn main() -> Result<()> {
-    /// let f = Features::new(&[0x2]);
-    /// assert!(f.supports_aead());
-    ///
-    /// let f = f.clear_aead();
-    /// assert!(! f.supports_aead());
-    /// # Ok(()) }
-    /// ```
-    #[deprecated]
-    pub fn clear_aead(self) -> Self {
-        self.clear(FEATURE_FLAG_AEAD)
-    }
 }
 
 /// Symmetrically Encrypted and Integrity Protected Data packet
 /// version 1.
 const FEATURE_FLAG_SEIPDV1: usize = 0;
-
-/// AEAD Encrypted Data Packet (packet 20) and version 5 Symmetric-Key
-/// Encrypted Session Key Packets (packet 3).
-const FEATURE_FLAG_AEAD: usize = 1;
 
 /// Symmetrically Encrypted and Integrity Protected Data packet
 /// version 2.
@@ -559,14 +483,8 @@ mod tests {
         assert!(a.normalized_eq(&b));
 
         #[allow(deprecated)]
-        let a = Features::empty().set_aead();
-        let b = Features::new(&[ 0x2 ]);
-        assert_eq!(a, b);
-        assert!(a.normalized_eq(&b));
-
-        #[allow(deprecated)]
-        let a = Features::empty().set_seipdv1().set_aead();
-        let b = Features::new(&[ 0x1 | 0x2 ]);
+        let a = Features::empty().set_seipdv1().set_seipdv2();
+        let b = Features::new(&[ 0x1 | 0x8 ]);
         assert_eq!(a, b);
         assert!(a.normalized_eq(&b));
     }

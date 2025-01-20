@@ -40,7 +40,14 @@ pub mod mpi;
 mod s2k;
 pub use s2k::S2K;
 pub(crate) mod symmetric;
-
+mod types;
+pub use types::{
+    AEADAlgorithm,
+    Curve,
+    HashAlgorithm,
+    PublicKeyAlgorithm,
+    SymmetricAlgorithm,
+};
 #[cfg(test)]
 mod tests;
 

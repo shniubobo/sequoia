@@ -216,14 +216,11 @@ impl MPI {
                 Ok((&value[1..], &[]))
             },
 
-            Unknown(_) if ! curve.is_brainpoolp384() =>
-                Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
-
             NistP256
                 | NistP384
                 | NistP521
                 | BrainpoolP256
-                | Unknown(_)
+                | BrainpoolP384
                 | BrainpoolP512
                 =>
             {
@@ -251,6 +248,9 @@ impl MPI {
                 Ok((&value[1..1 + coordinate_length],
                     &value[1 + coordinate_length..]))
             },
+
+            Unknown(_) =>
+                Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
         }
     }
 
@@ -1073,7 +1073,8 @@ impl SecretKeyMaterial {
 #[cfg(test)]
 impl Arbitrary for SecretKeyMaterial {
     fn arbitrary(g: &mut Gen) -> Self {
-        let pk = *g.choose(&crate::types::PUBLIC_KEY_ALGORITHM_VARIANTS)
+        let pk = *g.choose(
+            &crate::crypto::types::public_key_algorithm::PUBLIC_KEY_ALGORITHM_VARIANTS)
             .expect("not empty");
         Self::arbitrary_for(g, pk).expect("only known variants")
     }
