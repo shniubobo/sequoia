@@ -272,7 +272,7 @@ pub mod stream;
 
 // Whether to trace execution by default (on stderr).
 const TRACE : bool = false;
-
+
 // How much junk the packet parser is willing to skip when recovering.
 // This is an internal implementation detail and hence not exported.
 pub(crate) const RECOVERY_THRESHOLD: usize = 32 * 1024;
@@ -373,7 +373,7 @@ macro_rules! impl_parse_with_buffered_reader {
         }
     }
 }
-
+
 /// The default amount of acceptable nesting.
 ///
 /// The default is `16`.
@@ -1107,7 +1107,7 @@ impl Default for PacketParserSettings {
         }
     }
 }
-
+
 impl S2K {
     /// Reads an S2K from `php`.
     fn parse_v4(php: &mut PacketHeaderParser<'_>)
@@ -3944,7 +3944,7 @@ impl_parse_with_buffered_reader!(
                     "Excess data after packet".into()).into()),
         }
     });
-
+
 // State that lives for the life of the packet parser, not the life of
 // an individual packet.
 #[derive(Debug)]

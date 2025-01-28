@@ -93,7 +93,7 @@ use crate::types::{
     SymmetricAlgorithm,
     Timestamp,
 };
-
+
 lazy_static::lazy_static!{
     /// The default amount of tolerance to use when comparing
     /// some timestamps.

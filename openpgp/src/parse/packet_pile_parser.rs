@@ -14,7 +14,7 @@ use crate::parse::{
     Cookie
 };
 use buffered_reader::BufferedReader;
-
+
 /// Parses an OpenPGP stream with the convenience of
 /// [`PacketPile::from_file`] and the flexibility of a
 /// [`PacketParser`].

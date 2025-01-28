@@ -39,7 +39,7 @@ pub(crate) trait Mode: Send + Sync {
         src: &[u8],
     ) -> Result<()>;
 }
-
+
 /// A `Read`er for decrypting symmetrically encrypted data.
 pub struct Decryptor<'a> {
     // The encrypted data.
@@ -165,7 +165,7 @@ impl<'a> io::Read for Decryptor<'a> {
         Ok(pos)
     }
 }
-
+
 /// A `BufferedReader` that decrypts symmetrically-encrypted data as
 /// it is read.
 pub(crate) struct BufferedReaderDecryptor<'a> {

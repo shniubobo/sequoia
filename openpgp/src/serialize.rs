@@ -160,7 +160,7 @@ use crate::types::{
 
 // Whether to trace the modules execution (on stderr).
 const TRACE : bool = false;
-
+
 /// Serializes OpenPGP data structures.
 ///
 /// This trait provides the same interface as the [`Marshal`] trait (in
@@ -596,7 +596,7 @@ fn test_generic_export_into() {
     let e = u.export_into(&mut b[..]).unwrap_err();
     assert_match!(Some(Error::InvalidArgument(_)) = e.downcast_ref());
 }
-
+
 fn write_byte(o: &mut dyn std::io::Write, b: u8) -> io::Result<()> {
     o.write_all(&[b])
 }
@@ -608,7 +608,7 @@ fn write_be_u16(o: &mut dyn std::io::Write, n: u16) -> io::Result<()> {
 fn write_be_u32(o: &mut dyn std::io::Write, n: u32) -> io::Result<()> {
     o.write_all(&n.to_be_bytes())
 }
-
+
 // Compute the log2 of an integer.  (This is simply the most
 // significant bit.)  Note: log2(0) = -Inf, but this function returns
 // log2(0) as 0 (which is the closest number that we can represent).
@@ -631,7 +631,7 @@ fn log2_test() {
         }
     }
 }
-
+
 impl seal::Sealed for BodyLength {}
 impl Marshal for BodyLength {
     /// Emits the length encoded for use with new-style CTBs.
@@ -773,7 +773,7 @@ impl BodyLength {
         }
     }
 }
-
+
 impl seal::Sealed for CTBNew {}
 impl Marshal for CTBNew {
     fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
@@ -1345,7 +1345,7 @@ impl MarshalInto for crypto::mpi::Signature {
         generic_serialize_into(self, MarshalInto::serialized_len(self), buf)
     }
 }
-
+
 impl seal::Sealed for S2K {}
 impl Marshal for S2K {
     fn serialize(&self, w: &mut dyn std::io::Write) -> Result<()> {
@@ -3193,7 +3193,7 @@ impl MarshalInto for Padding {
         generic_serialize_into(self, MarshalInto::serialized_len(self), buf)
     }
 }
-
+
 impl Serialize for Packet {}
 impl seal::Sealed for Packet {}
 impl Marshal for Packet {
@@ -3590,7 +3590,7 @@ impl MarshalInto for Message {
         MarshalInto::export_into(self.packets(), buf)
     }
 }
-
+
 #[cfg(test)]
 mod test {
     use super::*;

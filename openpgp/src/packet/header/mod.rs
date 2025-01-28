@@ -225,7 +225,7 @@ impl Header {
         Ok(())
     }
 }
-
+
 /// A packet's size.
 ///
 /// A packet's size can be expressed in three different ways.  Either

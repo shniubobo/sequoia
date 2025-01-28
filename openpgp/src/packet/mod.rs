@@ -592,7 +592,7 @@ impl Arbitrary for Packet {
         }
     }
 }
-
+
 /// Fields used by multiple packet types.
 #[derive(Default, Debug, Clone)]
 pub(crate) struct Common {
@@ -659,7 +659,7 @@ impl std::hash::Hash for Common {
     }
 }
 
-
+
 /// An iterator over the *contents* of a packet in depth-first order.
 ///
 /// Given a [`Packet`], an `Iter` iterates over the `Packet` and any

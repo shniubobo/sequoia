@@ -230,7 +230,7 @@ impl Arbitrary for CompressionAlgorithm {
         u8::arbitrary(g).into()
     }
 }
-
+
 /// Signature type as defined in [Section 5.2.1 of RFC 4880].
 ///
 ///   [Section 5.2.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.1

@@ -141,7 +141,7 @@ macro_rules! assert_match {
         assert_match!($error = $expr, "")
     };
 }
-
+
 #[macro_use]
 pub mod armor;
 pub mod fmt;
@@ -184,7 +184,7 @@ pub mod policy;
 
 pub(crate) mod seal;
 pub(crate) mod utils;
-
+
 #[cfg(test)]
 mod tests;
 
@@ -196,7 +196,7 @@ mod tests;
 fn frozen_time() -> std::time::SystemTime {
     crate::types::Timestamp::from(1554542220 - 1).into()
 }
-
+
 /// The version of this crate.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
