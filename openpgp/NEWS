@@ -110,6 +110,9 @@
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead
 
+ * Notable fixes
+   - Fixed an integer overflow parsing PKESKv6 packets.
+
 * Changes in 2.0.0.alpha.0
   The major new feature is the support for RFC9580, which modernizes
   the cryptographic primitives used in OpenPGP.  Notably, it adds

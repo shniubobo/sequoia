@@ -607,6 +607,10 @@ impl<'a> PacketHeaderParser<'a> {
         Ok(r)
     }
 
+    fn parse_u8_len(&mut self, name: &'static str) -> Result<usize> {
+        self.parse_u8(name).map(Into::into)
+    }
+
     fn parse_be_u16(&mut self, name: &'static str) -> Result<u16> {
         let r = self.reader.read_be_u16()?;
         self.field(name, 2);
@@ -3479,7 +3483,7 @@ impl SKESK6 {
         make_php_try!(php);
 
         // Octet count of the following 5 fields.
-        let parameter_len = php_try!(php.parse_u8("parameter_len"));
+        let parameter_len = php_try!(php.parse_u8_len("parameter_len"));
         if parameter_len < 1 + 1 + 1 + 2 /* S2K */ + 12 /* IV */ {
             return php.fail("expected at least 16 parameter octets");
         }
@@ -3490,12 +3494,12 @@ impl SKESK6 {
             php_try!(php.parse_u8("aead_algo")).into();
 
         // The S2K object's length and the S2K.
-        let s2k_len = php_try!(php.parse_u8("s2k_len"));
+        let s2k_len = php_try!(php.parse_u8_len("s2k_len"));
         if parameter_len < 1 + 1 + 1 + s2k_len + 12 /* IV */ {
             return php.fail("S2K overflows parameter count");
         }
 
-        let s2k = php_try!(S2K::parse_v6(&mut php, s2k_len));
+        let s2k = php_try!(S2K::parse_v6(&mut php, s2k_len as u8));
 
         // And the IV.
         let iv =
