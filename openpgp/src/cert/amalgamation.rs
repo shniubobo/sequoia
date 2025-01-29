@@ -393,22 +393,8 @@ trait ValidateAmalgamationRelaxed<'a, C: 'a> {
 /// you also need to implement the `seal::Sealed` marker trait.
 ///
 /// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
-///
 pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
 {
-    /// Maps the given function over binding and direct key signature.
-    ///
-    /// Makes `f` consider both the binding signature and the direct
-    /// key signature.  Information in the binding signature takes
-    /// precedence over the direct key signature.  See also [Section
-    /// 5.2.3.3 of RFC 4880].
-    ///
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
-    fn map<F: Fn(&'a Signature) -> Option<T>, T>(&self, f: F) -> Option<T> {
-        f(self.binding_signature())
-            .or_else(|| self.direct_key_signature().ok().and_then(f))
-    }
-
     /// Returns the valid amalgamation's associated certificate.
     ///
     /// # Examples
@@ -653,6 +639,38 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// ```
     fn revocation_keys(&self)
                        -> Box<dyn Iterator<Item = &'a RevocationKey> + 'a>;
+}
+
+#[test]
+fn valid_amalgamation_is_dyn_compatible() {
+    let _t: Option<Box<dyn ValidAmalgamation<()>>> = None;
+}
+
+/// Locates information on the active binding signature or direct key
+/// signature.
+///
+/// # Sealed trait
+///
+/// This trait is [sealed] and cannot be implemented for types outside
+/// this crate.  Therefore it can be extended in a non-breaking way.
+/// If you want to implement the trait inside the crate you also need
+/// to implement the `seal::Sealed` marker trait.
+///
+/// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
+pub trait ValidBindingSignature<'a, C: 'a>: ValidAmalgamation<'a, C> + seal::Sealed
+{
+    /// Maps the given function over binding and direct key signature.
+    ///
+    /// Makes `f` consider both the binding signature and the direct
+    /// key signature.  Information in the binding signature takes
+    /// precedence over the direct key signature.  See also [Section
+    /// 5.2.3.3 of RFC 4880].
+    ///
+    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    fn map<F: Fn(&'a Signature) -> Option<T>, T>(&self, f: F) -> Option<T> {
+        f(self.binding_signature())
+            .or_else(|| self.direct_key_signature().ok().and_then(f))
+    }
 }
 
 /// A certificate component, its associated data, and useful methods.
@@ -2358,6 +2376,8 @@ impl<'a, C> ValidAmalgamation<'a, C> for ValidComponentAmalgamation<'a, C> {
         Box::new(keys.into_iter())
     }
 }
+
+impl<'a, C> ValidBindingSignature<'a, C> for ValidComponentAmalgamation<'a, C> {}
 
 impl<'a, C> crate::cert::Preferences<'a>
     for ValidComponentAmalgamation<'a, C>

@@ -261,6 +261,7 @@ use crate::{
         ComponentAmalgamation,
         key::signature::subpacket::SubpacketValue,
         ValidAmalgamation,
+        ValidBindingSignature,
         ValidateAmalgamation,
     },
     cert::ValidCert,
@@ -1585,6 +1586,13 @@ impl<'a, P, R, R2> ValidAmalgamation<'a, Key<P, R>>
     }
 }
 
+impl<'a, P, R, R2> ValidBindingSignature<'a, Key<P, R>>
+    for ValidKeyAmalgamation<'a, P, R, R2>
+where P: 'a + key::KeyParts,
+      R: 'a + key::KeyRole,
+      R2: Copy,
+      Self: PrimaryKey<'a, P, R>,
+{}
 
 impl<'a, P> PrimaryKey<'a, P, key::PrimaryRole>
     for ValidPrimaryKeyAmalgamation<'a, P>
@@ -2273,7 +2281,8 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     where P: 'a + key::KeyParts,
           R: 'a + key::KeyRole,
           R2: Copy,
-          Self: ValidAmalgamation<'a, Key<P, R>>
+          Self: ValidAmalgamation<'a, Key<P, R>>,
+          Self: ValidBindingSignature<'a, Key<P, R>>,
 {
     /// Returns the key's `Key Flags`.
     ///

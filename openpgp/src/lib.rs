@@ -51,6 +51,14 @@
 #![doc(html_logo_url = "https://docs.sequoia-pgp.org/logo.svg")]
 #![warn(missing_docs)]
 
+// Public re-exports.
+//
+// We should provide public re-exports for any crate defining types
+// that we use in our public API.  This allows downstream consumers to
+// name the types without explicitly depending on the third-party
+// crates, and provides the correct version of the crates.
+pub use anyhow;
+
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
