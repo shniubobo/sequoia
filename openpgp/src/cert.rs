@@ -3677,7 +3677,7 @@ impl<'a> ValidCert<'a> {
     /// # assert!(std::ptr::eq(vc.policy(), p));
     /// # Ok(()) }
     /// ```
-    pub fn cert(&'a self) -> &'a Cert {
+    pub fn cert(&self) -> &'a Cert {
         &self.cert
     }
 
@@ -3804,7 +3804,7 @@ impl<'a> ValidCert<'a> {
     /// # assert!(vc.direct_key_signature().is_ok());
     /// # Ok(()) }
     /// ```
-    pub fn direct_key_signature(&'a self) -> Result<&'a Signature>
+    pub fn direct_key_signature(&self) -> Result<&'a Signature>
     {
         self.cert.primary.binding_signature(self.policy(), self.time())
     }
@@ -3858,7 +3858,7 @@ impl<'a> ValidCert<'a> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn revocation_status(&'a self) -> RevocationStatus<'a> {
+    pub fn revocation_status(&self) -> RevocationStatus<'a> {
         self.cert.revocation_status(self.policy, self.time)
     }
 
@@ -3940,7 +3940,7 @@ impl<'a> ValidCert<'a> {
     /// // The certificate's fingerprint *is* the primary key's fingerprint.
     /// assert_eq!(vc.cert().fingerprint(), primary.key().fingerprint());
     /// # Ok(()) }
-    pub fn primary_key(&'a self)
+    pub fn primary_key(&self)
         -> ValidPrimaryKeyAmalgamation<'a, key::PublicParts>
     {
         self.cert.primary_key().with_policy(self.policy, self.time)
@@ -3990,7 +3990,7 @@ impl<'a> ValidCert<'a> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn keys(&'a self) -> ValidKeyAmalgamationIter<'a, key::PublicParts, key::UnspecifiedRole> {
+    pub fn keys(&self) -> ValidKeyAmalgamationIter<'a, key::PublicParts, key::UnspecifiedRole> {
         self.cert.keys().with_policy(self.policy, self.time)
     }
 
@@ -4084,7 +4084,7 @@ impl<'a> ValidCert<'a> {
     /// let carol = cert.with_policy(p, t2)?.primary_userid().unwrap();
     /// assert_eq!(carol.userid().value(), b"Carol");
     /// # Ok(()) }
-    pub fn primary_userid(&'a self) -> Result<ValidUserIDAmalgamation<'a>>
+    pub fn primary_userid(&self) -> Result<ValidUserIDAmalgamation<'a>>
     {
         self.cert.primary_userid_relaxed(self.policy(), self.time(), true)
     }
@@ -4139,7 +4139,7 @@ impl<'a> ValidCert<'a> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn userids(&'a self) -> ValidUserIDAmalgamationIter<'a> {
+    pub fn userids(&self) -> ValidUserIDAmalgamationIter<'a> {
         self.cert.userids().with_policy(self.policy, self.time)
     }
 
@@ -4177,7 +4177,7 @@ impl<'a> ValidCert<'a> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn primary_user_attribute(&'a self)
+    pub fn primary_user_attribute(&self)
         -> Result<ValidComponentAmalgamation<'a, UserAttribute>>
     {
         ValidComponentAmalgamation::primary(&self.cert,
@@ -4219,7 +4219,7 @@ impl<'a> ValidCert<'a> {
     /// #     Ok(())
     /// # }
     /// ```
-    pub fn user_attributes(&'a self) -> ValidUserAttributeAmalgamationIter<'a> {
+    pub fn user_attributes(&self) -> ValidUserAttributeAmalgamationIter<'a> {
         self.cert.user_attributes().with_policy(self.policy, self.time)
     }
 
@@ -4264,7 +4264,7 @@ impl<'a> ValidCert<'a> {
     ///            vec![&(&alice).into()]);
     /// # Ok(()) }
     /// ```
-    pub fn revocation_keys(&'a self)
+    pub fn revocation_keys(&self)
         -> impl Iterator<Item = &'a RevocationKey> + 'a
     {
         self.cert.revocation_keys(self.policy())
@@ -4274,7 +4274,7 @@ impl<'a> ValidCert<'a> {
 macro_rules! impl_pref {
     ($subpacket:ident, $rt:ty) => {
         #[allow(deprecated)]
-        fn $subpacket(&'a self) -> Option<$rt>
+        fn $subpacket(&self) -> Option<$rt>
         {
             // When addressed by the fingerprint or keyid, we first
             // look on the primary User ID and then fall back to the
