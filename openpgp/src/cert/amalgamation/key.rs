@@ -610,7 +610,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
             // need to check the user's policy.  So, it is safe to
             // create a ValidCert from scratch.
             cert: ValidCert {
-                cert,
+                cert: std::borrow::Cow::Borrowed(cert),
                 policy,
                 time,
             },

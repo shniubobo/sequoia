@@ -1081,7 +1081,7 @@ macro_rules! impl_with_policy {
             Ok(ValidComponentAmalgamation {
                 ca: self.clone(),
                 cert: ValidCert {
-                    cert,
+                    cert: std::borrow::Cow::Borrowed(cert),
                     policy,
                     time,
                 },
