@@ -40,9 +40,9 @@ use crate::{Error, Result};
 ///   - [`sequoia_rpc::gnupg::KeyPair`]: Connects to the `gpg-agent`.
 ///
 ///   [`sequoia_rpc::gnupg::KeyPair`]: https://docs.sequoia-pgp.org/sequoia_ipc/gnupg/struct.KeyPair.html
-pub trait Signer {
+pub trait Signer<R: key::KeyRole> {
     /// Returns a reference to the public key.
-    fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole>;
+    fn public(&self) -> &Key<key::PublicParts, R>;
 
     /// Returns a list of hashes that this signer accepts.
     ///
@@ -62,8 +62,8 @@ pub trait Signer {
             -> Result<mpi::Signature>;
 }
 
-impl Signer for Box<dyn Signer> {
-    fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole> {
+impl<R: key::KeyRole> Signer<R> for Box<dyn Signer<R>> {
+    fn public(&self) -> &Key<key::PublicParts, R> {
         self.as_ref().public()
     }
 
@@ -77,8 +77,8 @@ impl Signer for Box<dyn Signer> {
     }
 }
 
-impl Signer for Box<dyn Signer + Send + Sync> {
-    fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole> {
+impl<R: key::KeyRole> Signer<R> for Box<dyn Signer<R> + Send + Sync> {
+    fn public(&self) -> &Key<key::PublicParts, R> {
         self.as_ref().public()
     }
 
@@ -179,15 +179,15 @@ impl Decryptor for Box<dyn Decryptor + Send + Sync> {
 /// # Ok(()) }
 /// ```
 #[derive(Clone)]
-pub struct KeyPair {
-    public: Key<key::PublicParts, key::UnspecifiedRole>,
+pub struct KeyPair<R: key::KeyRole> {
+    public: Key<key::PublicParts, R>,
     secret: packet::key::Unencrypted,
 }
-assert_send_and_sync!(KeyPair);
+assert_send_and_sync!(KeyPair<R> where R: key::KeyRole);
 
-impl KeyPair {
+impl<R: key::KeyRole> KeyPair<R> {
     /// Creates a new key pair.
-    pub fn new(public: Key<key::PublicParts, key::UnspecifiedRole>,
+    pub fn new(public: Key<key::PublicParts, R>,
                secret: packet::key::Unencrypted)
         -> Result<Self>
     {
@@ -198,7 +198,7 @@ impl KeyPair {
     }
 
     /// Returns a reference to the public key.
-    pub fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole> {
+    pub fn public(&self) -> &Key<key::PublicParts, R> {
         &self.public
     }
 
@@ -208,15 +208,15 @@ impl KeyPair {
     }
 }
 
-impl From<KeyPair> for Key<key::SecretParts, key::UnspecifiedRole> {
-    fn from(p: KeyPair) -> Self {
+impl<R: key::KeyRole> From<KeyPair<R>> for Key<key::SecretParts, R> {
+    fn from(p: KeyPair<R>) -> Self {
         let (key, secret) = (p.public, p.secret);
         key.add_secret(secret.into()).0
     }
 }
 
-impl Signer for KeyPair {
-    fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole> {
+impl<R: key::KeyRole> Signer<R> for KeyPair<R> {
+    fn public(&self) -> &Key<key::PublicParts, R> {
         KeyPair::public(self)
     }
 
@@ -268,9 +268,9 @@ impl Signer for KeyPair {
     }
 }
 
-impl Decryptor for KeyPair {
+impl<R: key::KeyRole> Decryptor for KeyPair<R> {
     fn public(&self) -> &Key<key::PublicParts, key::UnspecifiedRole> {
-        KeyPair::public(self)
+        KeyPair::public(self).role_as_unspecified()
     }
 
     fn decrypt(&mut self,
@@ -354,7 +354,7 @@ impl Decryptor for KeyPair {
                     let S = Backend::x25519_shared_point(&r, &V.try_into()?)?;
 
                     crate::crypto::ecdh::decrypt_unwrap(
-                        self.public(), &S, ciphertext, plaintext_len)
+                        self.public().role_as_unspecified(), &S, ciphertext, plaintext_len)
                 },
 
                 (_public, secret, _ciphertext) =>

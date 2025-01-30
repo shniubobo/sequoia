@@ -1906,7 +1906,7 @@ impl<'a, P> ValidPrimaryKeyAmalgamation<'a, P>
     /// assert!(vc.primary_key().alive().is_err());
     /// # Ok(()) }
     pub fn set_expiration_time(&self,
-                               primary_signer: &mut dyn Signer,
+                               primary_signer: &mut dyn Signer<key::PrimaryRole>,
                                expiration: Option<time::SystemTime>)
         -> Result<Vec<Signature>>
     {
@@ -2013,8 +2013,8 @@ impl<'a, P> ValidSubordinateKeyAmalgamation<'a, P>
     /// }
     /// # Ok(()) }
     pub fn set_expiration_time(&self,
-                               primary_signer: &mut dyn Signer,
-                               subkey_signer: Option<&mut dyn Signer>,
+                               primary_signer: &mut dyn Signer<key::PrimaryRole>,
+                               subkey_signer: Option<&mut dyn Signer<key::SubordinateRole>>,
                                expiration: Option<time::SystemTime>)
         -> Result<Vec<Signature>>
     {
@@ -2034,9 +2034,9 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
     /// This function exists to facilitate testing, which is why it is
     /// not exported.
     pub(crate) fn set_validity_period_as_of(&self,
-                                            primary_signer: &mut dyn Signer,
+                                            primary_signer: &mut dyn Signer<key::PrimaryRole>,
                                             subkey_signer:
-                                                Option<&mut dyn Signer>,
+                                                Option<&mut dyn Signer<key::SubordinateRole>>,
                                             expiration: Option<time::Duration>,
                                             now: time::SystemTime)
         -> Result<Vec<Signature>>
@@ -2253,8 +2253,8 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
     /// }
     /// # Ok(()) }
     pub fn set_expiration_time(&self,
-                               primary_signer: &mut dyn Signer,
-                               subkey_signer: Option<&mut dyn Signer>,
+                               primary_signer: &mut dyn Signer<key::PrimaryRole>,
+                               subkey_signer: Option<&mut dyn Signer<key::SubordinateRole>>,
                                expiration: Option<time::SystemTime>)
         -> Result<Vec<Signature>>
     {

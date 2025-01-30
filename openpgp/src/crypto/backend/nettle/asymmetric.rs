@@ -194,7 +194,7 @@ impl Asymmetric for super::Backend {
     }
 }
 
-impl KeyPair {
+impl<R: key::KeyRole> KeyPair<R> {
     pub(crate) fn sign_backend(&self,
                                secret: &mpi::SecretKeyMaterial,
                                hash_algo: HashAlgorithm,
@@ -285,7 +285,7 @@ impl KeyPair {
     }
 }
 
-impl KeyPair {
+impl<R: key::KeyRole> KeyPair<R> {
     pub(crate) fn decrypt_backend(&self, secret: &mpi::SecretKeyMaterial, ciphertext: &mpi::Ciphertext,
                plaintext_len: Option<usize>)
                -> Result<SessionKey>

@@ -406,10 +406,10 @@ impl KeyBuilder {
 /// ```
 pub struct SubkeyBuilder<'a> {
     vc: ValidCert<'a>,
-    primary_signer: Option<Box<dyn Signer + Send + Sync + 'a>>,
+    primary_signer: Option<Box<dyn Signer<key::PrimaryRole> + Send + Sync + 'a>>,
 
     subkey: Key<key::UnspecifiedParts, key::SubordinateRole>,
-    subkey_signer: Option<Box<dyn Signer + Send + Sync + 'a>>,
+    subkey_signer: Option<Box<dyn Signer<key::SubordinateRole> + Send + Sync + 'a>>,
 
     template: SignatureBuilder,
 }
@@ -763,7 +763,8 @@ impl<'a> SubkeyBuilder<'a> {
     ///   [subkey binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
     ///   [primary binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
     pub fn set_primary_key_signer<S>(mut self, signer: S) -> Self
-    where S: Signer + Send + Sync + 'a,
+    where
+        S: Signer<key::PrimaryRole> + Send + Sync + 'a,
     {
         self.primary_signer = Some(Box::new(signer));
         self
@@ -784,7 +785,7 @@ impl<'a> SubkeyBuilder<'a> {
     ///   [subkey binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
     ///   [primary binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
     pub fn set_subkey_signer<S>(mut self, signer: S) -> Self
-    where S: Signer + Send + Sync + 'a,
+    where S: Signer<key::SubordinateRole> + Send + Sync + 'a,
     {
         self.subkey_signer = Some(Box::new(signer));
         self

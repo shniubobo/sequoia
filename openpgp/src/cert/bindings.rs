@@ -6,6 +6,7 @@ use crate::Cert;
 use crate::types::{HashAlgorithm, SignatureType};
 use crate::crypto::Signer;
 use crate::packet::{UserID, UserAttribute, key, Key, signature, Signature};
+use crate::packet::key::{PrimaryRole, UnspecifiedRole};
 
 impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     /// Creates a binding signature.
@@ -69,7 +70,7 @@ impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     ///                .key_flags(flags).count(),
     ///            1);
     /// # Ok(()) }
-    pub fn bind(&self, signer: &mut dyn Signer, cert: &Cert,
+    pub fn bind(&self, signer: &mut dyn Signer<key::PrimaryRole>, cert: &Cert,
                 signature: signature::SignatureBuilder)
         -> Result<Signature>
     {
@@ -118,7 +119,7 @@ impl UserID {
     /// // Check that we have a User ID.
     /// assert_eq!(cert.userids().len(), 1);
     /// # Ok(()) }
-    pub fn bind(&self, signer: &mut dyn Signer, cert: &Cert,
+    pub fn bind(&self, signer: &mut dyn Signer<key::UnspecifiedRole>, cert: &Cert,
                 signature: signature::SignatureBuilder)
                 -> Result<Signature>
     {
@@ -179,7 +180,7 @@ impl UserID {
     /// assert_eq!(bob.userids().nth(0).unwrap()
     ///            .certifications().count(), 1);
     /// # Ok(()) }
-    pub fn certify<S, H, T>(&self, signer: &mut dyn Signer, cert: &Cert,
+    pub fn certify<S, H, T>(&self, signer: &mut dyn Signer<key::UnspecifiedRole>, cert: &Cert,
                             signature_type: S,
                             hash_algo: H, creation_time: T)
         -> Result<Signature>
@@ -253,7 +254,7 @@ impl UserAttribute {
     /// // Check that we have a user attribute.
     /// assert_eq!(cert.user_attributes().count(), 1);
     /// # Ok(()) }
-    pub fn bind(&self, signer: &mut dyn Signer, cert: &Cert,
+    pub fn bind(&self, signer: &mut dyn Signer<UnspecifiedRole>, cert: &Cert,
                 signature: signature::SignatureBuilder)
         -> Result<Signature>
     {
@@ -319,7 +320,7 @@ impl UserAttribute {
     ///            .certifications().count(),
     ///            1);
     /// # Ok(()) }
-    pub fn certify<S, H, T>(&self, signer: &mut dyn Signer, cert: &Cert,
+    pub fn certify<S, H, T>(&self, signer: &mut dyn Signer<key::UnspecifiedRole>, cert: &Cert,
                             signature_type: S,
                             hash_algo: H, creation_time: T)
         -> Result<Signature>

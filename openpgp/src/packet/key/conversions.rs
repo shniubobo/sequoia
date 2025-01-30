@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 
 use crate::Error;
 use crate::cert::prelude::*;
+use crate::crypto::Signer;
 use crate::packet::prelude::*;
 use crate::packet::key::{
     KeyParts,

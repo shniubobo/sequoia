@@ -1505,7 +1505,7 @@ impl<R: key::KeyRole> Key<key::SecretParts, R> {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn into_keypair(self) -> Result<KeyPair> {
+    pub fn into_keypair(self) -> Result<KeyPair<R>> {
         match self {
             Key::V4(k) => k.into_keypair(),
             Key::V6(k) => k.into_keypair(),
@@ -1667,7 +1667,7 @@ impl<R: key::KeyRole> Key4<key::SecretParts, R> {
     ///
     /// Fails if the secret key is encrypted.  You can use
     /// [`Key::decrypt_secret`] to decrypt a key.
-    pub fn into_keypair(self) -> Result<KeyPair> {
+    pub fn into_keypair(self) -> Result<KeyPair<R>> {
         let (key, secret) = self.take_secret();
         let secret = match secret {
             SecretKeyMaterial::Unencrypted(secret) => secret,
@@ -1676,7 +1676,7 @@ impl<R: key::KeyRole> Key4<key::SecretParts, R> {
                     "secret key material is encrypted".into()).into()),
         };
 
-        KeyPair::new(key.role_into_unspecified().into(), secret)
+        KeyPair::new(key.into(), secret)
     }
 }
 
@@ -1688,7 +1688,7 @@ impl<R: key::KeyRole> Key6<key::SecretParts, R> {
     ///
     /// Fails if the secret key is encrypted.  You can use
     /// [`Key::decrypt_secret`] to decrypt a key.
-    pub fn into_keypair(self) -> Result<KeyPair> {
+    pub fn into_keypair(self) -> Result<KeyPair<R>> {
         let (key, secret) = self.take_secret();
         let secret = match secret {
             SecretKeyMaterial::Unencrypted(secret) => secret,
@@ -1697,7 +1697,7 @@ impl<R: key::KeyRole> Key6<key::SecretParts, R> {
                     "secret key material is encrypted".into()).into()),
         };
 
-        KeyPair::new(key.role_into_unspecified().into(), secret)
+        KeyPair::new(key.into(), secret)
     }
 }
 

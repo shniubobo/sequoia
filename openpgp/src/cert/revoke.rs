@@ -13,6 +13,7 @@ use crate::crypto::Signer;
 use crate::packet::{
     Key,
     key,
+    key::PrimaryRole,
     signature,
     Signature,
     UserAttribute,
@@ -301,7 +302,10 @@ impl CertRevocationBuilder {
     /// #            cert.revocation_status(p, None));
     /// # Ok(())
     /// # }
-    pub fn build<H>(self, signer: &mut dyn Signer, cert: &Cert, hash_algo: H)
+    pub fn build<H>(self,
+                    signer: &mut dyn Signer<PrimaryRole>,
+                    cert: &Cert,
+                    hash_algo: H)
         -> Result<Signature>
         where H: Into<Option<HashAlgorithm>>
     {
@@ -611,7 +615,7 @@ impl SubkeyRevocationBuilder {
     /// #            cert.keys().subkeys().nth(0).unwrap().revocation_status(p, None));
     /// # Ok(())
     /// # }
-    pub fn build<H, P>(mut self, signer: &mut dyn Signer,
+    pub fn build<H, P>(mut self, signer: &mut dyn Signer<key::PrimaryRole>,
                        cert: &Cert, key: &Key<P, key::SubordinateRole>,
                        hash_algo: H)
         -> Result<Signature>
@@ -934,7 +938,8 @@ impl UserIDRevocationBuilder {
     /// #            cert.userids().nth(0).unwrap().revocation_status(p, None));
     /// # Ok(())
     /// # }
-    pub fn build<H>(mut self, signer: &mut dyn Signer,
+    pub fn build<H>(mut self,
+                    signer: &mut dyn Signer<PrimaryRole>,
                     cert: &Cert, userid: &UserID,
                     hash_algo: H)
         -> Result<Signature>
@@ -1270,7 +1275,7 @@ impl UserAttributeRevocationBuilder {
     /// #            cert.user_attributes().nth(0).unwrap().revocation_status(p, None));
     /// # Ok(())
     /// # }
-    pub fn build<H>(mut self, signer: &mut dyn Signer,
+    pub fn build<H>(mut self, signer: &mut dyn Signer<PrimaryRole>,
                     cert: &Cert, ua: &UserAttribute,
                     hash_algo: H)
         -> Result<Signature>

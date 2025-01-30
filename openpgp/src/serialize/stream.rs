@@ -131,6 +131,7 @@ use crate::{
     packet::prelude::*,
     packet::signature,
     packet::key,
+    packet::key::UnspecifiedRole,
     cert::prelude::*,
 };
 use crate::packet::header::CTB;
@@ -631,7 +632,7 @@ pub struct Signer<'a> {
     // take our inner reader.  If that happens, we only update the
     // digests.
     inner: Option<writer::BoxStack<'a, Cookie>>,
-    signers: Vec<(Box<dyn crypto::Signer + Send + Sync + 'a>,
+    signers: Vec<(Box<dyn crypto::Signer<key::UnspecifiedRole> + Send + Sync + 'a>,
                   HashAlgorithm, Vec<u8>)>,
 
     /// The set of acceptable hashes.
@@ -735,7 +736,8 @@ impl<'a> Signer<'a> {
     /// # Ok(()) }
     /// ```
     pub fn new<S>(inner: Message<'a>, signer: S) -> Result<Self>
-        where S: crypto::Signer + Send + Sync + 'a
+    where
+        S: crypto::Signer<UnspecifiedRole> + Send + Sync + 'a,
     {
         Self::with_template(inner, signer,
                             signature::SignatureBuilder::new(SignatureType::Binary))
@@ -803,7 +805,7 @@ impl<'a> Signer<'a> {
     /// ```
     pub fn with_template<S, T>(inner: Message<'a>, signer: S, template: T)
                                -> Result<Self>
-        where S: crypto::Signer + Send + Sync + 'a,
+        where S: crypto::Signer<UnspecifiedRole> + Send + Sync + 'a,
               T: Into<signature::SignatureBuilder>,
     {
         let inner = writer::BoxStack::from(inner);
@@ -1064,7 +1066,8 @@ impl<'a> Signer<'a> {
     /// # Ok(()) }
     /// ```
     pub fn add_signer<S>(mut self, signer: S) -> Result<Self>
-        where S: crypto::Signer + Send + Sync + 'a
+    where
+        S: crypto::Signer<UnspecifiedRole> + Send + Sync + 'a,
     {
         // Update the set of acceptable hash algorithms.
         let is_sorted = |data: &[HashAlgorithm]| {

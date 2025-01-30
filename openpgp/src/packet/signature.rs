@@ -140,6 +140,7 @@ use crate::packet::{
     key,
     Key,
 };
+use crate::packet::key::{PrimaryRole, SubordinateRole, UnspecifiedRole};
 use crate::packet::UserID;
 use crate::packet::UserAttribute;
 use crate::Packet;
@@ -612,7 +613,7 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_standalone(mut self, signer: &mut dyn Signer)
+    pub fn sign_standalone(mut self, signer: &mut dyn Signer<UnspecifiedRole>)
                            -> Result<Signature>
     {
         self = self.pre_sign(signer)?;
@@ -720,7 +721,7 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_timestamp(mut self, signer: &mut dyn Signer)
+    pub fn sign_timestamp(mut self, signer: &mut dyn Signer<UnspecifiedRole>)
                           -> Result<Signature>
     {
         self = self.pre_sign(signer)?;
@@ -840,10 +841,10 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_direct_key<'a, PK>(mut self, signer: &mut dyn Signer,
+    pub fn sign_direct_key<'a, PK>(mut self, signer: &mut dyn Signer<UnspecifiedRole>,
                               pk: PK)
         -> Result<Signature>
-    where PK: Into<Option<&'a Key<key::PublicParts, key::PrimaryRole>>>
+    where PK: Into<Option<&'a Key<key::PublicParts, PrimaryRole>>>
     {
         self = self.pre_sign(signer)?;
 
@@ -974,7 +975,8 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_userid_binding<'a, PK>(mut self, signer: &mut dyn Signer,
+    pub fn sign_userid_binding<'a, PK>(mut self,
+                                       signer: &mut dyn Signer<UnspecifiedRole>,
                                   key: PK, userid: &UserID)
         -> Result<Signature>
         where PK: Into<Option<&'a Key<key::PublicParts, key::PrimaryRole>>>
@@ -1091,7 +1093,7 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_subkey_binding<'a, PK, Q>(mut self, signer: &mut dyn Signer,
+    pub fn sign_subkey_binding<'a, PK, Q>(mut self, signer: &mut dyn Signer<PrimaryRole>,
                                      primary: PK,
                                      subkey: &Key<Q, key::SubordinateRole>)
         -> Result<Signature>
@@ -1235,8 +1237,8 @@ impl SignatureBuilder {
     /// # }
     /// ```
     pub fn sign_primary_key_binding<P, Q>(mut self,
-                                          subkey_signer: &mut dyn Signer,
-                                          primary: &Key<P, key::PrimaryRole>,
+                                          subkey_signer: &mut dyn Signer<SubordinateRole>,
+                                          primary: &Key<P, PrimaryRole>,
                                           subkey: &Key<Q, key::SubordinateRole>)
         -> Result<Signature>
         where P: key::KeyParts,
@@ -1366,7 +1368,7 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_user_attribute_binding<'a, PK>(mut self, signer: &mut dyn Signer,
+    pub fn sign_user_attribute_binding<'a, PK>(mut self, signer: &mut dyn Signer<PrimaryRole>,
                                           key: PK, ua: &UserAttribute)
         -> Result<Signature>
         where PK: Into<Option<&'a Key<key::PublicParts, key::PrimaryRole>>>
@@ -1417,7 +1419,7 @@ impl SignatureBuilder {
     ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
-    pub fn sign_hash(mut self, signer: &mut dyn Signer,
+    pub fn sign_hash(mut self, signer: &mut dyn Signer<UnspecifiedRole>,
                      mut hash: hash::Context)
         -> Result<Signature>
     {
@@ -1524,7 +1526,7 @@ impl SignatureBuilder {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn sign_message<M>(mut self, signer: &mut dyn Signer, msg: M)
+    pub fn sign_message<M>(mut self, signer: &mut dyn Signer<key::UnspecifiedRole>, msg: M)
         -> Result<Signature>
         where M: AsRef<[u8]>
     {
@@ -1700,7 +1702,7 @@ impl SignatureBuilder {
     ///     SubpacketArea::MAX_SIZE - sig.hashed_area().serialized_len());
     /// # Ok(()) }
     /// ```
-    pub fn pre_sign(mut self, signer: &dyn Signer) -> Result<Self> {
+    pub fn pre_sign(mut self, signer: &dyn Signer<UnspecifiedRole>) -> Result<Self> {
         let pk = signer.public();
         self.pk_algo = pk.pk_algo();
 
@@ -1802,7 +1804,7 @@ impl SignatureBuilder {
         (self, old)
     }
 
-    fn sign(self, signer: &mut dyn Signer, digest: Vec<u8>)
+    fn sign(self, signer: &mut dyn Signer<UnspecifiedRole>, digest: Vec<u8>)
         -> Result<Signature>
     {
         // DSA is phased out in RFC9580.

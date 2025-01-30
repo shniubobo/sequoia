@@ -240,6 +240,7 @@ use crate::{
         Unknown,
         UserAttribute,
         UserID,
+        key::PrimaryRole,
     },
     Result,
     policy::{
@@ -1482,7 +1483,7 @@ impl<'a> UserIDAmalgamation<'a> {
     pub fn attest_certifications2<T, C, S>(&self,
                                            policy: &dyn Policy,
                                            time: T,
-                                           primary_signer: &mut dyn Signer,
+                                           primary_signer: &mut dyn Signer<PrimaryRole>,
                                            certifications: C)
         -> Result<Vec<Signature>>
     where T: Into<Option<time::SystemTime>>,
@@ -1519,7 +1520,7 @@ impl<'a> UserIDAmalgamation<'a> {
     #[deprecated(note = "Use attest_certifications2 instead.")]
     pub fn attest_certifications<C, S>(&self,
                                        policy: &dyn Policy,
-                                       primary_signer: &mut dyn Signer,
+                                       primary_signer: &mut dyn Signer<PrimaryRole>,
                                        certifications: C)
         -> Result<Vec<Signature>>
     where C: IntoIterator<Item = S>,
@@ -1567,7 +1568,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
     pub fn attest_certifications2<T, C, S>(&self,
                                            policy: &dyn Policy,
                                            time: T,
-                                           primary_signer: &mut dyn Signer,
+                                           primary_signer: &mut dyn Signer<PrimaryRole>,
                                            certifications: C)
         -> Result<Vec<Signature>>
     where T: Into<Option<time::SystemTime>>,
@@ -1604,7 +1605,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
     #[deprecated(note = "Use attest_certifications2 instead.")]
     pub fn attest_certifications<C, S>(&self,
                                        policy: &dyn Policy,
-                                       primary_signer: &mut dyn Signer,
+                                       primary_signer: &mut dyn Signer<PrimaryRole>,
                                        certifications: C)
         -> Result<Vec<Signature>>
     where C: IntoIterator<Item = S>,
@@ -1619,7 +1620,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
 fn attest_certifications_common<C, S>(hash: hash::Context,
                                       old_attestation: Option<Signature>,
                                       time: Option<SystemTime>,
-                                      primary_signer: &mut dyn Signer,
+                                      primary_signer: &mut dyn Signer<PrimaryRole>,
                                       certifications: C)
                                       -> Result<Vec<Signature>>
 where C: IntoIterator<Item = S>,
@@ -1964,7 +1965,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     /// # Ok(()) }
     /// ```
     pub fn attest_certifications<C, S>(&self,
-                                       primary_signer: &mut dyn Signer,
+                                       primary_signer: &mut dyn Signer<PrimaryRole>,
                                        certifications: C)
                                        -> Result<Vec<Signature>>
     where C: IntoIterator<Item = S>,
@@ -2097,7 +2098,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
     ///   [`ValidUserIDAmalgamation::attest_certifications#examples`]: ValidUserIDAmalgamation#examples
     // The explicit link works around a bug in rustdoc.
     pub fn attest_certifications<C, S>(&self,
-                                       primary_signer: &mut dyn Signer,
+                                       primary_signer: &mut dyn Signer<PrimaryRole>,
                                        certifications: C)
                                        -> Result<Vec<Signature>>
     where C: IntoIterator<Item = S>,

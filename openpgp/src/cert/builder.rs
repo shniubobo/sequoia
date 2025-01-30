@@ -6,6 +6,7 @@ use crate::packet::{
     Key,
     key::Key4,
     key::Key6,
+    key::PrimaryRole,
     key::UnspecifiedRole,
     key::SecretKey as KeySecretKey,
     key::SecretParts as KeySecretParts,
@@ -1672,7 +1673,7 @@ impl CertBuilder<'_> {
 
     /// Creates the primary key and a direct key signature.
     fn primary_key(&self, creation_time: std::time::SystemTime)
-        -> Result<(KeySecretKey, Signature, Box<dyn Signer>)>
+        -> Result<(KeySecretKey, Signature, Box<dyn Signer<PrimaryRole>>)>
     {
         let mut key = self.primary.ciphersuite
             .unwrap_or(self.ciphersuite)

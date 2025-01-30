@@ -848,7 +848,7 @@ impl Cert {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn revoke(&self, primary_signer: &mut dyn Signer,
+    pub fn revoke(&self, primary_signer: &mut dyn Signer<key::PrimaryRole>,
                   code: ReasonForRevocation, reason: &[u8])
         -> Result<Signature>
     {
@@ -928,7 +928,7 @@ impl Cert {
     /// # }
     /// ```
     pub fn set_expiration_time<T>(&self, policy: &dyn Policy, t: T,
-                                  primary_signer: &mut dyn Signer,
+                                  primary_signer: &mut dyn Signer<key::PrimaryRole>,
                                   expiration: Option<time::SystemTime>)
         -> Result<Vec<Signature>>
         where T: Into<Option<time::SystemTime>>,
