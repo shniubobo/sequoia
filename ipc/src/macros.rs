@@ -196,14 +196,17 @@ macro_rules! assert_send_and_sync {
     };
 }
 
+#[allow(dead_code)]
 pub(crate) trait Sendable : Send {}
+#[allow(dead_code)]
 pub(crate) trait Syncable : Sync {}
 
 /// We cannot test the macro in doctests, because the macro is not
 /// public.  We test the cases here, instead.  If you change the
 /// examples here, propagate the changes to the docstring above.
 #[cfg(test)]
-mod test {
+#[allow(dead_code)]
+mod test_assert_send_and_sync {
     /// For most types just call it after defining the type:
     pub struct MyStruct {}
     assert_send_and_sync!(MyStruct);

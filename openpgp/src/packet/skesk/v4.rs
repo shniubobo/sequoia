@@ -300,7 +300,6 @@ mod test {
         use std::io::Read;
         use crate::{
             Cert,
-            Fingerprint,
             packet::{SKESK, PKESK},
             parse::stream::*,
         };
@@ -319,10 +318,10 @@ mod test {
         }
 
         impl DecryptionHelper for H {
-            fn decrypt<D>(&mut self, _: &[PKESK], skesks: &[SKESK],
-                          _: Option<SymmetricAlgorithm>,
-                          mut decrypt: D) -> Result<Option<Fingerprint>>
-            where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, _: &[PKESK], skesks: &[SKESK],
+                       _: Option<SymmetricAlgorithm>,
+                       decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 assert_eq!(skesks.len(), 1);
                 let (cipher, sk) = skesks[0].decrypt(&"password".into())?;

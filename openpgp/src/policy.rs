@@ -1888,7 +1888,6 @@ mod test {
 
     use super::*;
     use crate::Error;
-    use crate::Fingerprint;
     use crate::crypto::SessionKey;
     use crate::packet::key::Key4;
     use crate::packet::signature;
@@ -2216,10 +2215,10 @@ mod test {
         }
 
         impl DecryptionHelper for VHelper {
-            fn decrypt<D>(&mut self, _: &[PKESK], _: &[SKESK],
-                          _: Option<SymmetricAlgorithm>,_: D)
-                          -> Result<Option<Fingerprint>>
-                where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, _: &[PKESK], _: &[SKESK],
+                       _: Option<SymmetricAlgorithm>,
+                       _: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 unreachable!();
             }
@@ -2722,10 +2721,10 @@ mod test {
         }
 
         impl DecryptionHelper for VHelper {
-            fn decrypt<D>(&mut self, _: &[PKESK], _: &[SKESK],
-                          _: Option<SymmetricAlgorithm>,_: D)
-                          -> Result<Option<Fingerprint>>
-                where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, _: &[PKESK], _: &[SKESK],
+                       _: Option<SymmetricAlgorithm>,
+                       _: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 unreachable!();
             }
@@ -2842,10 +2841,11 @@ mod test {
         }
 
         impl DecryptionHelper for Helper {
-            fn decrypt<D>(&mut self, _: &[PKESK], _: &[SKESK],
-                          _: Option<SymmetricAlgorithm>, _: D)
-                          -> Result<Option<Fingerprint>>
-                where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool {
+            fn decrypt(&mut self, _: &[PKESK], _: &[SKESK],
+                       _: Option<SymmetricAlgorithm>,
+                       _: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
+            {
                 Ok(None)
             }
         }
@@ -2889,10 +2889,10 @@ mod test {
         }
 
         impl DecryptionHelper for Helper {
-            fn decrypt<D>(&mut self, pkesks: &[PKESK], _: &[SKESK],
-                          algo: Option<SymmetricAlgorithm>, mut decrypt: D)
-                          -> Result<Option<Fingerprint>>
-                where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, pkesks: &[PKESK], _: &[SKESK],
+                       algo: Option<SymmetricAlgorithm>,
+                       decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 let p = &P::new();
                 let mut pair = Cert::from_bytes(

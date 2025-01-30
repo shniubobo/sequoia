@@ -2633,10 +2633,10 @@ impl<'a, 'b> Encryptor<'a, 'b> {
     /// # }
     /// #
     /// impl DecryptionHelper for Helper {
-    ///     fn decrypt<D>(&mut self, pkesks: &[PKESK], _skesks: &[SKESK],
-    ///                   sym_algo: Option<SymmetricAlgorithm>, mut decrypt: D)
-    ///                   -> Result<Option<Fingerprint>>
-    ///         where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+    ///     fn decrypt(&mut self, pkesks: &[PKESK], _skesks: &[SKESK],
+    ///                sym_algo: Option<SymmetricAlgorithm>,
+    ///                decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+    ///                -> Result<Option<Cert>>
     ///     {
     ///         let p = &StandardPolicy::new();
     ///         let mut encryption_context = None;
@@ -2667,7 +2667,7 @@ impl<'a, 'b> Encryptor<'a, 'b> {
     ///         }
     ///
     ///         self.recycling_bin = encryption_context; // Store for the reply.
-    ///         Ok(Some(self.key.fingerprint()))
+    ///         Ok(Some(self.key.clone()))
     ///     }
     /// }
     ///
@@ -3626,10 +3626,10 @@ mod test {
             }
         }
         impl<'a> DecryptionHelper for Helper<'a> {
-            fn decrypt<D>(&mut self, pkesks: &[PKESK], _skesks: &[SKESK],
-                          sym_algo: Option<SymmetricAlgorithm>,
-                          mut decrypt: D) -> Result<Option<crate::Fingerprint>>
-                where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, pkesks: &[PKESK], _skesks: &[SKESK],
+                       sym_algo: Option<SymmetricAlgorithm>,
+                       decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 let mut keypair = self.tsk.keys().with_policy(self.policy, None)
                     .for_transport_encryption()
@@ -4054,10 +4054,10 @@ mod test {
         }
 
         impl DecryptionHelper for Helper {
-            fn decrypt<D>(&mut self, _: &[PKESK], skesks: &[SKESK],
-                          _sym_algo: Option<SymmetricAlgorithm>,
-                          mut decrypt: D) -> Result<Option<crate::Fingerprint>>
-            where D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool
+            fn decrypt(&mut self, _: &[PKESK], skesks: &[SKESK],
+                       _sym_algo: Option<SymmetricAlgorithm>,
+                       decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool)
+                       -> Result<Option<Cert>>
             {
                 skesks[0].decrypt(&"совершенно секретно".into())
                     .map(|(algo, session_key)| decrypt(algo, &session_key))?;

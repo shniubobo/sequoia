@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     // Select a fresh circuit by providing a random username/password
     // combination to Tor.
     let mut nonce = [0; 4];
-    openpgp::crypto::random(&mut nonce[..]);
+    openpgp::crypto::random(&mut nonce[..])?;
     let nonce = openpgp::fmt::hex::encode(&nonce);
     let proxy_url = format!("socks5h://anonymous:{}@127.0.0.1:9050", nonce);
 
