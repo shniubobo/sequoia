@@ -100,6 +100,18 @@
    - DecryptionHelper::decrypt now uses dynamic dispatch for the
      `decryption` parameter
    - DecryptionHelper::decrypt now returns a Result<Option<Cert>>
+   - UserIDAmalgamation::attest_certifications2 renamed to
+     attest_certifications
+   - UserAttributeAmalgamation::attest_certifications2 renamed to
+     attest_certifications
+   - ValidUserAttributeAmalgamation::attest_certifications renamed to
+     approve_of_certifications
+   - ValidUserIDAmalgamation::attest_certifications renamed to
+     approve_of_certifications
+   - UserAttributeAmalgamation::attest_certifications renamed to
+     approve_of_certifications
+   - UserIDAmalgamation::attest_certifications renamed to
+     approve_of_certifications
 
 ** New functionality
    - Signature::hash_userid_attestation
