@@ -154,7 +154,7 @@ impl Cert {
             }
         }
 
-        for k in self.subkeys() {
+        for k in self.keys().subkeys() {
             if export && ! k.self_signatures().chain(k.self_revocations()).any(
                 |s| s.exportable().is_ok())
             {
@@ -232,7 +232,7 @@ impl MarshalInto for Cert {
             }
         }
 
-        for k in self.subkeys() {
+        for k in self.keys().subkeys() {
             l += PacketRef::PublicSubkey(k.key()).serialized_len();
 
             for s in k.signatures() {
@@ -644,7 +644,7 @@ impl<'a> TSK<'a> {
             }
         }
 
-        for k in self.cert.subkeys() {
+        for k in self.cert.keys().subkeys() {
             if export && ! k.self_signatures().chain(k.self_revocations()).any(
                 |s| s.exportable().is_ok())
             {
@@ -769,7 +769,7 @@ impl<'a> MarshalInto for TSK<'a> {
             }
         }
 
-        for k in self.cert.subkeys() {
+        for k in self.cert.keys().subkeys() {
             l += serialized_len_key(k.key().into(),
                                     Tag::PublicSubkey, Tag::SecretSubkey);
 

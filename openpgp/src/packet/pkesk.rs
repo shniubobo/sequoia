@@ -29,7 +29,7 @@ pub use v6::PKESK6;
 /// Holds an asymmetrically encrypted session key.
 ///
 /// The session key is used to decrypt the actual ciphertext, which is
-/// typically stored in a [SEIP] packet.  See [Section 5.1 of
+/// typically stored in a [`SEIP`] packet.  See [Section 5.1 of
 /// RFC 4880] for details.
 ///
 /// A PKESK packet is not normally instantiated directly.  In most
@@ -40,6 +40,7 @@ pub use v6::PKESK6;
 /// Note: This enum cannot be exhaustively matched to allow future
 /// extensions.
 ///
+/// [`SEIP`]: crate::packet::SEIP
 /// [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
 /// [streaming serializer]: crate::serialize::stream
 /// [`PacketParser`]: crate::parse::PacketParser

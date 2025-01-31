@@ -457,9 +457,41 @@ where
     P: key::KeyParts,
     R: key::KeyRole,
 {
+    /// Returns a reference to the key.
+    ///
+    /// This is just a type-specific alias for
+    /// [`ComponentAmalgamation::component`].
+    ///
+    /// [`ComponentAmalgamation::component`]: ComponentAmalgamation::component()
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use sequoia_openpgp as openpgp;
+    /// # use openpgp::cert::prelude::*;
+    /// #
+    /// # fn main() -> openpgp::Result<()> {
+    /// # let (cert, _) =
+    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     .generate()?;
+    /// // Display some information about the keys.
+    /// for ka in cert.keys() {
+    ///     eprintln!(" - {:?}", ka.key());
+    /// }
+    /// # Ok(()) }
+    /// ```
+    pub fn key(&self) -> &Key<P, R> {
+        self.component()
+    }
+
     pub(crate) fn set_role(&mut self, _: key::KeyRoleRT) {
         // The amalgamation only has a immutable reference, we cannot
         // change the role.
+    }
+
+    /// Forwarder for the conversion macros.
+    pub(crate) fn has_secret(&self) -> bool {
+        self.key().has_secret()
     }
 }
 
@@ -495,6 +527,62 @@ pub type PrimaryKeyAmalgamation<'a, P>
 ///
 pub type SubordinateKeyAmalgamation<'a, P>
     = KeyAmalgamation<'a, P, key::SubordinateRole, ()>;
+
+
+impl<'a, P> SubordinateKeyAmalgamation<'a, P>
+where
+    P: key::KeyParts,
+{
+    /// Returns the subkey's revocation status at time `t`.
+    ///
+    /// A subkey is revoked at time `t` if:
+    ///
+    ///   - There is a live revocation at time `t` that is newer than
+    ///     all live self signatures at time `t`, or
+    ///
+    ///   - There is a hard revocation (even if it is not live at
+    ///     time `t`, and even if there is a newer self-signature).
+    ///
+    /// Note: Certs and subkeys have different criteria from User IDs
+    /// and User Attributes.
+    ///
+    /// Note: this only returns whether this subkey is revoked; it
+    /// does not imply anything about the Cert or other components.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use sequoia_openpgp as openpgp;
+    /// # use openpgp::cert::prelude::*;
+    /// use openpgp::policy::StandardPolicy;
+    /// #
+    /// # fn main() -> openpgp::Result<()> {
+    /// let p = &StandardPolicy::new();
+    ///
+    /// # let (cert, _) =
+    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     .generate()?;
+    /// // Display the subkeys' revocation status.
+    /// for ka in cert.keys().subkeys() {
+    ///     eprintln!(" Revocation status of {}: {:?}",
+    ///               ka.key().fingerprint(), ka.revocation_status(p, None));
+    /// }
+    /// # Ok(()) }
+    /// ```
+    pub fn revocation_status<T>(&self, policy: &dyn Policy, t: T)
+                                -> RevocationStatus
+    where
+        T: Into<Option<time::SystemTime>>,
+    {
+        let t = t.into();
+        self.bundle().revocation_status(policy, t)
+    }
+
+    /// Forwarder for the conversion macros.
+    pub(crate) fn has_secret(&self) -> bool {
+        self.key().has_secret()
+    }
+}
 
 /// An amalgamation whose role is not known at compile time.
 ///
@@ -1568,7 +1656,7 @@ impl<'a, P, R, R2> ValidAmalgamation<'a, Key<P, R>>
         let pk_sec = self.cert().primary_key().key().hash_algo_security();
 
         // All valid self-signatures.
-        let sec = self.hash_algo_security;
+        let sec = self.bundle().hash_algo_security;
         self.self_signatures()
             .filter(move |sig| {
                 policy.signature(sig, sec).is_ok()

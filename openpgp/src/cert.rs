@@ -1074,10 +1074,16 @@ impl Cert {
     }
 
     /// Returns an iterator over the certificate's subkeys.
-    pub(crate) fn subkeys(&self) -> ComponentAmalgamationIter<Key<key::PublicParts,
-                                                      key::SubordinateRole>>
+    ///
+    /// This is used in many test.  But, its convenience and
+    /// availability made us use it here and there in the code.
+    /// Nowadays, we use it in tests, and it is merely an alias for
+    /// the public interface.  Do not use it for new tests.
+    #[cfg(test)]
+    pub(crate) fn subkeys(&self)
+        -> KeyAmalgamationIter<key::PublicParts, key::SubordinateRole>
     {
-        ComponentAmalgamationIter::new(self, self.subkeys.iter())
+        self.keys().subkeys()
     }
 
     /// Returns an iterator over the certificate's unknown components.
@@ -1203,7 +1209,7 @@ impl Cert {
         self.userids()
             .flat_map(|ua| {
                 // All valid self-signatures.
-                let sec = ua.hash_algo_security;
+                let sec = ua.userid().hash_algo_security();
                 ua.self_signatures()
                     .filter(move |sig| {
                         policy.signature(sig, sec).is_ok()
@@ -3180,7 +3186,7 @@ impl Cert {
         if self.primary_key().has_secret() {
             return true;
         }
-        self.subkeys().any(|sk| {
+        self.keys().subkeys().any(|sk| {
             sk.key().has_secret()
         })
     }
@@ -5732,7 +5738,7 @@ mod test {
         // tsk is now a cert, but it still has its private bits.
         assert!(tsk.primary.key().has_secret());
         assert!(tsk.is_tsk());
-        let subkey_count = tsk.subkeys().len();
+        let subkey_count = tsk.subkeys().count();
         assert!(subkey_count > 0);
         assert!(tsk.subkeys().all(|k| k.key().has_secret()));
 
@@ -5750,13 +5756,13 @@ mod test {
         let merge1 = cert.clone().merge_public_and_secret(tsk.clone()).unwrap();
         assert!(merge1.is_tsk());
         assert!(merge1.primary.key().has_secret());
-        assert_eq!(merge1.subkeys().len(), subkey_count);
+        assert_eq!(merge1.subkeys().count(), subkey_count);
         assert!(merge1.subkeys().all(|k| k.key().has_secret()));
 
         let merge2 = tsk.clone().merge_public_and_secret(cert.clone()).unwrap();
         assert!(merge2.is_tsk());
         assert!(merge2.primary.key().has_secret());
-        assert_eq!(merge2.subkeys().len(), subkey_count);
+        assert_eq!(merge2.subkeys().count(), subkey_count);
         assert!(merge2.subkeys().all(|k| k.key().has_secret()));
     }
 
@@ -5805,7 +5811,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
             .add_transport_encryption_subkey()
             .add_certification_subkey()
             .generate().unwrap();
-        assert_eq!(cert.subkeys().len(), 2);
+        assert_eq!(cert.subkeys().count(), 2);
         let pile = cert
             .into_packet_pile()
             .into_children()
@@ -5827,7 +5833,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         eprintln!("parse back");
         let cert = Cert::try_from(pile).unwrap();
 
-        assert_eq!(cert.subkeys().len(), 2);
+        assert_eq!(cert.subkeys().count(), 2);
     }
 
     #[test]

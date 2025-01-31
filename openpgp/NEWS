@@ -112,6 +112,7 @@
      approve_of_certifications
    - UserIDAmalgamation::attest_certifications renamed to
      approve_of_certifications
+   - ComponentAmalgamation no longer derefs to the ComponentBundle
 
 ** New functionality
    - Signature::hash_userid_attestation
@@ -129,6 +130,13 @@
    - cert::amalgamation::ValidBindingSignature
    - impl Borrow<[u8]> for Fingerprint
    - impl Borrow<[u8]> for KeyID
+   - ComponentAmalgamation::binding_signature
+   - ComponentAmalgamation::approvals
+   - UserIDAmalgamation::revocation_status
+   - UserAttributeAmalgamation::revocation_status
+   - UnknownComponentAmalgamation::unknown
+   - KeyAmalgamation::key
+   - KeyAmalgamation::revocation_status
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

@@ -158,20 +158,24 @@
 //!    as well as parts of the [`Signature`] are not covered by the
 //!    signatures.
 //!
-//!  - Ciphertext integrity is provided by the [`SEIP`] packet's
-//!    [`MDC`] mechanism, but the integrity can only be checked after
-//!    decrypting the whole container.  Proper authenticated
-//!    encryption is provided by the [`AED`] container, but as of this
-//!    writing it is not standardized.
+//!  - Ciphertext integrity is provided by the [version 2 SEIP]
+//!    packet's use of authenticated encryption.
+//!
+//!  - In messages compatible with [RFC4880], ciphertext integrity is
+//!    provided by the [`version 1 SEIP`] packet's [`MDC`] mechanism,
+//!    but the integrity can only be checked after decrypting the whole
+//!    container.
 //!
 //!   [`DEFAULT_BUFFER_SIZE`]: stream::DEFAULT_BUFFER_SIZE
 //!   [`PKESK`]: crate::packet::PKESK
 //!   [`SKESK`]: crate::packet::PKESK
 //!   [`Literal`]: crate::packet::Literal
 //!   [`Signature`]: crate::packet::Signature
+//!   [`version 2 SEIP`]: crate::packet::seip::SEIP2
+//!   [RFC4880]: https://datatracker.ietf.org/doc/html/rfc4880
+//!   [`version 1 SEIP`]: crate::packet::seip::SEIP1
 //!   [`SEIP`]: crate::packet::SEIP
 //!   [`MDC`]: crate::packet::MDC
-//!   [`AED`]: crate::packet::AED
 
 use std::io;
 use std::io::prelude::*;
