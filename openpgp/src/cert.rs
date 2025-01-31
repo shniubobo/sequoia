@@ -3267,7 +3267,7 @@ impl Cert {
         if self.primary_key().has_secret() {
             return true;
         }
-        self.subkeys().any(|sk| {
+        self.keys().subkeys().any(|sk| {
             sk.key().has_secret()
         })
     }
