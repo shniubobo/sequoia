@@ -11,20 +11,19 @@ use crate::{
 // A `const fn` function can only use a subset of Rust's
 // functionality.  The subset is growing, but we restrict ourselves to
 // only use `const fn` functionality that is available in Debian
-// stable, which, as of 2020, includes rustc version 1.34.2.  This
+// stable, which, as of 2024, is rustc version 1.63.0.  This
 // requires a bit of creativity.
 #[derive(Debug, Clone)]
 pub(super) enum VecOrSlice<'a, T> {
     Vec(Vec<T>),
     Slice(&'a [T]),
-    Empty(),
 }
 
 // Make a `VecOrSlice` act like a `Vec`.
 impl<'a, T> VecOrSlice<'a, T> {
     // Returns an empty `VecOrSlice`.
     const fn empty() -> Self {
-        VecOrSlice::Empty()
+        VecOrSlice::Vec(Vec::new())
     }
 
     // Like `Vec::get`.
@@ -32,7 +31,6 @@ impl<'a, T> VecOrSlice<'a, T> {
         match self {
             VecOrSlice::Vec(v) => v.get(i),
             VecOrSlice::Slice(s) => s.get(i),
-            VecOrSlice::Empty() => None,
         }
     }
 
@@ -41,7 +39,6 @@ impl<'a, T> VecOrSlice<'a, T> {
         match self {
             VecOrSlice::Vec(v) => v.len(),
             VecOrSlice::Slice(s) => s.len(),
-            VecOrSlice::Empty() => 0,
         }
     }
 
@@ -59,7 +56,6 @@ impl<'a, T> VecOrSlice<'a, T> {
         let v: Vec<T> = match self {
             VecOrSlice::Vec(ref mut v) => std::mem::take(v),
             VecOrSlice::Slice(s) => s.to_vec(),
-            VecOrSlice::Empty() => Vec::new(),
         };
 
         *self = VecOrSlice::Vec(v);
@@ -78,7 +74,6 @@ impl<'a, T> Deref for VecOrSlice<'a, T> {
         match self {
             VecOrSlice::Vec(ref v) => &v[..],
             VecOrSlice::Slice(s) => s,
-            VecOrSlice::Empty() => &[],
         }
     }
 }
@@ -90,7 +85,6 @@ impl<'a, T> Index<usize> for VecOrSlice<'a, T> {
         match self {
             VecOrSlice::Vec(v) => &v[i],
             VecOrSlice::Slice(s) => &s[i],
-            VecOrSlice::Empty() => &[][i],
         }
     }
 }
@@ -106,9 +100,6 @@ impl<'a, T> IndexMut<usize> for VecOrSlice<'a, T>
         match self {
             VecOrSlice::Vec(v) => &mut v[i],
             VecOrSlice::Slice(_) => unreachable!(),
-            VecOrSlice::Empty() =>
-                panic!("index out of bounds: the len is 0 but the index is {}",
-                       i),
         }
     }
 }

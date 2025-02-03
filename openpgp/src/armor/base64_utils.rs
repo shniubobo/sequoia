@@ -12,7 +12,7 @@ use crate::{
 /// Remove whitespace, etc. from the base64 data.
 ///
 /// This function returns the filtered base64 data (i.e., stripped of
-/// all skipable data like whitespace), and the amount of unfiltered
+/// all skippable data like whitespace), and the amount of unfiltered
 /// data that corresponds to.  Thus, if we have the following 7 bytes:
 ///
 /// ```text

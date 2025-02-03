@@ -5,7 +5,7 @@
 //! following:
 //!
 //! 1. We break free(3) by using a custom allocator that leaks all
-//!    heap allocations, so that memory will not be re-used and we
+//!    heap allocations, so that memory will not be reused and we
 //!    can robustly detect secret leaking into the heap because
 //!    there is no risk of them being overwritten.
 //!
