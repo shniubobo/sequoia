@@ -7223,7 +7223,6 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         // Now we make sure the attestation signature was correctly reordered.
         assert_eq!(alice2.bad_signatures().count(), 0);
-        assert!(alice2.keys().all(|ka| ka.approvals().count() == 0));
         let ua = alice2.userids().next().unwrap();
         assert_eq!(ua.approvals().count(), 1);
 

@@ -113,6 +113,9 @@
    - UserIDAmalgamation::attest_certifications renamed to
      approve_of_certifications
    - ComponentAmalgamation no longer derefs to the ComponentBundle
+   - KeyAmalgamation no longer derefs to ComponentAmalgamation<Key>
+   - ValidComponentAmalgamation no longer derefs to ComponentAmalgamation
+   - ValidKeyAmalgamation no longer derefs to KeyAmalgamation
 
 ** New functionality
    - Signature::hash_userid_attestation
@@ -137,6 +140,33 @@
    - UnknownComponentAmalgamation::unknown
    - KeyAmalgamation::key
    - KeyAmalgamation::revocation_status
+   - PrimaryKeyAmalgamation::binding_signature
+   - SubordinateKeyAmalgamation::binding_signature
+   - KeyAmalgamation::cert
+   - KeyAmalgamation::bundle
+   - KeyAmalgamation::component
+   - KeyAmalgamation::self_signatures
+   - KeyAmalgamation::certifications
+   - KeyAmalgamation::self_revocations
+   - KeyAmalgamation::other_revocations
+   - KeyAmalgamation::signatures
+   - ValidComponentAmalgamation::cert
+   - ValidComponentAmalgamation::binding_signature
+   - ValidComponentAmalgamation::bundle
+   - ValidComponentAmalgamation::component
+   - ValidComponentAmalgamation::approvals
+   - ValidUserIDAmalgamation::userid
+   - ValidUserAttributeAmalgamation::user_attribute
+   - ValidKeyAmalgamation::cert
+   - ValidKeyAmalgamation::binding_signature
+   - ValidKeyAmalgamation::bundle
+   - ValidKeyAmalgamation::component
+   - ValidKeyAmalgamation::self_signatures
+   - ValidKeyAmalgamation::certifications
+   - ValidKeyAmalgamation::self_revocations
+   - ValidKeyAmalgamation::other_revocations
+   - ValidKeyAmalgamation::approvals
+   - ValidKeyAmalgamation::signatures
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

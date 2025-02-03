@@ -264,7 +264,8 @@ impl<'a, C> fmt::Debug for ValidComponentAmalgamationIter<'a, C> {
 }
 
 impl<'a, C> Iterator for ValidComponentAmalgamationIter<'a, C>
-    where C: std::fmt::Debug
+where
+    C: std::fmt::Debug + Send + Sync,
 {
     type Item = ValidComponentAmalgamation<'a, C>;
 
