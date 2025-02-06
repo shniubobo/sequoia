@@ -599,8 +599,8 @@ impl CertBuilder<'_> {
     ///
     /// This method controls whether the certificate is exportable.
     /// If the certificate builder is configured to make a
-    /// non-exportable certificate, then all of the signatures that it
-    /// creates include the an [Exportable Certification] subpacket
+    /// non-exportable certificate, then all the signatures that it
+    /// creates include the [Exportable Certification] subpacket
     /// that is set to `false`.
     ///
     /// [Exportable Certification]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.11
@@ -1108,7 +1108,7 @@ impl CertBuilder<'_> {
                         None, None)
     }
 
-    /// Adds an certification-capable subkey.
+    /// Adds a certification-capable subkey.
     ///
     /// The key uses the default cipher suite (see
     /// [`CertBuilder::set_cipher_suite`]), and is not set to expire.
@@ -2187,7 +2187,7 @@ mod tests {
         check!(cert.as_tsk().armored(), export, 0);
         check!(cert.as_tsk().armored(), serialize, 1);
 
-        // Have Alice add a exportable self signature.  Now her's
+        // Have Alice add an exportable self signature.  Now her
         // certificate should be exportable.
         let mut keypair = cert.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;

@@ -192,7 +192,7 @@ impl<'a, C> ComponentAmalgamationIter<'a, C> {
 /// This allows it to filter the returned components based on
 /// information available in the components' binding signatures.  For
 /// instance, [`ValidComponentAmalgamationIter::revoked`] filters the
-/// returned components by whether or not they are revoked.
+/// returned components by whether they are revoked.
 ///
 /// `ValidComponentAmalgamationIter` follows the builder pattern.
 /// There is no need to explicitly finalize it: it already implements

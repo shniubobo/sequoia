@@ -17,7 +17,7 @@ use crate::{
 /// OpenPGP timestamps are represented as `u32` containing the number of seconds
 /// elapsed since midnight, 1 January 1970 UTC ([Section 3.5 of RFC 4880]).
 ///
-/// They cannot express dates further than 7th February of 2106 or earlier than
+/// They cannot express dates further than 7th February 2106 or earlier than
 /// the [UNIX epoch]. Unlike Unix's `time_t`, OpenPGP's timestamp is unsigned so
 /// it rolls over in 2106, not 2038.
 ///
@@ -226,7 +226,7 @@ impl Timestamp {
     /// };
     ///
     /// assert!(sign_with_p(21).is_ok());
-    /// assert!(sign_with_p(22).is_ok());  // Rounded to bob's cert's creation time.
+    /// assert!(sign_with_p(22).is_ok());  // Rounded to Bob's cert's creation time.
     /// assert!(sign_with_p(32).is_err()); // Invalid precision
     /// # Ok(()) }
     /// ```

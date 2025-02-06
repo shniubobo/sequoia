@@ -32,7 +32,7 @@ pub use v6::OnePassSig6;
 /// See [One-Pass Signature Packet] for details.
 ///
 /// A `OnePassSig` packet is not normally instantiated directly.  In
-/// most cases, you'll create one as a side-effect of signing a
+/// most cases, you'll create one as a side effect of signing a
 /// message using the [streaming serializer], or parsing a signed
 /// message using the [`PacketParser`].
 ///

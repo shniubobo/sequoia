@@ -107,7 +107,7 @@ lazy_static::lazy_static!{
     ///
     /// We tolerate half an hour of skew based on the following
     /// anecdote: In 2019, a developer using Sequoia in a Windows VM
-    /// running inside of Virtual Box on Mac OS X reported that he
+    /// running inside Virtual Box on Mac OS X reported that he
     /// typically observed a few minutes of clock skew and
     /// occasionally saw over 20 minutes of clock skew.
     ///
@@ -531,7 +531,7 @@ mod tests {
         use std::iter::FromIterator;
 
         // SUBPACKET_TAG_VARIANTS is a list.  Derive it in a different way
-        // to double check that nothing is missing.
+        // to double-check that nothing is missing.
         let derived_variants = (0..=u8::MAX)
             .map(SubpacketTag::from)
             .filter(|t| {
@@ -1076,7 +1076,7 @@ impl SubpacketArea {
     ///
     /// Assuming we have a signature with an additional `Issuer`
     /// subpacket in the unhashed area (see the example for
-    /// [`SubpacketArea::add`], this replaces the `Issuer` subpacket
+    /// [`SubpacketArea::add`]), this replaces the `Issuer` subpacket
     /// in the unhashed area.  Because the unhashed area is not
     /// protected by the signature, the signature remains valid:
     ///
@@ -1481,7 +1481,7 @@ impl NotationDataFlags {
 /// Holds an arbitrary, well-structured subpacket.
 ///
 /// The `SubpacketValue` enum holds a [`Subpacket`]'s value.  The
-/// values are well structured in the sense that they have been parsed
+/// values are well-structured in the sense that they have been parsed
 /// into Sequoia's native data types rather than just holding the raw
 /// byte vector.  For instance, the [`Issuer`] variant holds a
 /// [`KeyID`].
@@ -1907,7 +1907,7 @@ pub struct Subpacket {
     critical: bool,
     /// Packet value, must match packet type.
     value: SubpacketValue,
-    /// Whether or not the information in this subpacket are
+    /// Whether the information in this subpacket are
     /// authenticated in the context of its signature.
     authenticated: atomic::AtomicBool,
 }
@@ -2064,14 +2064,14 @@ impl Subpacket {
     ///     been verified.
     ///   - It is in the unhashed subpacket area and the information
     ///     is self-authenticating and has been authenticated by
-    ///     Sequoia.  This is can be done for issuer information and
+    ///     Sequoia.  This can be done for issuer information and
     ///     embedded Signatures.
     ///   - The subpacket has been authenticated by the user and
     ///     marked as such using [`Subpacket::set_authenticated`].
     ///
     /// Note: The authentication is only valid in the context of the
-    /// signature the subpacket is in.  If the an authenticated
-    /// `Subpacket` is is added to a [`SubpacketArea`], the flag is
+    /// signature the subpacket is in.  If the authenticated
+    /// `Subpacket` is added to a [`SubpacketArea`], the flag is
     /// cleared.
     pub fn authenticated(&self) -> bool {
         self.authenticated.load(atomic::Ordering::Relaxed)
@@ -2434,7 +2434,7 @@ impl SubpacketAreas {
     /// key to be valid if there is another valid binding signature,
     /// even if it is older than the expired signature; if the active
     /// binding signature indicates that the key has expired, then
-    /// OpenPGP implementations will not fallback to an older binding
+    /// OpenPGP implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
@@ -2506,7 +2506,7 @@ impl SubpacketAreas {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -2548,7 +2548,7 @@ impl SubpacketAreas {
         }
     }
 
-    /// Returns whether or not the signature is alive at the specified
+    /// Returns whether the signature is alive at the specified
     /// time.
     ///
     /// A signature is considered to be alive if `creation time -
@@ -2715,7 +2715,7 @@ impl SubpacketAreas {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -2771,7 +2771,7 @@ impl SubpacketAreas {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
@@ -2802,7 +2802,7 @@ impl SubpacketAreas {
         }
     }
 
-    /// Returns whether or not a key is alive at the specified
+    /// Returns whether a key is alive at the specified
     /// time.
     ///
     /// A [Key] is considered to be alive if `creation time -
@@ -3631,7 +3631,7 @@ impl SubpacketAreas {
     ///
     /// The [Reason For Revocation subpacket] indicates why a key,
     /// User ID, or User Attribute is being revoked.  It includes both
-    /// a machine readable code, and a human-readable string.  The
+    /// a machine-readable code, and a human-readable string.  The
     /// code is essential as it indicates to the OpenPGP
     /// implementation that reads the certificate whether the key was
     /// compromised (a hard revocation), or is no longer used (a soft
@@ -4504,7 +4504,7 @@ impl signature::SignatureBuilder {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -4584,7 +4584,7 @@ impl signature::SignatureBuilder {
     /// key to be valid if there is another valid binding signature,
     /// even if it is older than the expired signature; if the active
     /// binding signature indicates that the key has expired, then
-    /// OpenPGP implementations will not fallback to an older binding
+    /// OpenPGP implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -5173,7 +5173,7 @@ impl signature::SignatureBuilder {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -5282,7 +5282,7 @@ impl signature::SignatureBuilder {
     /// valid if there is another valid binding signature, even if it
     /// is older than the expired signature; if the active binding
     /// signature indicates that the key has expired, then OpenPGP
-    /// implementations will not fallback to an older binding
+    /// implementations will not fall back to an older binding
     /// signature.
     ///
     /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
@@ -5536,7 +5536,7 @@ impl signature::SignatureBuilder {
     /// hashed subpacket area.  This has the advantage that the signer
     /// authenticates the set of issuers.  Furthermore, it makes
     /// handling of the resulting signatures more robust: If there are
-    /// two two signatures that are equal modulo the contents of the
+    /// two signatures that are equal modulo the contents of the
     /// unhashed area, there is the question of how to merge the
     /// information in the unhashed areas.  Storing issuer information
     /// in the hashed area avoids this problem.
@@ -5626,7 +5626,7 @@ impl signature::SignatureBuilder {
     /// hashed subpacket area.  This has the advantage that the signer
     /// authenticates the set of issuers.  Furthermore, it makes
     /// handling of the resulting signatures more robust: If there are
-    /// two two signatures that are equal modulo the contents of the
+    /// two signatures that are equal modulo the contents of the
     /// unhashed area, there is the question of how to merge the
     /// information in the unhashed areas.  Storing issuer information
     /// in the hashed area avoids this problem.
@@ -6506,7 +6506,7 @@ impl signature::SignatureBuilder {
     ///
     /// The Reason For Revocation subpacket indicates why a key, User
     /// ID, or User Attribute is being revoked.  It includes both a
-    /// machine readable code, and a human-readable string.  The code
+    /// machine-readable code, and a human-readable string.  The code
     /// is essential as it indicates to the OpenPGP implementation
     /// that reads the certificate whether the key was compromised (a
     /// hard revocation), or is no longer used (a soft revocation).
@@ -6619,6 +6619,7 @@ impl signature::SignatureBuilder {
     /// use openpgp::types::{AEADAlgorithm, Features};
     ///
     /// # fn main() -> openpgp::Result<()> {
+    /// use sequoia_openpgp::types::SymmetricAlgorithm;
     /// let p = &StandardPolicy::new();
     ///
     /// let (cert, _) = CertBuilder::new().add_userid("Alice").generate()?;
@@ -6634,7 +6635,7 @@ impl signature::SignatureBuilder {
     /// if let Ok(sig) = vc.direct_key_signature() {
     ///     sigs.push(
     ///         SignatureBuilder::from(sig.clone())
-    ///             .set_preferred_aead_algorithms(vec![ AEADAlgorithm::EAX ])?
+    ///             .set_preferred_aead_ciphersuites(vec![(SymmetricAlgorithm::AES256, AEADAlgorithm::EAX) ])?
     ///             .set_features(
     ///                 sig.features().unwrap_or_else(Features::sequoia)
     ///                     .set_seipdv2())?
@@ -6645,7 +6646,7 @@ impl signature::SignatureBuilder {
     ///     let sig = ua.binding_signature();
     ///     sigs.push(
     ///         SignatureBuilder::from(sig.clone())
-    ///             .set_preferred_aead_algorithms(vec![ AEADAlgorithm::EAX ])?
+    ///             .set_preferred_aead_ciphersuites(vec![(SymmetricAlgorithm::AES256, AEADAlgorithm::EAX) ])?
     ///             .set_features(
     ///                 sig.features().unwrap_or_else(Features::sequoia)
     ///                     .set_seipdv2())?
@@ -6784,7 +6785,7 @@ impl signature::SignatureBuilder {
     /// stored in the hashed subpacket area.  This has the advantage
     /// that the signer authenticates the set of issuers.
     /// Furthermore, it makes handling of the resulting signatures
-    /// more robust: If there are two two signatures that are equal
+    /// more robust: If there are two signatures that are equal
     /// modulo the contents of the unhashed area, there is the
     /// question of how to merge the information in the unhashed
     /// areas.  Storing issuer information in the hashed area avoids
@@ -6876,7 +6877,7 @@ impl signature::SignatureBuilder {
     /// stored in the hashed subpacket area.  This has the advantage
     /// that the signer authenticates the set of issuers.
     /// Furthermore, it makes handling of the resulting signatures
-    /// more robust: If there are two two signatures that are equal
+    /// more robust: If there are two signatures that are equal
     /// modulo the contents of the unhashed area, there is the
     /// question of how to merge the information in the unhashed
     /// areas.  Storing issuer information in the hashed area avoids

@@ -130,7 +130,7 @@ impl Features {
 
     /// Compares two feature sets for semantic equality.
     ///
-    /// `Features`' implementation of `PartialEq` compares two feature
+    /// `Features` implementation of `PartialEq` compares two feature
     /// sets for serialized equality.  That is, the `PartialEq`
     /// implementation considers two feature sets to *not* be equal if
     /// they have different amounts of padding.  This comparison

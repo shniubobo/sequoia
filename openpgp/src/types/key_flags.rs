@@ -170,7 +170,7 @@ impl KeyFlags {
 
     /// Compares two key flag sets for semantic equality.
     ///
-    /// `KeyFlags`' implementation of `PartialEq` compares two key
+    /// `KeyFlags` implementation of `PartialEq` compares two key
     /// flag sets for serialized equality.  That is, the `PartialEq`
     /// implementation considers two key flag sets to *not* be equal
     /// if they have different amounts of padding.  This comparison

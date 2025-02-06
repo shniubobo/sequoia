@@ -139,7 +139,7 @@
 //! embedded in the data structure.  Further, when the
 //! `ValidComponentAmalgamation` constructor is passed `None` for the
 //! reference time, it eagerly stores the current time, and uses that
-//! for all operations.  This approach elegantly solves all of the
+//! for all operations.  This approach elegantly solves all the
 //! aforementioned problems.
 //!
 //! [`ComponentBundle`]: super::bundle
@@ -528,7 +528,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// Returns a list of any designated revokers for this component.
     ///
     /// This function returns the designated revokers listed on the
-    /// components's binding signatures and the certificate's direct
+    /// components' binding signatures and the certificate's direct
     /// key signatures.
     ///
     /// Note: the returned list is deduplicated.
@@ -944,7 +944,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
         self.bundle().other_revocations()
     }
 
-    /// Returns all of the component's Certification Approval Key
+    /// Returns all the component's Certification Approval Key
     /// Signatures.
     ///
     /// This feature is [experimental](crate#experimental-features).
@@ -985,7 +985,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
         self.bundle().approvals()
     }
 
-    /// Returns all of the component's signatures.
+    /// Returns all the component's signatures.
     ///
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
@@ -1285,14 +1285,14 @@ impl<'a> UserIDAmalgamation<'a> {
     /// This function returns the certifications issued by the
     /// specified key.  Specifically, it returns a certification if:
     ///
-    ///   - it is well formed,
+    ///   - it is well-formed,
     ///   - it is live with respect to the reference time,
     ///   - it conforms to the policy, and
     ///   - the signature is cryptographically valid.
     ///
     /// This method is implemented on a [`UserIDAmalgamation`] and not
     /// a [`ValidUserIDAmalgamation`], because a third-party
-    /// certification does not require the user ID to be self signed.
+    /// certification does not require the user ID to be self-signed.
     ///
     /// # Examples
     ///
@@ -1434,7 +1434,7 @@ impl<'a> UserIDAmalgamation<'a> {
     ///
     /// This method is implemented on a [`UserIDAmalgamation`] and not
     /// a [`ValidUserIDAmalgamation`], because a third-party
-    /// certification does not require the user ID to be self signed.
+    /// certification does not require the user ID to be self-signed.
     ///
     /// # Examples
     ///
@@ -1470,14 +1470,14 @@ impl<'a> UserIDAmalgamation<'a> {
     /// This function returns the revocations issued by the specified
     /// key.  Specifically, it returns a revocation if:
     ///
-    ///   - it is well formed,
+    ///   - it is well-formed,
     ///   - it is live with respect to the reference time,
     ///   - it conforms to the policy, and
     ///   - the signature is cryptographically valid.
     ///
     /// This method is implemented on a [`UserIDAmalgamation`] and not
     /// a [`ValidUserIDAmalgamation`], because a third-party
-    /// revocation does not require the user ID to be self signed.
+    /// revocation does not require the user ID to be self-signed.
     ///
     /// # Examples
     ///
@@ -2570,7 +2570,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
         self.component()
     }
 
-    /// Returns the user attributes's approved third-party certifications.
+    /// Returns the user attributes' approved third-party certifications.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///

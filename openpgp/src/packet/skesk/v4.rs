@@ -23,9 +23,9 @@ use crate::types::{
 use crate::packet::{self, SKESK};
 use crate::Packet;
 
-/// Holds an symmetrically encrypted session key version 4.
+/// Holds a symmetrically encrypted session key version 4.
 ///
-/// Holds an symmetrically encrypted session key.  The session key is
+/// Holds a symmetrically encrypted session key.  The session key is
 /// needed to decrypt the actual ciphertext.  See [Section 5.3 of RFC
 /// 4880] for details.
 ///

@@ -29,9 +29,9 @@ use crate::packet::{
     skesk::SKESK4,
 };
 
-/// Holds an symmetrically encrypted session key version 6.
+/// Holds a symmetrically encrypted session key version 6.
 ///
-/// Holds an symmetrically encrypted session key.  The session key is
+/// Holds a symmetrically encrypted session key.  The session key is
 /// needed to decrypt the actual ciphertext.  See [Version 6 Symmetric
 /// Key Encrypted Session Key Packet Format] for details.
 ///

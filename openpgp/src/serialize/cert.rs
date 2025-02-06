@@ -94,7 +94,7 @@ impl Cert {
     ///   - Self signatures.  They are authenticated.
     ///   - Other signatures.  They are not authenticated at this point.
     ///   - Other revocations.  They are not authenticated, and likely
-    ///     not well supported in other implementations, hence the
+    ///     not well-supported in other implementations, hence the
     ///     least reliable way of revoking keys and therefore least
     ///     useful and most likely to be abused.
     fn serialize_common(&self, o: &mut dyn std::io::Write, export: bool)

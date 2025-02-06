@@ -226,7 +226,7 @@ impl Signature6 {
         self.level
     }
 
-    /// Returns whether or not this signature should be exported.
+    /// Returns whether this signature should be exported.
     ///
     /// This checks whether the [`Exportable Certification`] subpacket
     /// is absent or present and 1, and that the signature does not

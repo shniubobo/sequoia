@@ -381,7 +381,7 @@ ABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAT8Qf//Z
         let subpackets: Vec<_> = if let Packet::UserAttribute(ua) = p {
             ua.subpackets().collect()
         } else {
-            panic!("Expected an UserAttribute, got: {:?}", p);
+            panic!("Expected a UserAttribute, got: {:?}", p);
         };
         assert_eq!(subpackets.len(), 1);
         if let Ok(Subpacket::Image(Image::JPEG(img))) = &subpackets[0] {

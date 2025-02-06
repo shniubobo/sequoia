@@ -88,7 +88,7 @@ impl MPI {
 
     /// Creates new MPI encoding an uncompressed EC point.
     ///
-    /// Encodes the given point on a elliptic curve (see [Section 6 of
+    /// Encodes the given point on an elliptic curve (see [Section 6 of
     /// RFC 6637] for details).  This is used to encode public keys
     /// and ciphertexts for the NIST curves (`NistP256`, `NistP384`,
     /// and `NistP521`).
@@ -114,7 +114,7 @@ impl MPI {
     /// Creates new MPI encoding a compressed EC point using native
     /// encoding.
     ///
-    /// Encodes the given point on a elliptic curve (see [Section 13.2
+    /// Encodes the given point on an elliptic curve (see [Section 13.2
     /// of RFC4880bis] for details).  This is used to encode public
     /// keys and ciphertexts for the Bernstein curves (currently
     /// `X25519`).
@@ -423,7 +423,7 @@ impl Arbitrary for ProtectedMPI {
 impl ProtectedMPI {
     /// Creates new MPI encoding an uncompressed EC point.
     ///
-    /// Encodes the given point on a elliptic curve (see [Section 6 of
+    /// Encodes the given point on an elliptic curve (see [Section 6 of
     /// RFC 6637] for details).  This is used to encode public keys
     /// and ciphertexts for the NIST curves (`NistP256`, `NistP384`,
     /// and `NistP521`).
@@ -436,7 +436,7 @@ impl ProtectedMPI {
     /// Creates new MPI encoding a compressed EC point using native
     /// encoding.
     ///
-    /// Encodes the given point on a elliptic curve (see [Section 13.2
+    /// Encodes the given point on an elliptic curve (see [Section 13.2
     /// of RFC4880bis] for details).  This is used to encode public
     /// keys and ciphertexts for the Bernstein curves (currently
     /// `X25519`).

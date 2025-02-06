@@ -25,8 +25,8 @@ impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
     ///   [`SignatureBuilder::sign_primary_key_binding`]: signature::SignatureBuilder::sign_primary_key_binding()
     ///
-    /// This function adds a creation time subpacket, a issuer
-    /// fingerprint subpacket, and a issuer subpacket to the
+    /// This function adds a creation time subpacket, an issuer
+    /// fingerprint subpacket, and an issuer subpacket to the
     /// signature.
     ///
     /// # Examples
@@ -86,8 +86,8 @@ impl UserID {
     /// The`hash_algo` defaults to SHA512, `creation_time` to the
     /// current time.
     ///
-    /// This function adds a creation time subpacket, a issuer
-    /// fingerprint subpacket, and a issuer subpacket to the
+    /// This function adds a creation time subpacket, an issuer
+    /// fingerprint subpacket, and an issuer subpacket to the
     /// signature.
     ///
     /// # Examples
@@ -134,8 +134,8 @@ impl UserID {
     /// `SignatureType::GenericCertification`, `hash_algo` to SHA512,
     /// `creation_time` to the current time.
     ///
-    /// This function adds a creation time subpacket, a issuer
-    /// fingerprint subpacket, and a issuer subpacket to the
+    /// This function adds a creation time subpacket, an issuer
+    /// fingerprint subpacket, and an issuer subpacket to the
     /// signature.
     ///
     /// # Errors
@@ -216,8 +216,8 @@ impl UserAttribute {
     /// builder.  The`hash_algo` defaults to SHA512, `creation_time`
     /// to the current time.
     ///
-    /// This function adds a creation time subpacket, a issuer
-    /// fingerprint subpacket, and a issuer subpacket to the
+    /// This function adds a creation time subpacket, an issuer
+    /// fingerprint subpacket, and an issuer subpacket to the
     /// signature.
     ///
     /// # Examples
@@ -269,8 +269,8 @@ impl UserAttribute {
     /// `SignatureType::GenericCertification`, `hash_algo` to SHA512,
     /// `creation_time` to the current time.
     ///
-    /// This function adds a creation time subpacket, a issuer
-    /// fingerprint subpacket, and a issuer subpacket to the
+    /// This function adds a creation time subpacket, an issuer
+    /// fingerprint subpacket, and an issuer subpacket to the
     /// signature.
     ///
     /// # Errors

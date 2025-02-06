@@ -162,7 +162,7 @@ impl S2K {
     /// Usually, you should use `S2K`s [`Default`] implementation to
     /// create `S2K` objects with sane default parameters.  The
     /// parameters are chosen with contemporary machines in mind, and
-    /// should also be usable on lower-end devices like smart phones.
+    /// should also be usable on lower-end devices like smartphones.
     ///
     ///   [`Default`]: std::default::Default
     ///

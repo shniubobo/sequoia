@@ -454,7 +454,7 @@ impl Packet {
         self.container_ref().and_then(|c| c.children())
     }
 
-    /// Returns an iterator over all of the packet's descendants, in
+    /// Returns an iterator over all the packet's descendants, in
     /// depth-first order.
     pub(crate) fn descendants(&self) -> Option<Iter> {
         self.container_ref().and_then(|c| c.descendants())

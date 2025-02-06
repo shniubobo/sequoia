@@ -1667,7 +1667,7 @@ impl seal::Sealed for RevocationKey {}
 impl Marshal for RevocationKey {
     fn serialize(&self, o: &mut dyn std::io::Write) -> Result<()> {
         let (pk_algo, fp) = self.revoker();
-        o.write_all(&[self.class(), (pk_algo).into()])?;
+        o.write_all(&[self.class(), pk_algo.into()])?;
         o.write_all(fp.as_bytes())?;
         Ok(())
     }

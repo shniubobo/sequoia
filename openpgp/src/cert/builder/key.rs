@@ -271,7 +271,7 @@ impl KeyBuilder {
 ///
 /// - If the subkey is new, then the active binding signature of the
 ///   newest live, non-revoked, valid subkey is used as the binding
-///   signature template.  Newest means the the key with the latest
+///   signature template.  Newest means the key with the latest
 ///   Key Creation Time and not necessarily the newest binding
 ///   signature.  (If multiple keys have the same key creation time,
 ///   the key to use is chosen in an undefined, but deterministic
@@ -396,7 +396,7 @@ impl KeyBuilder {
 /// for ka in vc.keys().subkeys().revoked(false) {
 ///     // Check that the key's expiration time is really e.  Note: We
 ///     // need to take into account that SystemTime has a subsecond
-///     // resolution, but OpenPGP's timestamps only have a 1 second
+///     // resolution, but OpenPGP's timestamps only have a 1-second
 ///     // resolution.
 ///     assert!(e.duration_since(ka.key_expiration_time().unwrap()).unwrap()
 ///             < Duration::new(1, 0));
@@ -550,7 +550,7 @@ impl<'a> SubkeyBuilder<'a> {
     /// # assert_eq!(vc1.keys().count() + 1, vc2.keys().count());
     ///
     /// // Observe that both keys expire one year from now.  If we
-    /// // hadn't adjust the validity period of the new key, it would
+    /// // hadn't adjusted the validity period of the new key, it would
     /// // have expired in two years from now, because the key validity
     /// // period is relative to the key's creation time!
     /// vc2.keys().subkeys().for_each(|sig| {
@@ -899,7 +899,7 @@ impl<'a> SubkeyBuilder<'a> {
     ///
     /// Note: if you are adding multiple subkeys to a certificate or
     /// updating multiple subkeys, it is usually more efficient to use
-    /// [`SubkeyBuilder::attach`], and then merge all of the packets
+    /// [`SubkeyBuilder::attach`], and then merge all the packets
     /// at once.
     ///
     /// # Examples

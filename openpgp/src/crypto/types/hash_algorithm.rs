@@ -313,7 +313,7 @@ mod tests {
         use std::iter::FromIterator;
 
         // HASH_ALGORITHM_VARIANTS is a list.  Derive it in a
-        // different way to double check that nothing is missing.
+        // different way to double-check that nothing is missing.
         let derived_variants = (0..=u8::MAX)
             .map(HashAlgorithm::from)
             .filter(|t| {

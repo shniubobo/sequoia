@@ -343,7 +343,7 @@ impl CertValidator {
 /// this way, it is possible to propagate parse errors.
 ///
 /// A `CertParser` returns each [`TPK`] or [`TSK`] that it encounters.
-/// Note: if you don't actually need all of the certificates, it is
+/// Note: if you don't actually need all the certificates, it is
 /// usually faster to use a [`RawCertParser`] and only fully parse and
 /// canonicalize those certificates that are relevant.
 ///
@@ -678,7 +678,7 @@ impl<'a> CertParser<'a> {
     /// certificates in a large keyring, most certificates can be
     /// immediately discarded.  That is, it is more efficient to
     /// filter, validate, and double check, than to validate and
-    /// filter.  (It is necessary to double check, because the check
+    /// filter.  (It is necessary to double-check, because the check
     /// might have been on an invalid part.  For example, if searching
     /// for a key with a particular Key ID, a matching key might not
     /// have any self signatures.)
@@ -882,7 +882,7 @@ impl<'a> CertParser<'a> {
         }).and_then(|mut cert| {
             let primary_fp: KeyHandle = cert.key_handle();
 
-            // The parser puts all of the signatures on the
+            // The parser puts all the signatures on the
             // certifications field.  Split them now.
 
             split_sigs(&primary_fp, &mut cert.primary);

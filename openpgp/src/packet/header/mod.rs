@@ -58,7 +58,7 @@ impl Header {
 
     /// Checks the header for validity.
     ///
-    /// A header is consider invalid if:
+    /// A header is considered invalid if:
     ///
     ///   - The tag is [`Tag::Reserved`].
     ///   - The tag is [`Tag::Unknown`] or [`Tag::Private`] and
@@ -173,7 +173,7 @@ impl Header {
                                     + 64 * 1024 // MPIs.
                                    )).contains(&l),
                         Tag::SKESK =>
-                            // 2 bytes of fixed header.  An s2k
+                            // 2 bytes of fixed header.  A s2k
                             // specification (at least 1 byte), an
                             // optional encryption session key.
                             (3..10 * 1024).contains(&l),

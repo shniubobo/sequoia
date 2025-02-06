@@ -4,7 +4,7 @@
 //!
 //! The main data type is the [`Key`] enum.  This enum abstracts away
 //! the differences between the key formats (the current [version 6],
-//! the deprecated [version 4], and the legacy [version 3].
+//! the deprecated [version 4], and the legacy [version 3]).
 //! Nevertheless, some functionality remains format specific.  For
 //! instance, the `Key` enum doesn't provide a mechanism to generate
 //! keys.  This functionality depends on the format.
@@ -645,7 +645,7 @@ impl KeyRole for PrimaryRole {
     }
 }
 
-/// A marker that indicates the `Key` should treated like a subkey.
+/// A marker that indicates the `Key` should be treated like a subkey.
 ///
 /// Refer to [`KeyRole`] for details.
 ///
@@ -1317,7 +1317,7 @@ impl<R> Key4<SecretParts, R>
     ///
     /// The ECDH key will use hash algorithm `hash` and symmetric
     /// algorithm `sym`.  If one or both are `None` secure defaults
-    /// will be used.  The key will have it's creation date set to
+    /// will be used.  The key will have its creation date set to
     /// `ctime` or the current time if `None` is given.
     ///
     /// The given `private_key` is expected to be in the native X25519
@@ -1371,7 +1371,7 @@ impl<R> Key4<SecretParts, R>
 
     /// Creates a new OpenPGP secret key packet for an existing Ed25519 key.
     ///
-    /// The key will have it's creation date set to `ctime` or the current
+    /// The key will have its creation date set to `ctime` or the current
     /// time if `None` is given.
     pub fn import_secret_ed25519<T>(private_key: &[u8], ctime: T)
         -> Result<Self> where T: Into<Option<time::SystemTime>>
@@ -1485,7 +1485,7 @@ impl<R> Key4<SecretParts, R>
 
     /// Generates a new ElGamal key with a public modulus of size `p_bits`.
     ///
-    /// Note: ElGamal is no longer well supported in cryptographic
+    /// Note: ElGamal is no longer well-supported in cryptographic
     /// libraries and should be avoided.
     pub fn generate_elgamal(p_bits: usize) -> Result<Self> {
         use crate::crypto::backend::{Backend, interface::Asymmetric};
@@ -2032,7 +2032,7 @@ impl SecretKeyMaterial {
 ///
 /// This data structure is used by the [`SecretKeyMaterial`] enum.
 ///
-/// Unlike an [`Encrypted`] key, this key an be used as-is.
+/// Unlike an [`Encrypted`] key, this key can be used as-is.
 ///
 /// The secret key is encrypted in memory and only decrypted on
 /// demand.  This helps protect against [heartbleed]-style
@@ -3033,7 +3033,7 @@ mod tests {
         let pile =
             PacketPile::from_bytes(crate::tests::key("public-key.gpg")).unwrap();
 
-        // The blob contains a public key and a three subkeys.
+        // The blob contains a public key and three subkeys.
         let mut pki = 0;
         let mut ski = 0;
 

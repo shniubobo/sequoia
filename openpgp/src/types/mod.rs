@@ -469,10 +469,10 @@ impl SignatureType {
 /// assert_eq!(revocation.typ(), SignatureType::CertificationRevocation);
 ///
 /// // Now merge the revocation signature into the Cert.
-/// let cert = cert.insert_packets(revocation.clone())?;
+/// let cert = cert.insert_packets2(revocation.clone())?;
 ///
 /// // Check that it is revoked.
-/// let ca = cert.userids().nth(0).unwrap();
+/// let ca = cert.0.userids().nth(0).unwrap();
 /// let status = ca.with_policy(p, None)?.revocation_status();
 /// if let RevocationStatus::Revoked(revs) = status {
 ///     assert_eq!(revs.len(), 1);

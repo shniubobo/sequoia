@@ -32,7 +32,7 @@ pub use v6::SKESK6;
 /// 4880] for details.
 ///
 /// An SKESK packet is not normally instantiated directly.  In most
-/// cases, you'll create one as a side-effect of encrypting a message
+/// cases, you'll create one as a side effect of encrypting a message
 /// using the [streaming serializer], or parsing an encrypted message
 /// using the [`PacketParser`].
 ///

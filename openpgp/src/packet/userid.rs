@@ -1306,7 +1306,7 @@ mod tests {
           None, None, Some("name@example.org"), None);
     }
 
-    // Make sure we can't parse non conventional User IDs.
+    // Make sure we can't parse non-conventional User IDs.
     #[test]
     fn decompose_non_conventional() {
         // Empty string is not allowed.

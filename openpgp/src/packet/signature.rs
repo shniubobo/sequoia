@@ -1720,7 +1720,7 @@ impl SignatureBuilder {
                 format!("Unsupported key version {}", n)).into()),
         };
 
-        // Update the version in the fields struct.
+        // Update the version in the field's struct.
         self.fields.version = self.sb_version.to_u8();
 
         // Set the creation time.
@@ -2096,7 +2096,7 @@ impl Signature4 {
         ::std::mem::replace(&mut self.level, level)
     }
 
-    /// Returns whether or not this signature should be exported.
+    /// Returns whether this signature should be exported.
     ///
     /// This checks whether the [`Exportable Certification`] subpacket
     /// is absent or present and 1, and that the signature does not
@@ -2377,7 +2377,7 @@ impl crate::packet::Signature {
     /// when comparing two signatures.  This prevents a malicious
     /// party from taking valid signatures, adding subpackets to the
     /// unhashed area, and deriving valid but distinct signatures,
-    /// which could be used to perform a denial of service attack.
+    /// which could be used to perform a denial-of-service attack.
     /// For instance, an attacker could create a lot of signatures,
     /// which need to be validated.  Ignoring the unhashed subpackets
     /// means that we can deduplicate signatures using this predicate.
@@ -2432,7 +2432,7 @@ impl crate::packet::Signature {
     /// when comparing two signatures.  This prevents a malicious
     /// party from taking valid signatures, adding subpackets to the
     /// unhashed area, and deriving valid but distinct signatures,
-    /// which could be used to perform a denial of service attack.
+    /// which could be used to perform a denial-of-service attack.
     /// For instance, an attacker could create a lot of signatures,
     /// which need to be validated.  Ignoring the unhashed subpackets
     /// means that we can deduplicate signatures using this predicate.
@@ -2561,7 +2561,7 @@ impl crate::packet::Signature {
     /// stored in the signature.  Note that we don't do this
     /// automatically when verifying signatures, because that would
     /// change the serialized representation of the signature as a
-    /// side-effect of verifying the signature.
+    /// side effect of verifying the signature.
     pub fn add_missing_issuers(&mut self) -> Result<()> {
         if self.additional_issuers().is_empty() {
             return Ok(());
@@ -2597,7 +2597,7 @@ impl crate::packet::Signature {
     /// [`Signature::normalized_eq`] may differ in the contents of the
     /// unhashed subpacket areas.  This function merges two signatures
     /// trying hard to incorporate all the information into one
-    /// signature while avoiding denial of service attacks by merging
+    /// signature while avoiding denial-of-service attacks by merging
     /// in bad information.
     ///
     /// The merge strategy is as follows:

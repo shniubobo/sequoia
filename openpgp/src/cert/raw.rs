@@ -205,7 +205,7 @@ impl<'a> crate::serialize::Marshal for RawPacket<'a> {
 /// A mostly unparsed `Cert`.
 ///
 /// This data structure contains the unparsed packets for a
-/// certificate or key.  The packet sequence is well formed in the
+/// certificate or key.  The packet sequence is well-formed in the
 /// sense that the sequence of tags conforms to the [Transferable
 /// Public Key grammar] or [Transferable Secret Key grammar], and that
 /// it can extract the primary key's fingerprint.  Beyond that, the
@@ -495,7 +495,7 @@ impl<'a> crate::serialize::Marshal for RawCert<'a> {
 ///
 /// [`CertParser`]: crate::cert::CertParser
 ///
-/// `RawCertParser` checks that the packet sequence is well formed in
+/// `RawCertParser` checks that the packet sequence is well-formed in
 /// the sense that the sequence of tags conforms to the [Transferable
 /// Public Key grammar] or [Transferable Secret Key grammar], and it
 /// performs a few basic checks.  See the documentation for

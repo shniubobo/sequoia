@@ -8,7 +8,7 @@
 //!   [Section 3 ff. of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3
 //!
 //! An OpenPGP stream represents a sequence of packets.  Some of the
-//! packets contain other packets.  These so called containers include
+//! packets contain other packets.  These so-called containers include
 //! encrypted data packets (the SED and [SEIP] packets), and
 //! [compressed data] packets.  This structure results in a tree,
 //! which is laid out in depth-first order.
@@ -145,7 +145,7 @@
 //!    verified.  On the other hand, buffering an unbounded amount of
 //!    data is problematic and can lead to out-of-memory situations
 //!    resulting in denial of service.  The streaming message
-//!    processing interfaces address this problem by buffering an
+//!    processing interfaces address this problem by buffering a
 //!    configurable amount of data before releasing any data to the
 //!    caller, and only revert to streaming unverified data if the
 //!    message exceeds the buffer.  See [`DEFAULT_BUFFER_SIZE`] for
@@ -382,7 +382,7 @@ macro_rules! impl_parse_with_buffered_reader {
 ///
 /// The default is `16`.
 ///
-/// Typically, we expect a message to looking like:
+/// Typically, we expect a message to look like:
 ///
 /// ```text
 /// [ encryption container: [ compression container: [ signature: [ literal data ]]]]
@@ -731,7 +731,7 @@ pub(crate) enum HashesFor {
     CleartextSignature,
 }
 
-/// Controls whether or not a hashed reader hashes data.
+/// Controls whether a hashed reader hashes data.
 #[derive(Copy, Clone, PartialEq, Debug)]
 enum Hashing {
     /// Hashing is enabled.
@@ -1095,7 +1095,7 @@ struct PacketParserSettings {
     // the next packet is retrieved.
     buffer_unread_content: bool,
 
-    // Whether or not to create a map.
+    // Whether to create a map.
     map: bool,
 
     // Whether to implicitly start hashing upon parsing OnePassSig
@@ -1456,7 +1456,7 @@ impl Signature {
             let recursion_depth = pp.recursion_depth();
 
             // We know that the top reader is not a HashedReader (it's
-            // a buffered_reader::Dup).  So, start with it's child.
+            // a buffered_reader::Dup).  So, start with its child.
             let mut r = (&mut pp.reader).get_mut();
             while let Some(tmp) = r {
                 {
@@ -2745,8 +2745,8 @@ impl Key4<key::UnspecifiedParts, key::UnspecifiedRole>
                     let aead_iv = php_try!(php.parse_bytes(
                         "aead_iv",
                         // If we don't know the AEAD mode, we won't
-                        // know the nonce size, and all of the IV will
-                        // end up in the ciphertext.  This is a
+                        // know the nonce size, and all the IV will
+                        // end up in the ciphertext.  This is an
                         // inherent limitation of the v4 packet
                         // format.
                         aead_algo.nonce_size().unwrap_or(0)))
@@ -3637,7 +3637,7 @@ impl MDC {
         make_php_try!(php);
 
         // Find the HashedReader pushed by the containing SEIP packet.
-        // In a well-formed message, this will be the outer most
+        // In a well-formed message, this will be the outermost
         // HashedReader on the BufferedReader stack: we pushed it
         // there when we started decrypting the SEIP packet, and an
         // MDC packet is the last packet in a SEIP container.
@@ -3666,7 +3666,7 @@ impl MDC {
                             let _ = h.digest(&mut computed_digest);
                         }
 
-                        // If the outer most HashedReader is not the
+                        // If the outermost HashedReader is not the
                         // matching HashedReader, then the message is
                         // malformed.
                         break;
@@ -4170,7 +4170,7 @@ impl PacketParserState {
 /// allow the caller to choose the behavior by either calling the
 /// [`PacketParser::recurse`] method or the [`PacketParser::next`]
 /// method, as appropriate.  OpenPGP doesn't impose any restrictions
-/// on the amount of nesting.  So, to prevent a denial of service
+/// on the amount of nesting.  So, to prevent a denial-of-service
 /// attack, the parsers don't recurse more than
 /// [`DEFAULT_MAX_RECURSION_DEPTH`] times, by default.
 ///
@@ -4279,7 +4279,7 @@ enum ParserResult<'a> {
 /// Once the [`PacketParser`] reaches the end of the input stream, it
 /// returns a [`PacketParserResult::EOF`] with a `PacketParserEOF`.
 /// This object provides information about the parsed stream, notably
-/// whether or not the packet stream was a well-formed [`Message`],
+/// whether the packet stream was a well-formed [`Message`],
 /// [`Cert`] or keyring.
 ///
 ///   [`Message`]: super::Message
@@ -5202,7 +5202,7 @@ impl <'a> PacketParser<'a> {
                     }
 
                     if state.first_packet {
-                        // We don't try to recover if we haven't see
+                        // We don't try to recover if we haven't seen
                         // any packets.
                         return Err(orig_error.unwrap());
                     }
@@ -6097,7 +6097,7 @@ fn packet_parser_reader_interface() {
     // is just EOF).
     let (packet, ppr) = pp.recurse().unwrap();
     assert!(ppr.is_eof());
-    // Since we read all of the data, we expect content to be None.
+    // Since we read all the data, we expect content to be None.
     assert_eq!(packet.unprocessed_body().unwrap().len(), 0);
 }
 
@@ -7030,7 +7030,7 @@ mod test {
         }
 
         // But if we set the maximum packet size too low, it is parsed
-        // into a unknown packet.
+        // into an unknown packet.
         let ppr = PacketParserBuilder::from_bytes(&buf).unwrap()
             .max_packet_size(5)
             .build().unwrap();
@@ -7136,8 +7136,8 @@ mod test {
         }
     }
 
-    /// Checks that the content hash is correctly computed whether or
-    /// not the content has been (fully) read.
+    /// Checks that the content hash is correctly computed whether
+    /// the content has been (fully) read.
     #[test]
     fn issue_537() -> Result<()> {
         // Buffer unread content.

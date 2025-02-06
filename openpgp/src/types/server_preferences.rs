@@ -108,7 +108,7 @@ impl KeyServerPreferences {
 
     /// Compares two key server preference sets for semantic equality.
     ///
-    /// `KeyServerPreferences`' implementation of `PartialEq` compares
+    /// `KeyServerPreferences` implementation of `PartialEq` compares
     /// two key server preference sets for serialized equality.  That
     /// is, the `PartialEq` implementation considers two key server
     /// preference sets to *not* be equal if they have different

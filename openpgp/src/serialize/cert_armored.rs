@@ -15,7 +15,7 @@ use crate::serialize::{
 use crate::policy::StandardPolicy as P;
 
 
-/// Whether or not a character is printable.
+/// Whether a character is printable.
 pub(crate) fn is_printable(c: &char) -> bool {
     // c.is_ascii_alphanumeric || c.is_whitespace || c.is_ascii_punctuation
     // would exclude any utf8 character, so it seems that to obtain all
@@ -251,7 +251,7 @@ mod tests {
         let chars: Vec<char> = vec![
             'a', 'z', 'A', 'Z', '1', '9', '0',
             '|', '!', '#', '$', '%', '^', '&', '*', '-', '+', '/',
-            // The following unicode characters were taken from:
+            // The following Unicode characters were taken from:
             // https://doc.rust-lang.org/std/primitive.char.html
             'é', 'ß', 'ℝ', '💣', '❤', '東', '京', '𝕊', '💝', 'δ',
             'Δ', '中', '越', '٣', '7', '৬', '¾', '①', 'K',

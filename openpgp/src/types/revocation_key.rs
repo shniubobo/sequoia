@@ -125,13 +125,13 @@ impl RevocationKey {
         (pk_algo, fp)
     }
 
-    /// Returns whether or not the relation between revoker and
+    /// Returns whether the relation between revoker and
     /// revokee is of a sensitive nature.
     pub fn sensitive(&self) -> bool {
         self.sensitive
     }
 
-    /// Sets whether or not the relation between revoker and revokee
+    /// Sets whether the relation between revoker and revokee
     /// is of a sensitive nature.
     pub fn set_sensitive(mut self, v: bool) -> Self {
         self.sensitive = v;

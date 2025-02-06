@@ -484,7 +484,7 @@ where
     }
 
     pub(crate) fn set_role(&mut self, _: key::KeyRoleRT) {
-        // The amalgamation only has a immutable reference, we cannot
+        // The amalgamation only has an immutable reference, we cannot
         // change the role.
     }
 
@@ -651,7 +651,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
 
         // We need to make sure the certificate is okay.  This means
         // checking the primary key.  But, be careful: we don't need
-        // to double check.
+        // to double-check.
         if ! self.primary() {
             let pka = PrimaryKeyAmalgamation::new(self.cert());
             pka.with_policy(policy, time).context("primary key")?;
@@ -667,7 +667,7 @@ impl<'a, P> ValidateAmalgamation<'a, Key<P, key::UnspecifiedRole>>
             // We need some black magic to avoid infinite
             // recursion: a ValidCert must be valid for the
             // specified policy and reference time.  A ValidCert
-            // is consider valid if the primary key is valid.
+            // is considered valid if the primary key is valid.
             // ValidCert::with_policy checks that by calling this
             // function.  So, if we call ValidCert::with_policy
             // here we'll recurse infinitely.
@@ -1185,14 +1185,14 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// This function returns the certifications issued by the
     /// specified key.  Specifically, it returns a certification if:
     ///
-    ///   - it is well formed,
+    ///   - it is well-formed,
     ///   - it is live with respect to the reference time,
     ///   - it conforms to the policy, and
     ///   - the signature is cryptographically valid.
     ///
     /// This method is implemented on a [`KeyAmalgamation`] and not
     /// a [`ValidKeyAmalgamation`], because a third-party
-    /// certification does not require the key to be self signed.
+    /// certification does not require the key to be self-signed.
     ///
     /// # Examples
     ///
@@ -1341,7 +1341,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     ///
     /// This method is implemented on a [`KeyAmalgamation`] and not
     /// a [`ValidKeyAmalgamation`], because a third-party
-    /// certification does not require the user ID to be self signed.
+    /// certification does not require the user ID to be self-signed.
     ///
     /// # Examples
     ///
@@ -1385,7 +1385,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// This function returns the revocations issued by the specified
     /// key.  Specifically, it returns a revocation if:
     ///
-    ///   - it is well formed,
+    ///   - it is well-formed,
     ///   - it is a [hard revocation](crate::types::RevocationType),
     ///     or it is live with respect to the reference time,
     ///   - it conforms to the policy, and
@@ -1393,7 +1393,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     ///
     /// This method is implemented on a [`KeyAmalgamation`] and not
     /// a [`ValidKeyAmalgamation`], because a third-party
-    /// revocation does not require the key to be self signed.
+    /// revocation does not require the key to be self-signed.
     ///
     /// # Examples
     ///
@@ -2317,7 +2317,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
 {
     /// Returns the key's primary key binding signature, if any.
     ///
-    /// The [primary key binding signature] is embedded inside of a
+    /// The [primary key binding signature] is embedded inside a
     /// subkey binding signature.  It is made by the subkey to
     /// indicate that it should be associated with the primary key.
     /// This prevents an attack in which an attacker creates a
@@ -2512,7 +2512,7 @@ impl<'a, P> ValidSubordinateKeyAmalgamation<'a, P>
     /// `subkey_signer` is `None`, and this is a signing-capable
     /// subkey, this function fails with [`Error::InvalidArgument`].
     /// Likewise, this function fails if `subkey_signer` is not `None`
-    /// when updating the expiration of an non signing-capable subkey.
+    /// when updating the expiration of a non signing-capable subkey.
     ///
     ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
     ///   [`Error::InvalidArgument`]: super::super::super::Error::InvalidArgument
@@ -2751,7 +2751,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
     /// `subkey_signer` is `None`, and this is a signing-capable
     /// subkey, this function fails with [`Error::InvalidArgument`].
     /// Likewise, this function fails if `subkey_signer` is not `None`
-    /// when updating the expiration of the primary key, or an non
+    /// when updating the expiration of the primary key, or a non
     /// signing-capable subkey.
     ///
     ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1

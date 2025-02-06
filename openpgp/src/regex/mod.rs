@@ -193,7 +193,7 @@
 //! // using the CA as a trusted introducer based on `ca_tsig`.
 //! let res = RegexSet::from_signature(&ca_tsig)?;
 //!
-//! // Should should be able to authenticate Alice.
+//! // Should be able to authenticate Alice.
 //! let alice_ua = alice.with_policy(p, None)?
 //!     .userids().nth(0).expect("Added a User ID");
 //! # assert!(res.matches_userid(alice_ua.userid()));
@@ -423,7 +423,7 @@ impl Regex {
 
         // Converting the Hir to a string and the compiling that is
         // apparently the canonical way to convert a Hir to a Regex
-        // (at least it is what rip-grep does, which the author of
+        // (at least it is what rip-grep does), which the author of
         // regex also wrote.  See
         // ripgrep/crates/regex/src/config.rs:ConfiguredHir::regex.
         let regex = regex::RegexBuilder::new(&hir.to_string())
@@ -881,7 +881,7 @@ impl RegexSet {
     /// // email addresses wrapped in <>.
     /// assert!(! res.is_match("dave@example.com"));
     ///
-    /// // And, it is case sensitive.
+    /// // And, it is case-sensitive.
     /// assert!(res.is_match("Ellen <ellen@example.com>"));
     /// assert!(! res.is_match("Ellen <ellen@EXAMPLE.COM>"));
     /// # Ok(()) }

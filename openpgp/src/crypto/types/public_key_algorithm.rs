@@ -344,7 +344,7 @@ mod tests {
         use std::iter::FromIterator;
 
         // PUBLIC_KEY_ALGORITHM_VARIANTS is a list.  Derive it in a
-        // different way to double check that nothing is missing.
+        // different way to double-check that nothing is missing.
         let derived_variants = (0..=u8::MAX)
             .map(PublicKeyAlgorithm::from)
             .filter(|t| {

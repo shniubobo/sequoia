@@ -61,8 +61,8 @@ use crc::Crc;
 const TRACE: bool = false;
 
 /// The encoded output stream must be represented in lines of no more
-/// than 76 characters each (see (see [RFC 4880, section
-/// 6.3](https://tools.ietf.org/html/rfc4880#section-6.3).  GnuPG uses
+/// than 76 characters each (see [RFC 4880, section
+/// 6.3](https://tools.ietf.org/html/rfc4880#section-6.3) ).  GnuPG uses
 /// 64.
 pub(crate) const LINE_LENGTH: usize = 64;
 

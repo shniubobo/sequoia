@@ -286,7 +286,7 @@ pub fn aes_key_wrap(algo: SymmetricAlgorithm, key: &Protected,
 
                 // A = MSB(64, B) ^ t where t = (n*j)+i
                 a = read_be_u64(&b[..8]) ^ ((n * j) + i + 1) as u64;
-                // (Note that our i runs from 0 to n-1 instead of 1 to
+                // Note that our i runs from 0 to n-1 instead of 1 to
                 // n, hence the index shift.
 
                 // R[i] = LSB(64, B)
@@ -352,7 +352,7 @@ pub fn aes_key_unwrap(algo: SymmetricAlgorithm, key: &Protected,
                 // B = AES-1(K, (A ^ t) | R[i]) where t = n*j+i
                 write_be_u64(&mut tmp[..8], a ^ ((n * j) + i + 1) as u64);
                 tmp[8..].copy_from_slice(&r[8 * i..8 * (i + 1)]);
-                // (Note that our i runs from n-1 to 0 instead of n to
+                // Note that our i runs from n-1 to 0 instead of n to
                 // 1, hence the index shift.
                 cipher.decrypt(&mut b, &tmp)?;
 

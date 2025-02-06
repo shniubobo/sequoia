@@ -62,7 +62,7 @@ use crate::parse::Cookie;
 ///
 /// let policy = &StandardPolicy::new();
 ///
-/// // Certificate is considered revoked because it is accompanied with its
+/// // Certificate is considered revoked because it is accompanied by its
 /// // revocation signature
 /// let pp: PacketPile = PacketPile::from_bytes(&buffer)?;
 /// let cert = Cert::try_from(pp)?;
@@ -319,7 +319,7 @@ impl PacketPile {
     /// Replaces the specified packets at the location described by
     /// `pathspec` with `packets`.
     ///
-    /// If a packet is a container, the sub-tree rooted at the
+    /// If a packet is a container, the subtree rooted at the
     /// container is removed.
     ///
     /// Note: the number of packets to remove need not match the
@@ -414,7 +414,7 @@ impl PacketPile {
         Err(Error::IndexOutOfRange.into())
     }
 
-    /// Returns an iterator over all of the packet's descendants, in
+    /// Returns an iterator over all the packet's descendants, in
     /// depth-first order.
     ///
     /// ```rust
@@ -516,7 +516,7 @@ impl From<Cert> for PacketPile {
 impl<'a> TryFrom<PacketParserResult<'a>> for PacketPile {
     type Error = anyhow::Error;
 
-    /// Reads all of the packets from a `PacketParser`, and turns them
+    /// Reads all the packets from a `PacketParser`, and turns them
     /// into a message.
     ///
     /// Note: this assumes that `ppr` points to a top-level packet.
@@ -628,7 +628,7 @@ impl<'a> PacketParserBuilder<'a> {
     /// settings.  Thus, by default, the content of packets will *not*
     /// be buffered.
     ///
-    /// Note: to avoid denial of service attacks, the `PacketParser`
+    /// Note: to avoid denial-of-service attacks, the `PacketParser`
     /// interface should be preferred unless the size of the message
     /// is known to fit in memory.
     ///

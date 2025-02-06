@@ -502,7 +502,7 @@ pub(crate) fn hash_buffered_reader<R>(reader: R,
     let mut reader
         = HashedReader::new(reader, HashesFor::Signature, algos.to_vec())?;
 
-    // Hash all of the data.
+    // Hash all the data.
     reader.drop_eof()?;
 
     let hashes =

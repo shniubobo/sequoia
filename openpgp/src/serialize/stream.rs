@@ -330,7 +330,7 @@ impl<'a> From<&'a mut (dyn io::Write + Send + Sync)> for Message<'a> {
 /// stream that has been base64-encoded and decorated with a header,
 /// footer, and optional headers representing key-value pairs.  It can
 /// be safely transmitted over protocols that can only transmit
-/// printable characters, and can handled by end users (e.g. copied
+/// printable characters, and can be handled by end users (e.g. copied
 /// and pasted).
 ///
 ///   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
@@ -1671,12 +1671,12 @@ impl<'a> LiteralWriter<'a> {
     /// {
     ///     let message = Message::new(&mut sink);
     ///     let mut message = LiteralWriter::new(message)
-    ///         .format(DataFormat::Text)
+    ///         .format(DataFormat::Unicode)
     ///         .build()?;
     ///     message.write_all(b"Hello world.")?;
     ///     message.finalize()?;
     /// }
-    /// assert_eq!(b"\xcb\x12t\x00\x00\x00\x00\x00Hello world.",
+    /// assert_eq!(b"\xcb\x12u\x00\x00\x00\x00\x00Hello world.",
     ///            sink.as_slice());
     /// # Ok(()) }
     /// ```
@@ -3726,7 +3726,7 @@ mod test {
                         }
 
                         // We only corrupted the final tag, so we
-                        // should get all of the content.
+                        // should get all the content.
                         assert_eq!(msg_len, decrypted_content.len());
                         assert_eq!(content, decrypted_content);
                     }

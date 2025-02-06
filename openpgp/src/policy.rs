@@ -321,7 +321,7 @@ pub trait Policy : fmt::Debug + Send + Sync {
 /// case for binding signatures, and direct key signatures.  But, it
 /// is not normally the case for documents (the attacker may be able
 /// to control the content of the document), certifications (the
-/// attacker may be able to control the the key packet, the User ID
+/// attacker may be able to control the key packet, the User ID
 /// packet, or the User Attribute packet), or certificate revocations
 /// (the attacker may be able to control the key packet).
 ///
@@ -378,7 +378,7 @@ pub trait Policy : fmt::Debug + Send + Sync {
 /// hidden to avoid making the victim suspicious.  This is
 /// straightforward for User Attributes, which are currently images,
 /// and have many places to hide this type of data.  However, User IDs
-/// are are normally [UTF-8 encoded RFC 2822 mailbox]es, which makes
+/// are normally [UTF-8 encoded RFC 2822 mailbox]es, which makes
 /// hiding half a kilobyte of binary data impractical.  The attacker
 /// does not control the victim's public key (in V).  But, they do
 /// control the malicious User ID or User Attribute that they want to
@@ -1407,7 +1407,7 @@ impl<'a> StandardPolicy<'a> {
     /// released on 2002-07-19, was the first release of Debian to
     /// ship a version of GnuPG that emitted SEIP packets by default.
     /// The first version that emitted SEIP packets was [GnuPG 1.0.3],
-    /// released on 2000-09-18.  Mid 2002 plus a 18 months grace
+    /// released on 2000-09-18.  Mid 2002 plus an 18 months grace
     /// period of people still using older versions is 2004.
     ///
     ///   [Debian 3.0]: https://www.debian.org/News/2002/20020719

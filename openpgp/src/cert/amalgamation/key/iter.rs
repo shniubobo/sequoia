@@ -404,7 +404,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// ```
     ///
     /// [`KeyHandle`s]: super::super::super::KeyHandle
-    /// [`key_handles`]: KeyAmalgamationIter::key_handles()
+    /// [`key_handles`]: KeyAmalgamationIter::key_handles2()
     /// [`KeyHandle::aliases`]: super::super::super::KeyHandle::aliases()
     pub fn key_handle<H>(mut self, h: H) -> Self
         where H: Into<KeyHandle>
@@ -658,7 +658,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
 /// A `ValidKeyAmalgamationIter` also provides additional
 /// filters based on information available in the `Key`s' binding
 /// signatures.  For instance, [`ValidKeyAmalgamationIter::revoked`]
-/// filters the returned `Key`s by whether or not they are revoked.
+/// filters the returned `Key`s by whether they are revoked.
 /// And, [`ValidKeyAmalgamationIter::alive`] changes the iterator to
 /// only return `Key`s that are live.
 ///
@@ -1374,7 +1374,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     ///             RevocationStatus::CouldBe(_) =>
     ///                 // There is a designated revoker that we
     ///                 // could check, but don't (or can't).  To
-    ///                 // avoid a denial of service attack arising from
+    ///                 // avoid a denial-of-service attack arising from
     ///                 // fake revocations, we assume that the key has
     ///                 // not been revoked and return it.
     ///                 true,
@@ -1582,7 +1582,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// ```
     ///
     /// [`KeyHandle`s]: super::super::super::KeyHandle
-    /// [`key_handles`]: ValidKeyAmalgamationIter::key_handles()
+    /// [`key_handles`]: ValidKeyAmalgamationIter::key_handles2()
     /// [`KeyHandle::aliases`]: super::super::super::KeyHandle::aliases()
     pub fn key_handle<H>(mut self, h: H) -> Self
         where H: Into<KeyHandle>

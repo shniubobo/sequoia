@@ -231,8 +231,7 @@ fn canonical_signature_order(a: Option<time::SystemTime>, b: Option<time::System
     a.cmp(&b).reverse()
 }
 
-/// Compares two signatures by creation time using the MPIs as tie
-/// breaker.
+/// Compares two signatures by creation time using the MPIs as tie-breaker.
 ///
 /// Useful to sort signatures so that the most recent ones are at the
 /// front.
@@ -331,28 +330,28 @@ pub trait Preferences<'a>: seal::Sealed {
     /// Returns the supported symmetric algorithms ordered by
     /// preference.
     ///
-    /// The algorithms are ordered according by the certificate
+    /// The algorithms are ordered according to the certificate
     /// holder's preference.
     fn preferred_symmetric_algorithms(&self)
         -> Option<&'a [SymmetricAlgorithm]>;
 
     /// Returns the supported hash algorithms ordered by preference.
     ///
-    /// The algorithms are ordered according by the certificate
+    /// The algorithms are ordered according to the certificate
     /// holder's preference.
     fn preferred_hash_algorithms(&self) -> Option<&'a [HashAlgorithm]>;
 
     /// Returns the supported compression algorithms ordered by
     /// preference.
     ///
-    /// The algorithms are ordered according by the certificate
+    /// The algorithms are ordered according to the certificate
     /// holder's preference.
     fn preferred_compression_algorithms(&self)
         -> Option<&'a [CompressionAlgorithm]>;
 
     /// Returns the supported AEAD ciphersuites ordered by preference.
     ///
-    /// The algorithms are ordered according by the certificate holder's
+    /// The algorithms are ordered according to the certificate holder's
     /// preference.
     fn preferred_aead_ciphersuites(
         &self)
@@ -360,7 +359,7 @@ pub trait Preferences<'a>: seal::Sealed {
 
     /// Returns the supported AEAD algorithms ordered by preference.
     ///
-    /// The algorithms are ordered according by the certificate holder's
+    /// The algorithms are ordered according to the certificate holder's
     /// preference.
     #[deprecated]
     fn preferred_aead_algorithms(&self) -> Option<&'a [AEADAlgorithm]>;
@@ -499,7 +498,7 @@ pub trait Preferences<'a>: seal::Sealed {
 ///
 /// # fn main() -> Result<()> {
 /// fn identity_filter(cert: &Cert) -> Result<Cert> {
-///     // Iterate over all of the Cert components, pushing packets we
+///     // Iterate over all the Cert components, pushing packets we
 ///     // want to keep into the accumulator.
 ///     let mut acc = Vec::new();
 ///
@@ -1236,7 +1235,7 @@ impl Cert {
     /// material.
     ///
     /// If you do want to preserve secret key material, use
-    /// [`Cert::into_tsk`] to opt-in to getting the secret key
+    /// [`Cert::into_tsk`] to opt in to getting the secret key
     /// material, then use [`TSK::into_packets`] to convert to a
     /// packet stream.
     ///
@@ -2771,7 +2770,7 @@ impl Cert {
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
-    /// // We just created the key, so all of the keys have secret key
+    /// // We just created the key, so all the keys have secret key
     /// // material.
     /// let mut pk = cert.primary_key().key().clone();
     ///
@@ -3429,7 +3428,7 @@ impl<'a> TSK<'a> {
     /// This function emits secret key packets, modulo the keys that
     /// are filtered (see [`TSK::set_filter`]).  If requested, missing
     /// secret key material is replaced by stubs (see
-    /// [`TSK::emit_secret_key_stubs`].
+    /// [`TSK::emit_secret_key_stubs`]).
     ///
     /// # Examples
     ///
@@ -3860,7 +3859,7 @@ impl<'a> ValidCert<'a> {
         self.cert.revocation_status(self.policy, self.time)
     }
 
-    /// Returns whether or not the certificate is alive at the
+    /// Returns whether the certificate is alive at the
     /// reference time.
     ///
     /// A certificate is considered to be alive at time `t` if the
@@ -4169,7 +4168,7 @@ impl<'a> ValidCert<'a> {
     /// #     .generate()?;
     /// let vc = cert.with_policy(p, None)?;
     /// let ua = vc.primary_user_attribute();
-    /// # // We don't have an user attributes.  So, this should return an
+    /// # // We don't have a user attributes.  So, this should return an
     /// # // error.
     /// # assert!(ua.is_err());
     /// #     Ok(())
@@ -4597,7 +4596,7 @@ mod test {
 
     #[test]
     fn out_of_order_self_sigs_test() {
-        // neal-out-of-order.pgp contains all of the self-signatures,
+        // neal-out-of-order.pgp contains all the self-signatures,
         // but some are out of order.  The canonicalization step
         // should reorder them.
         //
@@ -4663,7 +4662,7 @@ mod test {
                       "C2B819056C652598".parse().ok(),
                    ]);
 
-        // DKG's key has all of the self-signatures moved to the last
+        // DKG's key has all the self-signatures moved to the last
         // subkey; all user ids/user attributes/subkeys have nothing.
         let cert =
             Cert::from_bytes(crate::tests::key("dkg-sigs-out-of-order.pgp")).unwrap();
@@ -5672,7 +5671,7 @@ mod test {
             check(p, &cert, false, selfsig0);
             check(p, &cert, false, now);
 
-            // A hard revocation.  Unlike for Certs, this does NOT trumps
+            // A hard revocation.  Unlike for Certs, this does NOT trump
             // everything.
             let cert = cert.merge_public_and_secret(
                 Cert::from_bytes(

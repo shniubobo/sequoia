@@ -99,8 +99,8 @@
 //!
 //! Consider defining `Eq` as the equivalence of two `Packet`s'
 //! serialized forms.  If an application naively deduplicates
-//! signatures, then an attacker can potentially perform a denial of
-//! service attack by causing the application to process many
+//! signatures, then an attacker can potentially perform a
+//! denial-of-service attack by causing the application to process many
 //! cryptographically-valid `Signature`s by varying the content of one
 //! cryptographically-valid `Signature`'s unhashed area.  This attack
 //! can be prevented by only comparing data that is protected by the
@@ -683,7 +683,7 @@ pub struct Iter<'a> {
     // The current child (i.e., the last value returned by
     // children.next()).
     child: Option<&'a Packet>,
-    // The an iterator over the current child's children.
+    // The iterator over the current child's children.
     grandchildren: Option<Box<Iter<'a>>>,
 
     // The depth of the last returned packet.  This is used by the
@@ -1186,7 +1186,7 @@ impl DerefMut for Signature {
 /// `P` to `key::SecretParts`, these functions are infallible.
 /// Converting `P` to `key::SecretParts` may fail if the key doesn't
 /// have any secret key material.  (Note: although the secret key
-/// material is required, it not checked for validity.)
+/// material is required, it is not checked for validity.)
 ///
 /// For `R`, the conversion functions are [`Key::role_into_primary`],
 /// [`Key::role_as_primary`], [`Key::role_into_subordinate`],
@@ -1287,7 +1287,7 @@ impl DerefMut for Signature {
 /// `Key` is a wrapper around [the different key formats].
 /// (Currently, Sequoia only supports version 6 and version 4 keys,
 /// however, future versions may add limited support for version 3
-/// keys to facilitate working with achieved messages].)  As such, it
+/// keys to facilitate working with achieved messages.)  As such, it
 /// doesn't provide a mechanism to generate keys or import existing
 /// key material.  Instead, use the format-specific functions (e.g.,
 /// [`Key4::generate_ecc`]) and then convert the result into a `Key`
@@ -2052,7 +2052,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
 /// OpenPGP packets.  See [Section 5.13 of RFC 4880] for details.
 ///
 /// A SEIP packet is not normally instantiated directly.  In most
-/// cases, you'll create one as a side-effect of encrypting a message
+/// cases, you'll create one as a side effect of encrypting a message
 /// using the [streaming serializer], or parsing an encrypted message
 /// using the [`PacketParser`].
 ///

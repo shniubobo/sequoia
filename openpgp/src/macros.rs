@@ -63,7 +63,7 @@ macro_rules! tracer {
 /// execution time between it and debug mode!
 ///
 /// This macro measures the wall time it takes to execute the block.
-/// If the time is at least $ms_threshold (in milli-seconds), then it
+/// If the time is at least $ms_threshold (in milliseconds), then it
 /// displays the output on stderr.  The output is prefixed with label,
 /// if it is provided.
 ///
@@ -120,7 +120,7 @@ macro_rules! time_it {
 mod test_time_it {
     /// This macro measures the wall time it takes to execute the
     /// block.  If the time is at least $ms_threshold (in
-    /// milli-seconds), then it displays the output on stderr.  The
+    /// milliseconds), then it displays the output on stderr.  The
     /// output is prefixed with label, if it is provided.
     #[test]
     fn time_it() {

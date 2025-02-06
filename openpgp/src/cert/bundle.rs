@@ -42,7 +42,7 @@
 //! signatures are used to provide information about the whole
 //! certificate.  For instance, they can include the default `Key`
 //! expiry time.  This is used if a subkey's binding signature doesn't
-//! include a expiry.
+//! include an expiry.
 //!
 //! Self-revocations are revocation certificates issued by the key
 //! certificate holder.
@@ -561,7 +561,7 @@ impl<C> ComponentBundle<C> {
         self.other_revocations.iter()
     }
 
-    /// Returns all of the component's Certification Approval Key
+    /// Returns all the component's Certification Approval Key
     /// Signatures.
     ///
     /// This feature is [experimental](crate#experimental-features).
@@ -602,7 +602,7 @@ impl<C> ComponentBundle<C> {
         self.attestations.iter_verified(None)
     }
 
-    /// Returns all of the component's signatures.
+    /// Returns all the component's signatures.
     ///
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
@@ -642,7 +642,7 @@ impl<C> ComponentBundle<C> {
             .chain(self.other_revocations())
     }
 
-    /// Returns all of the bundles's bad signatures.
+    /// Returns all the bundles' bad signatures.
     pub(crate) fn bad_signatures(&self)
         -> impl Iterator<Item = &Signature> + Send + Sync
     {

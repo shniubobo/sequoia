@@ -289,7 +289,7 @@ impl Tag {
     ///
     ///   [Messages]: https://tools.ietf.org/html/rfc4880#section-11.3
     ///
-    /// Signatures can standalone either as a [detached signature], a
+    /// Signatures can stand alone either as a [detached signature], a
     /// third-party certification, or a revocation certificate.
     ///
     ///   [detached signature]: https://tools.ietf.org/html/rfc4880#section-11.3
@@ -356,7 +356,7 @@ mod tests {
         use std::iter::FromIterator;
 
         // PACKET_TAG_VARIANTS is a list.  Derive it in a different way
-        // to double check that nothing is missing.
+        // to double-check that nothing is missing.
         let derived_variants = (0..=u8::MAX)
             .map(Tag::from)
             .filter(|t| {
