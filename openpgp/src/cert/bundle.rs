@@ -569,10 +569,11 @@ impl<C> ComponentBundle<C> {
     /// The signatures are validated, and they are sorted by their
     /// creation time, most recent first.
     ///
-    /// A certificate owner can use Attestation Key Signatures to
-    /// attest to third party certifications.  Currently, only userid
-    /// and user attribute certifications can be attested.  See
-    /// [Approved Certifications subpacket] for details.
+    /// A certificate owner can use Certification Approval Key
+    /// Signatures to approve of third party certifications.
+    /// Currently, only user ID and user attribute certifications can
+    /// be approved.  See [Approved Certifications subpacket] for
+    /// details.
     ///
     ///   [Approved Certifications subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
     ///
@@ -589,7 +590,7 @@ impl<C> ComponentBundle<C> {
     /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.userids().enumerate() {
-    ///     eprintln!("UserID #{} ({:?}) has {:?} attestation key signatures",
+    ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
     ///               i, uid.userid().email(),
     ///               uid.bundle().approvals().count());
     /// }
@@ -606,7 +607,7 @@ impl<C> ComponentBundle<C> {
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
     /// revocations come first, then the self signatures,
-    /// then any key attestation signatures,
+    /// then any certification approval key signatures,
     /// certifications, and third-party revocations coming last.  This
     /// function may return additional types of signatures that could
     /// be associated to this component.

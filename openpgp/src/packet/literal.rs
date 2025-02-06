@@ -166,7 +166,7 @@ impl Literal {
     }
 }
 
-impl_body_forwards!(Literal);
+impl_unprocessed_body_forwards!(Literal);
 
 impl From<Literal> for Packet {
     fn from(s: Literal) -> Self {

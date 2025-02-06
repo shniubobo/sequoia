@@ -5722,16 +5722,15 @@ impl <'a> PacketParser<'a> {
             }
         }
 
-        use std::ops::DerefMut;
         match &mut self.packet {
             Packet::Literal(p) => set_or_extend(rest, p.container_mut(), false),
             Packet::Unknown(p) => set_or_extend(rest, p.container_mut(), false),
             Packet::CompressedData(p) =>
-                set_or_extend(rest, p.deref_mut(), self.processed),
+                set_or_extend(rest, p.container_mut(), self.processed),
             Packet::SEIP(SEIP::V1(p)) =>
-                set_or_extend(rest, p.deref_mut(), self.processed),
+                set_or_extend(rest, p.container_mut(), self.processed),
             Packet::SEIP(SEIP::V2(p)) =>
-                set_or_extend(rest, p.deref_mut(), self.processed),
+                set_or_extend(rest, p.container_mut(), self.processed),
             p => {
                 if !rest.is_empty() {
                     Err(Error::MalformedPacket(

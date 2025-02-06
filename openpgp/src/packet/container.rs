@@ -133,13 +133,6 @@ pub struct Container {
 
 assert_send_and_sync!(Container);
 
-impl std::ops::Deref for Container {
-    type Target = Body;
-    fn deref(&self) -> &Self::Target {
-        &self.body
-    }
-}
-
 impl PartialEq for Container {
     fn eq(&self, other: &Container) -> bool {
         use Body::*;
@@ -325,7 +318,8 @@ impl Container {
         format!("{:08X}", self.body_digest)
     }
 
-    // Converts an indentation level to whitespace.
+    /// Converts an indentation level to whitespace.
+    #[cfg(test)]
     fn indent(depth: usize) -> &'static str {
         use std::cmp;
 
@@ -333,11 +327,12 @@ impl Container {
         &s[0..cmp::min(depth, s.len())]
     }
 
-    // Pretty prints the container to stderr.
-    //
-    // This function is primarily intended for debugging purposes.
-    //
-    // `indent` is the number of spaces to indent the output.
+    /// Pretty prints the container to stderr.
+    ///
+    /// This function is primarily intended for debugging purposes.
+    ///
+    /// `indent` is the number of spaces to indent the output.
+    #[cfg(test)]
     pub(crate) fn pretty_print(&self, indent: usize) {
         for (i, p) in self.children_ref().iter().enumerate() {
             eprintln!("{}{}: {:?}",
@@ -351,7 +346,7 @@ impl Container {
     }
 }
 
-macro_rules! impl_body_forwards {
+macro_rules! impl_unprocessed_body_forwards {
     ($typ:ident) => {
         /// This packet implements the unprocessed container
         /// interface.
@@ -396,14 +391,45 @@ macro_rules! impl_body_forwards {
     };
 }
 
+macro_rules! impl_processed_body_forwards {
+    ($typ:ident) => {
+        /// This packet implements the processed container
+        /// interface.
+        ///
+        /// Container packets like this one can contain either
+        /// unprocessed or processed, structured data.
+        impl $typ {
+            /// Returns a reference to the container.
+            pub fn container_ref(&self) -> &packet::Container {
+                &self.container
+            }
+
+            /// Returns a mutable reference to the container.
+            pub fn container_mut(&mut self) -> &mut packet::Container {
+                &mut self.container
+            }
+
+            /// Gets a reference to the this packet's body.
+            pub fn body(&self) -> &crate::packet::Body {
+                self.container_ref().body()
+            }
+
+            /// Sets the this packet's body.
+            pub fn set_body(&mut self, body: crate::packet::Body)
+                            -> crate::packet::Body {
+                self.container_mut().set_body(body)
+            }
+        }
+    };
+}
+
 impl Packet {
     pub(crate) // for packet_pile.rs
     fn container_ref(&self) -> Option<&Container> {
-        use std::ops::Deref;
         match self {
-            Packet::CompressedData(p) => Some(p.deref()),
-            Packet::SEIP(SEIP::V1(p)) => Some(p.deref()),
-            Packet::SEIP(SEIP::V2(p)) => Some(p.deref()),
+            Packet::CompressedData(p) => Some(p.container_ref()),
+            Packet::SEIP(SEIP::V1(p)) => Some(p.container_ref()),
+            Packet::SEIP(SEIP::V2(p)) => Some(p.container_ref()),
             Packet::Literal(p) => Some(p.container_ref()),
             Packet::Unknown(p) => Some(p.container_ref()),
             _ => None,
@@ -412,11 +438,10 @@ impl Packet {
 
     pub(crate) // for packet_pile.rs, packet_pile_parser.rs, parse.rs
     fn container_mut(&mut self) -> Option<&mut Container> {
-        use std::ops::DerefMut;
         match self {
-            Packet::CompressedData(p) => Some(p.deref_mut()),
-            Packet::SEIP(SEIP::V1(p)) => Some(p.deref_mut()),
-            Packet::SEIP(SEIP::V2(p)) => Some(p.deref_mut()),
+            Packet::CompressedData(p) => Some(p.container_mut()),
+            Packet::SEIP(SEIP::V1(p)) => Some(p.container_mut()),
+            Packet::SEIP(SEIP::V2(p)) => Some(p.container_mut()),
             Packet::Literal(p) => Some(p.container_mut()),
             Packet::Unknown(p) => Some(p.container_mut()),
             _ => None,

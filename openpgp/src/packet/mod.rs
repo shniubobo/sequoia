@@ -66,8 +66,9 @@
 //! OpenPGP packets.  For instance, by definition, a [`Compressed
 //! Data`] packet contains an [OpenPGP Message].  It is possible to
 //! iterate over a container's descendants using the
-//! [`Container::descendants`] method.  (Note: `Container`s [`Deref`]
-//! to [`Container`].)
+//! [`Container::descendants`] method.  (Note: `Container`s have a
+//! `.container_ref()` and a `.container_mut()` method that return a
+//! reference to [`Container`].)
 //!
 //! # Packet Headers and Bodies
 //!

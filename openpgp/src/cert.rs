@@ -1954,13 +1954,13 @@ impl Cert {
                                            String::from_utf8_lossy(
                                                binding.userid().value())),
                                    binding.attestations, sig,
-                                   hash_userid_attestation, binding.userid());
+                                   hash_userid_approval, binding.userid());
                     }
 
                     for binding in self.user_attributes.iter_mut() {
                         check_one!("user attribute",
                                    binding.attestations, sig,
-                                   hash_user_attribute_attestation,
+                                   hash_user_attribute_approval,
                                    binding.user_attribute());
                     }
                 },
@@ -7142,9 +7142,10 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         Ok(())
     }
 
-    /// Makes sure that attested key signatures are correctly handled.
+    /// Makes sure that certification approval key signatures are
+    /// correctly handled.
     #[test]
-    fn attested_key_signatures_dkgpg() -> Result<()> {
+    fn certification_approval_key_signatures_dkgpg() -> Result<()> {
         const DUMP: bool = false;
         let p = &crate::policy::StandardPolicy::new();
 
@@ -7193,9 +7194,10 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         Ok(())
     }
 
-    /// Makes sure that attested key signatures are correctly reordered.
+    /// Makes sure that certification approval key signatures are
+    /// correctly reordered.
     #[test]
-    fn attested_key_signature_out_of_order() -> Result<()> {
+    fn certification_approval_key_signature_out_of_order() -> Result<()> {
         let p = &crate::policy::StandardPolicy::new();
 
         let (alice, _) = CertBuilder::general_purpose(

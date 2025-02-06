@@ -170,7 +170,7 @@ impl Unknown {
     }
 }
 
-impl_body_forwards!(Unknown);
+impl_unprocessed_body_forwards!(Unknown);
 
 impl From<Unknown> for Packet {
     fn from(s: Unknown) -> Self {

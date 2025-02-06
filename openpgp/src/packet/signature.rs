@@ -3381,17 +3381,17 @@ impl Signature {
             Some(hash.into_digest()?.into()))
     }
 
-    /// Verifies an attested key signature on a user id.
+    /// Verifies an certification approval key signature on a user ID.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
-    /// Allows the certificate owner to attest to third party
+    /// Allows the certificate owner to approve of third party
     /// certifications. See [Certification Approval Key Signature] for
     /// details.
     ///
-    /// `self` is the attested key signature, `signer` is the key that
-    /// allegedly made the signature, `pk` is the primary key, and
-    /// `userid` is the user id.
+    /// `self` is the certification approval key signature, `signer`
+    /// is the key that allegedly made the signature, `pk` is the
+    /// primary key, and `userid` is the user ID.
     ///
     /// Note: Due to limited context, this only verifies the
     /// cryptographic signature, checks the signature's type, and
@@ -3406,7 +3406,7 @@ impl Signature {
     /// signing capability, etc.
     ///
     ///   [Certification Approval Key Signature]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#name-certification-approval-key-
-    pub fn verify_userid_attestation<P, Q, R>(
+    pub fn verify_userid_approval<P, Q, R>(
         &self,
         signer: &Key<P, R>,
         pk: &Key<Q, key::PrimaryRole>,
@@ -3427,7 +3427,7 @@ impl Signature {
                        .into());
         }
 
-        self.hash_userid_attestation(&mut hash, pk, userid)?;
+        self.hash_userid_approval(&mut hash, pk, userid)?;
         self.verify_digest_internal(
             signer.parts_as_public().role_as_unspecified(),
             Some(hash.into_digest()?.into()))
@@ -3517,17 +3517,18 @@ impl Signature {
             Some(hash.into_digest()?.into()))
     }
 
-    /// Verifies an attested key signature on a user attribute.
+    /// Verifies an certification approval key signature on a user
+    /// attribute.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
-    /// Allows the certificate owner to attest to third party
+    /// Allows the certificate owner to approve of third party
     /// certifications. See [Certification Approval Key Signature] for
     /// details.
     ///
-    /// `self` is the attested key signature, `signer` is the key that
-    /// allegedly made the signature, `pk` is the primary key, and
-    /// `ua` is the user attribute.
+    /// `self` is the certification approval key signature, `signer`
+    /// is the key that allegedly made the signature, `pk` is the
+    /// primary key, and `ua` is the user attribute.
     ///
     /// Note: Due to limited context, this only verifies the
     /// cryptographic signature, checks the signature's type, and
@@ -3542,7 +3543,7 @@ impl Signature {
     /// signing capability, etc.
     ///
     ///   [Certification Approval Key Signature]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#name-certification-approval-key-
-    pub fn verify_user_attribute_attestation<P, Q, R>(
+    pub fn verify_user_attribute_approval<P, Q, R>(
         &self,
         signer: &Key<P, R>,
         pk: &Key<Q, key::PrimaryRole>,
@@ -3563,7 +3564,7 @@ impl Signature {
                        .into());
         }
 
-        self.hash_user_attribute_attestation(&mut hash, pk, ua)?;
+        self.hash_user_attribute_approval(&mut hash, pk, ua)?;
         self.verify_digest_internal(
             signer.parts_as_public().role_as_unspecified(),
             Some(hash.into_digest()?.into()))

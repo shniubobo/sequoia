@@ -185,6 +185,7 @@ impl PacketPile {
     /// Pretty prints the message to stderr.
     ///
     /// This function is primarily intended for debugging purposes.
+    #[cfg(test)]
     pub fn pretty_print(&self) {
         self.top_level.pretty_print(0);
     }
@@ -341,7 +342,7 @@ impl PacketPile {
     /// literal.set_body(b"old".to_vec());
     /// let mut compressed =
     ///     CompressedData::new(CompressionAlgorithm::Uncompressed);
-    /// compressed.children_mut().unwrap().push(literal.into());
+    /// compressed.container_mut().children_mut().unwrap().push(literal.into());
     /// let mut pile = PacketPile::from(Packet::from(compressed));
     ///
     /// // Replace the literal data packet.
@@ -881,7 +882,7 @@ mod test {
         }
 
         let mut seip = SEIP1::new();
-        seip.children_mut().unwrap().push(cd.into());
+        seip.container_mut().children_mut().unwrap().push(cd.into());
         packets.push(seip.into());
 
         eprintln!("{:#?}", packets);

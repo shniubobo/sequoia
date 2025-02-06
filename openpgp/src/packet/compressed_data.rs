@@ -31,19 +31,6 @@ pub struct CompressedData {
 }
 assert_send_and_sync!(CompressedData);
 
-impl std::ops::Deref for CompressedData {
-    type Target = packet::Container;
-    fn deref(&self) -> &Self::Target {
-        &self.container
-    }
-}
-
-impl std::ops::DerefMut for CompressedData {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.container
-    }
-}
-
 impl fmt::Debug for CompressedData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("CompressedData")
@@ -90,6 +77,8 @@ impl CompressedData {
         self
     }
 }
+
+impl_processed_body_forwards!(CompressedData);
 
 impl From<CompressedData> for Packet {
     fn from(s: CompressedData) -> Self {

@@ -57,19 +57,6 @@ pub struct SEIP2 {
 
 assert_send_and_sync!(SEIP2);
 
-impl std::ops::Deref for SEIP2 {
-    type Target = packet::Container;
-    fn deref(&self) -> &Self::Target {
-        &self.container
-    }
-}
-
-impl std::ops::DerefMut for SEIP2 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.container
-    }
-}
-
 impl SEIP2 {
     /// Creates a new SEIP2 packet.
     pub fn new(sym_algo: SymmetricAlgorithm,
@@ -159,6 +146,8 @@ impl SEIP2 {
         std::mem::replace(&mut self.salt, salt)
     }
 }
+
+impl_processed_body_forwards!(SEIP2);
 
 impl From<SEIP2> for SEIP {
     fn from(p: SEIP2) -> Self {

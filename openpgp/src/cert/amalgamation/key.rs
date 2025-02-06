@@ -1138,7 +1138,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
     /// revocations come first, then the self signatures,
-    /// then any key attestation signatures,
+    /// then any certification approval key signatures,
     /// certifications, and third-party revocations coming last.  This
     /// function may return additional types of signatures that could
     /// be associated to this component.
@@ -1828,7 +1828,7 @@ where
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
     /// revocations come first, then the self signatures,
-    /// then any key attestation signatures,
+    /// then any certification approval key signatures,
     /// certifications, and third-party revocations coming last.  This
     /// function may return additional types of signatures that could
     /// be associated to this component.

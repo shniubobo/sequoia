@@ -952,10 +952,11 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// The signatures are validated, and they are sorted by their
     /// creation time, most recent first.
     ///
-    /// A certificate owner can use Attestation Key Signatures to
-    /// attest to third party certifications.  Currently, only userid
-    /// and user attribute certifications can be attested.  See
-    /// [Approved Certifications subpacket] for details.
+    /// A certificate owner can use Certification Approval Key
+    /// Signatures to approve of third party certifications.
+    /// Currently, only userid and user attribute certifications can
+    /// be approved of.  See [Approved Certifications subpacket] for
+    /// details.
     ///
     ///   [Approved Certifications subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
     ///
@@ -972,7 +973,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.userids().enumerate() {
-    ///     eprintln!("UserID #{} ({:?}) has {:?} attestation key signatures",
+    ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
     ///               i, uid.userid().email(),
     ///               uid.approvals().count());
     /// }
@@ -989,7 +990,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
     /// revocations come first, then the self signatures,
-    /// then any key attestation signatures,
+    /// then any certification approval key  signatures,
     /// certifications, and third-party revocations coming last.  This
     /// function may return additional types of signatures that could
     /// be associated to this component.
@@ -1625,15 +1626,15 @@ impl<'a> UserIDAmalgamation<'a> {
     ///         SignatureBuilder::new(SignatureType::GenericCertification))?;
     /// let bob = bob.insert_packets2(vec![alice_certifies_bob.clone()])?.0;
     ///
-    /// // Have Bob attest that certification.
+    /// // Have Bob approve of that certification.
     /// let bobs_uid = bob.userids().next().unwrap();
-    /// let attestations =
+    /// let approvals =
     ///     bobs_uid.approve_of_certifications(
     ///         policy,
     ///         None,
     ///         &mut bob_signer,
     ///         bobs_uid.certifications())?;
-    /// let bob = bob.insert_packets2(attestations)?.0;
+    /// let bob = bob.insert_packets2(approvals)?.0;
     ///
     /// assert_eq!(bob.bad_signatures().count(), 0);
     /// assert_eq!(bob.userids().next().unwrap().certifications().next(),
@@ -2260,10 +2261,11 @@ where
     /// The signatures are validated, and they are sorted by their
     /// creation time, most recent first.
     ///
-    /// A certificate owner can use Attestation Key Signatures to
-    /// attest to third party certifications.  Currently, only userid
-    /// and user attribute certifications can be attested.  See
-    /// [Approved Certifications subpacket] for details.
+    /// A certificate owner can use Certification Approval Key
+    /// Signatures to approve of third party certifications.
+    /// Currently, only userid and user attribute certifications can
+    /// be approved.  See [Approved Certifications subpacket] for
+    /// details.
     ///
     ///   [Approved Certifications subpacket]: https://www.ietf.org/archive/id/draft-dkg-openpgp-1pa3pc-02.html#approved-certifications-subpacket
     ///
@@ -2280,7 +2282,7 @@ where
     /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.with_policy(p, None)?.userids().enumerate() {
-    ///     eprintln!("UserID #{} ({:?}) has {:?} attestation key signatures",
+    ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
     ///               i, uid.userid().email(),
     ///               uid.approvals().count());
     /// }
@@ -2301,7 +2303,7 @@ where
     /// Only the self-signatures are validated.  The signatures are
     /// sorted first by type, then by creation time.  The self
     /// revocations come first, then the self signatures,
-    /// then any key attestation signatures,
+    /// then any certification approval key signatures,
     /// certifications, and third-party revocations coming last.  This
     /// function may return additional types of signatures that could
     /// be associated to this component.
@@ -2375,7 +2377,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
-    /// Allows the certificate owner to attest to third party
+    /// Allows the certificate owner to approve of third party
     /// certifications. See [Approved Certification subpacket] for
     /// details.  This can be used to address certificate flooding
     /// concerns.
@@ -2428,7 +2430,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     ///
     /// Note: This is a low-level interface.  Consider using
     /// [`ValidUserIDAmalgamation::approved_certifications`] to
-    /// iterate over all attested certifications.
+    /// iterate over all approved certifications.
     ///
     ///   [`ValidUserIDAmalgamation::approved_certifications`]: ValidUserIDAmalgamation#method.approved_certifications
     // The explicit link works around a bug in rustdoc.
@@ -2507,13 +2509,13 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     ///         SignatureBuilder::new(SignatureType::GenericCertification))?;
     /// let bob = bob.insert_packets2(vec![alice_certifies_bob.clone()])?.0;
     ///
-    /// // Have Bob attest that certification.
+    /// // Have Bob approve of that certification.
     /// let bobs_uid = bob.with_policy(policy, None)?.userids().next().unwrap();
-    /// let attestations =
+    /// let approvals =
     ///     bobs_uid.approve_of_certifications(
     ///         &mut bob_signer,
     ///         bobs_uid.certifications())?;
-    /// let bob = bob.insert_packets2(attestations)?.0;
+    /// let bob = bob.insert_packets2(approvals)?.0;
     ///
     /// assert_eq!(bob.bad_signatures().count(), 0);
     /// assert_eq!(bob.userids().next().unwrap().certifications().next(),
@@ -2572,7 +2574,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
-    /// Allows the certificate owner to attest to third party
+    /// Allows the certificate owner to approve of third party
     /// certifications. See [Approved Certifications subpacket] for
     /// details.  This can be used to address certificate flooding
     /// concerns.
@@ -2611,7 +2613,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
             })
     }
 
-    /// Returns set of active attestation key signatures.
+    /// Returns set of active certification approval key signatures.
     ///
     /// This feature is [experimental](crate#experimental-features).
     ///
@@ -2620,8 +2622,8 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
     /// all digests in these signatures are the set of approved
     /// third-party certifications.
     ///
-    /// This interface is useful for pruning old attestation key
-    /// signatures when filtering a certificate.
+    /// This interface is useful for pruning old certification
+    /// approval key signatures when filtering a certificate.
     ///
     /// Note: This is a low-level interface.  Consider using
     /// [`ValidUserAttributeAmalgamation::approved_certifications`] to

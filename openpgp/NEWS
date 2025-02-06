@@ -116,6 +116,26 @@
    - KeyAmalgamation no longer derefs to ComponentAmalgamation<Key>
    - ValidComponentAmalgamation no longer derefs to ComponentAmalgamation
    - ValidKeyAmalgamation no longer derefs to KeyAmalgamation
+   - Signature::hash_userid_attestation renamed to
+     hash_userid_approval
+   - Signature::hash_user_attribute_attestation renamed to
+     hash_user_attribute_approval
+   - Signature::verify_userid_attestation renamed to
+     verify_userid_approval
+   - Signature::verify_user_attribute_attestation renamed to
+     hash_user_attribute_approval
+   - packet::CompressedData::container_ref
+   - packet::CompressedData::container_mut
+   - packet::CompressedData no longer derefs to Container
+   - packet::seip::SEIP1::container_ref
+   - packet::seip::SEIP1::container_mut
+   - packet::seip::SEIP1 no longer derefs to Container
+   - packet::seip::SEIP2::container_ref
+   - packet::seip::SEIP2::container_mut
+   - packet::seip::SEIP2 no longer derefs to Container
+   - PacketPile::pretty_print removed
+   - parse::stream::MessageStructure no longer derefs to [MessageLayer]
+   - packet::Container no longer derefs to packet::Body
 
 ** New functionality
    - Signature::hash_userid_attestation
@@ -167,6 +187,7 @@
    - ValidKeyAmalgamation::other_revocations
    - ValidKeyAmalgamation::approvals
    - ValidKeyAmalgamation::signatures
+   - parse::stream::MessageStructure::iter
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

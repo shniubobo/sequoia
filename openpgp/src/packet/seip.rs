@@ -36,19 +36,6 @@ pub struct SEIP1 {
 
 assert_send_and_sync!(SEIP1);
 
-impl std::ops::Deref for SEIP1 {
-    type Target = packet::Container;
-    fn deref(&self) -> &Self::Target {
-        &self.container
-    }
-}
-
-impl std::ops::DerefMut for SEIP1 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.container
-    }
-}
-
 impl SEIP1 {
     /// Creates a new SEIP1 packet.
     pub fn new() -> Self {
@@ -58,6 +45,8 @@ impl SEIP1 {
         }
     }
 }
+
+impl_processed_body_forwards!(SEIP1);
 
 impl From<SEIP1> for super::SEIP {
     fn from(p: SEIP1) -> Self {

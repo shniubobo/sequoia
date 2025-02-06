@@ -1126,9 +1126,9 @@ impl Signature {
         Ok(())
     }
 
-    /// Hashes this user ID attestation over the specified primary key and
-    /// user ID, the primary key, and the userid.
-    pub fn hash_userid_attestation<P>(&self, hash: &mut Context,
+    /// Hashes this user ID approval over the specified primary key
+    /// and user ID.
+    pub fn hash_userid_approval<P>(&self, hash: &mut Context,
                                   key: &Key<P, key::PrimaryRole>,
                                   userid: &UserID)
                                   -> Result<()>
@@ -1148,10 +1148,9 @@ impl Signature {
         Ok(())
     }
 
-    /// Hashes this user attribute attestation over the specified primary
-    /// key and user attribute, the primary key, and the user
-    /// attribute.
-    pub fn hash_user_attribute_attestation<P>(
+    /// Hashes this user attribute approval over the specified primary
+    /// key and user attribute.
+    pub fn hash_user_attribute_approval<P>(
         &self,
         hash: &mut Context,
         key: &Key<P, key::PrimaryRole>,

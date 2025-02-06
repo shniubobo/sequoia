@@ -1081,9 +1081,9 @@ mod tests {
         //  1: MDC
         // => good.
         let mut seip = SEIP1::new();
-        seip.children_mut().unwrap().push(
+        seip.container_mut().children_mut().unwrap().push(
             lit.clone().into());
-        seip.children_mut().unwrap().push(
+        seip.container_mut().children_mut().unwrap().push(
             MDC::from([0u8; 20]).into());
         packets[1] = seip.into();
 
