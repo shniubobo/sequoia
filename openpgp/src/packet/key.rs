@@ -3219,6 +3219,32 @@ FwPoSAbbsLkNS/iNN2MDGAVYvezYn2QZ
     }
 
     #[test]
+    fn eq_discriminates_secrets() -> Result<()> {
+        let key0 = Packet::from_bytes("-----BEGIN PGP ARMORED FILE-----
+
+xz4GAAAAABMAAAAeCSskAwMCCAEBDQCQpQZn7QBjzv/Pdag12kyuCGrLAACRAaqg
+XmaPgaKzC3evllewuojvGA==
+-----END PGP ARMORED FILE-----")?;
+        assert!(matches!(key0, Packet::SecretSubkey(_)));
+
+        use crate::serialize::SerializeInto;
+        for bit in 16..key0.serialized_len() * 8 {
+            let mut bin = key0.to_vec()?;
+            // Flip a bit.
+            bin[bit / 8] ^= 1 << (bit % 8);
+
+            match Packet::from_bytes(&bin) {
+                Ok(key1) => {
+                    assert_ne!(key0, key1, "Flipping bit {}.", bit);
+                },
+                Err(_) => (),
+            }
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn issue_1016() {
         // The fingerprint is a function of the creation time,
         // algorithm, and public MPIs.  When we change them make sure
