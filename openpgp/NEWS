@@ -211,6 +211,7 @@
    - Key6::import_secret_ed448
    - SignatureBuilder::add_revocation_key
    - parse::stream::VerificationError::UnknownSignature
+   - RawCert::into_owned
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

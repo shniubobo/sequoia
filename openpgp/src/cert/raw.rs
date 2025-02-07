@@ -428,6 +428,62 @@ impl<'a> RawCert<'a> {
                 }
             })
     }
+
+    /// Changes the `RawCert`'s lifetime to the static lifetime.
+    ///
+    /// Returns a `RawCert` with a static lifetime by copying any
+    /// referenced data.
+    ///
+    /// [`RawCertParser::next`] returns a `RawCert` with the same
+    /// lifetime as its reader.  In certain situations,
+    /// `RawCertParser::next` can take advantage of this to avoid
+    /// copying data.  Tying the `RawCert`'s lifetime to the reader is
+    /// inconvenient when the `RawCert` needs to outlive the reader,
+    /// however.  This function copies any referenced data thereby
+    /// breaking the dependency.
+    ///
+    /// ```
+    /// # use sequoia_openpgp::Result;
+    /// # use sequoia_openpgp::cert::raw::RawCert;
+    /// # use sequoia_openpgp::cert::raw::RawCertParser;
+    /// # use sequoia_openpgp::parse::Parse;
+    ///
+    /// # fn main() -> Result<()> {
+    /// fn read_certs<'a>() -> Result<Vec<RawCert<'static>>> {
+    ///     let input = // ...
+    ///     # Vec::new();
+    ///
+    ///     // The lifetime of the returned certs is tied to input.
+    ///     // We use into_owned to break the dependency.
+    ///     let parser = RawCertParser::from_bytes(&input)?;
+    ///     let certs = parser
+    ///         .map(|r| r.map(|c| c.into_owned()))
+    ///         .collect::<Result<Vec<_>>>()?;
+    ///     Ok(certs)
+    /// }
+    ///
+    /// let cert = read_certs()?;
+    /// # assert_eq!(cert.len(), 0);
+    /// # Ok(()) }
+    /// ```
+    pub fn into_owned(self) -> RawCert<'static> {
+        match self.data {
+            Cow::Owned(data) => {
+                RawCert {
+                    data: Cow::Owned(data),
+                    primary_key: self.primary_key,
+                    packets: self.packets,
+                }
+            }
+            Cow::Borrowed(data) => {
+                RawCert {
+                    data: Cow::Owned(data.to_vec()),
+                    primary_key: self.primary_key,
+                    packets: self.packets,
+                }
+            }
+        }
+    }
 }
 
 impl<'a> TryFrom<&RawCert<'a>> for Cert {
