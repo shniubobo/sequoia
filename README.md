@@ -1,26 +1,28 @@
 Sequoia PGP
 ===========
 
-Sequoia is a cool new OpenPGP implementation.  It consists of several
-crates, providing both a low-level and a high-level API for dealing
-with OpenPGP data.
+Sequoia is a complete implementation of OpenPGP as defined by [RFC
+9580] as well as the deprecated OpenPGP as defined by [RFC 4880], and
+various related standards.
+
+OpenPGP is a standard by the IETF.  It was derived from the PGP
+software, which was created by Phil Zimmermann in 1991.
+
+Sequoia consists of several crates, providing both a low-level and a
+high-level API for dealing with OpenPGP data.
 
 Low-level API
 -------------
 
 The low-level API can be found in the [openpgp](./openpgp) crate.
-This crate
-aims to provide a complete implementation of OpenPGP as defined by RFC
-4880 as well as several extensions (e.g., RFC 6637, which describes
-ECC cryptography for OpenPGP, and RFC 4880bis, the draft of the next
-OpenPGP standard).  This includes support for unbuffered message
-processing.
+This crate aims to provide a complete implementation of OpenPGP as
+defined by [RFC 9580] as well as the deprecated OpenPGP as defined by
+[RFC 4880].  This includes support for unbuffered message processing.
 
 The [openpgp](./openpgp) crate tries hard to avoid dictating how
-OpenPGP should
-be used.  This doesn't mean that we don't have opinions about how
-OpenPGP should be used in a number of common scenarios (for instance,
-message validation).
+OpenPGP should be used.  This doesn't mean that we don't have opinions
+about how OpenPGP should be used in a number of common scenarios (for
+instance, message validation).
 
 High-level API
 --------------
