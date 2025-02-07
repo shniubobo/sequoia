@@ -127,7 +127,7 @@ use crate::{
     Packet,
     Result,
     packet,
-    packet::Signature,
+    packet::{Signature, Unknown},
     cert::prelude::*,
     crypto::SessionKey,
     policy::Policy,
@@ -242,16 +242,12 @@ assert_send_and_sync!(GoodChecksum<'_>);
 ///
 ///   [`Error`]: super::super::Error
 ///   [`From`]: std::convert::From
+///
+/// Note: This enum cannot be exhaustively matched to allow future
+/// extensions.
+#[non_exhaustive]
 #[derive(Debug)]
 pub enum VerificationError<'a> {
-    /// Malformed signature (no signature creation subpacket, etc.)
-    MalformedSignature {
-        /// The signature.
-        sig: &'a Signature,
-
-        /// The reason why the signature is malformed.
-        error: anyhow::Error,
-    },
     /// Missing Key
     MissingKey {
         /// The signature.
@@ -293,6 +289,22 @@ pub enum VerificationError<'a> {
         /// The reason why the signature is bad.
         error: anyhow::Error,
     },
+
+    /// Malformed signature (no signature creation subpacket, etc.).
+    MalformedSignature {
+        /// The signature.
+        sig: &'a Signature,
+
+        /// The reason why the signature is malformed.
+        error: anyhow::Error,
+    },
+
+    /// A signature that failed to parse at all.
+    UnknownSignature {
+        /// The signature parsed into an [`crate::packet::Unknown`]
+        /// packet.
+        sig: &'a Unknown,
+    }
 }
 assert_send_and_sync!(VerificationError<'_>);
 
@@ -302,6 +314,8 @@ impl<'a> std::fmt::Display for VerificationError<'a> {
         match self {
             MalformedSignature { error, .. } =>
                 write!(f, "Malformed signature: {}", error),
+            UnknownSignature { sig, .. } =>
+                write!(f, "Malformed signature: {}", sig.error()),
             MissingKey { sig } =>
                 if let Some(issuer) = sig.get_issuers().get(0) {
                     write!(f, "Missing key: {}", issuer)
@@ -326,6 +340,8 @@ impl<'a> From<VerificationError<'a>> for Error {
         match e {
             MalformedSignature { .. } =>
                 Error::MalformedPacket(e.to_string()),
+            UnknownSignature { sig } =>
+                Error::MalformedPacket(sig.error().to_string()),
             MissingKey { .. } =>
                 Error::InvalidKey(e.to_string()),
             UnboundKey { .. } =>
@@ -660,7 +676,7 @@ impl IMessageStructure {
         }
     }
 
-    fn push_signature(&mut self, sig: Signature, csf_message: bool) {
+    fn push_signature(&mut self, sig: MaybeSignature, csf_message: bool) {
         tracer!(TRACE, "IMessageStructure::push_signature", TRACE_INDENT);
         t!("Pushing {:?}", sig);
         if csf_message {
@@ -704,7 +720,7 @@ impl IMessageStructure {
         });
     }
 
-    fn push_bare_signature(&mut self, sig: Signature) {
+    fn push_bare_signature(&mut self, sig: MaybeSignature) {
         if let Some(IMessageLayer::SignatureGroup { .. }) = self.layers.iter().last() {
             // The last layer is a SignatureGroup.  We will append the
             // signature there without accounting for it.
@@ -747,10 +763,14 @@ enum IMessageLayer {
         aead_algo: Option<AEADAlgorithm>,
     },
     SignatureGroup {
-        sigs: Vec<Signature>,
+        sigs: Vec<MaybeSignature>,
         count: usize,
     }
 }
+
+/// Represents [`Signature`]s and those that failed to parse in the
+/// form of [`Unknown`] packets.
+type MaybeSignature = std::result::Result<Signature, Unknown>;
 
 /// Helper for signature verification.
 ///
@@ -1062,6 +1082,8 @@ impl<'a> Parse<'a, VerifierBuilder<'a>>
         VerifierBuilder::new(reader)
     }
 }
+
+impl<'a> crate::seal::Sealed for VerifierBuilder<'a> {}
 
 impl<'a> VerifierBuilder<'a> {
     fn new<B>(signatures: B) -> Result<Self>
@@ -1450,6 +1472,8 @@ impl<'a> Parse<'a, DetachedVerifierBuilder<'a>>
     }
 }
 
+impl<'a> crate::seal::Sealed for DetachedVerifierBuilder<'a> {}
+
 impl<'a> DetachedVerifierBuilder<'a> {
     fn new<B>(signatures: B) -> Result<Self>
         where B: buffered_reader::BufferedReader<Cookie> + 'a
@@ -1794,6 +1818,8 @@ impl<'a> Parse<'a, DecryptorBuilder<'a>>
         DecryptorBuilder::new(reader)
     }
 }
+
+impl<'a> crate::seal::Sealed for DecryptorBuilder<'a> {}
 
 impl<'a> DecryptorBuilder<'a> {
     fn new<B>(signatures: B) -> Result<Self>
@@ -2461,8 +2487,13 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                     // signature itself.
                     sig.get_issuers().into_iter()
                         .for_each(|i| v.push_issuer(i));
-                    v.structure.push_bare_signature(sig);
-                }
+                    v.structure.push_bare_signature(Ok(sig));
+                },
+
+                Packet::Unknown(u) if u.tag() == packet::Tag::Signature => {
+                    v.structure.push_bare_signature(Err(u));
+                },
+
                 _ => (),
             }
             ppr = ppr_tmp;
@@ -2493,14 +2524,16 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
         };
 
         // Compute the necessary hashes.
-        let algos: Vec<_> = sigs.iter().map(|s| {
-            HashingMode::for_signature(s.hash_algo(), s)
+        let algos: Vec<_> = sigs.iter().filter_map(|s| {
+            let s = s.as_ref().ok()?;
+            let h = s.hash_algo();
+            Some(HashingMode::for_signature(h, s))
         }).collect();
         let hashes =
             crate::parse::hashed_reader::hash_buffered_reader(data, &algos)?;
 
         // Attach the digests.
-        for sig in sigs.iter_mut() {
+        for sig in sigs.iter_mut().filter_map(|s| s.as_ref().ok()) {
             let need_hash =
                 HashingMode::for_signature(sig.hash_algo(), sig);
             // Note: |hashes| < 10, most likely 1.
@@ -2530,7 +2563,11 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
             Packet::Signature(sig) => {
                 sig.get_issuers().into_iter().for_each(|i| self.push_issuer(i));
                 self.structure.push_signature(
-                    sig, self.processing_csf_message.expect("set by now"));
+                    Ok(sig), self.processing_csf_message.expect("set by now"));
+            },
+            Packet::Unknown(sig) if sig.tag() == packet::Tag::Signature => {
+                self.structure.push_signature(
+                    Err(sig), self.processing_csf_message.expect("set by now"));
             },
             _ => (),
         }
@@ -2701,6 +2738,19 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
                 IMessageLayer::SignatureGroup { sigs, .. } => {
                     results.new_signature_group();
                     'sigs: for sig in sigs.iter_mut() {
+                        let sig = match sig {
+                            Ok(s) => s,
+                            Err(u) => {
+                                // Unparsablee signature.
+                                t!("Unparsablee signature: {}", u.error());
+                                results.push_verification_result(
+                                    Err(VerificationError::UnknownSignature {
+                                        sig: u,
+                                    }));
+                                continue;
+                            }
+                        };
+
                         let sigid = *sig.digest_prefix();
 
                         let sig_time = if let Some(t) = sig.signature_creation_time() {
@@ -3076,6 +3126,7 @@ pub(crate) mod test {
                                 Err(MissingKey { .. }) => self.unknown += 1,
                                 Err(UnboundKey { .. }) => self.unknown += 1,
                                 Err(MalformedSignature { .. }) => self.bad += 1,
+                                Err(UnknownSignature { .. }) => self.bad += 1,
                                 Err(BadKey { .. }) => self.bad += 1,
                                 Err(BadSignature { error, .. }) => {
                                     eprintln!("error: {}", error);
@@ -3582,20 +3633,18 @@ pub(crate) mod test {
     }
 
     #[test]
-    fn test_streaming_verifier_bug_issue_682() -> Result<()> {
+    fn issue_682() -> Result<()> {
         let p = P::new();
         let sig = crate::tests::message("signature-with-broken-mpis.sig");
 
         let h = VHelper::new(0, 0, 0, 0, vec![]);
-        let result = DetachedVerifierBuilder::from_bytes(sig)?
-        .with_policy(&p, None, h);
+        let mut v = DetachedVerifierBuilder::from_bytes(sig)?
+            .with_policy(&p, None, h)?;
 
-        if let Err(e) = result {
-            let error = e.downcast::<crate::Error>()?;
-            assert!(matches!(error, Error::MalformedMessage(..)));
-        } else {
-            unreachable!("Should error out as the signature is broken.");
-        }
+        assert!(v.verify_bytes(b"").is_err());
+
+        let h = v.into_helper();
+        assert_eq!(h.bad, 1);
 
         Ok(())
     }

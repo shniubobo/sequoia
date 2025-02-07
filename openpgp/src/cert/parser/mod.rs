@@ -426,10 +426,10 @@ impl CertValidator {
 ///
 /// # fn main() -> Result<()> {
 /// # let (alice, _) =
-/// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #       CertBuilder::general_purpose(Some("alice@example.org"))
 /// #       .generate()?;
 /// # let (bob, _) =
-/// #       CertBuilder::general_purpose(None, Some("bob@example.org"))
+/// #       CertBuilder::general_purpose(Some("bob@example.org"))
 /// #       .generate()?;
 /// #
 /// # let mut keyring = Vec::new();
@@ -474,10 +474,10 @@ impl CertValidator {
 /// lit.set_body(b"test".to_vec());
 ///
 /// let (alice, _) =
-///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+///       CertBuilder::general_purpose(Some("alice@example.org"))
 ///       .generate()?;
 /// let (bob, _) =
-///       CertBuilder::general_purpose(None, Some("bob@example.org"))
+///       CertBuilder::general_purpose(Some("bob@example.org"))
 ///       .generate()?;
 ///
 /// let mut packets : Vec<Packet> = Vec::new();
@@ -604,6 +604,8 @@ impl<'a> Parse<'a, CertParser<'a>> for CertParser<'a>
     }
 }
 
+impl<'a> crate::seal::Sealed for CertParser<'a> {}
+
 impl<'a> CertParser<'a> {
     /// Creates a `CertParser` from a `Result<Packet>` iterator.
     ///
@@ -626,10 +628,10 @@ impl<'a> CertParser<'a> {
     ///
     /// # fn main() -> Result<()> {
     /// # let (alice, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// # let (bob, _) =
-    /// #       CertBuilder::general_purpose(None, Some("bob@example.org"))
+    /// #       CertBuilder::general_purpose(Some("bob@example.org"))
     /// #       .generate()?;
     /// #
     /// # let mut keyring = Vec::new();
@@ -1326,7 +1328,7 @@ mod test {
         }
 
         let (cert, _) =
-            CertBuilder::general_purpose(None, Some("alice@example.org"))
+            CertBuilder::general_purpose(Some("alice@example.org"))
             .generate()?;
         let cert = cert.into_packets().collect::<Vec<_>>();
 
@@ -1586,7 +1588,7 @@ mod test {
         for i in 0..n {
             let (cert, _) =
                 CertBuilder::general_purpose(
-                    None, Some(format!("{}@example.org", i)))
+                    Some(format!("{}@example.org", i)))
                 .generate()?;
 
             cert.as_tsk().serialize(&mut data)?;
@@ -1810,14 +1812,14 @@ mod test {
 
         let (cert_1, _) =
             CertBuilder::general_purpose(
-                None, Some("a@example.org"))
+                Some("ea@example.org"))
             .generate()?;
         let cert_1_packets: Vec<Packet>
             = cert_1.into_packets().collect();
 
         let (cert_2, _) =
             CertBuilder::general_purpose(
-                None, Some("b@example.org"))
+                Some("eb@example.org"))
             .generate()?;
 
         for n in 1..cert_1_packets.len() {

@@ -91,7 +91,7 @@
 //!
 //! # fn main() -> Result<()> {
 //! #     let (cert, _) =
-//! #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+//! #         CertBuilder::general_purpose(Some("alice@example.org"))
 //! #         .generate()?;
 //! #     let mut i = 0;
 //! let p = &StandardPolicy::new();
@@ -151,7 +151,7 @@
 //! let p = &StandardPolicy::new();
 //!
 //! #     let (cert, _) =
-//! #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+//! #         CertBuilder::general_purpose(Some("alice@example.org"))
 //! #         .generate()?;
 //! #     let timestamp = None;
 //! #     let issuer = cert.with_policy(p, None)?.keys()
@@ -227,7 +227,7 @@
 //! let p = &StandardPolicy::new();
 //!
 //! #     let (cert, _) =
-//! #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+//! #         CertBuilder::general_purpose(Some("alice@example.org"))
 //! #         .generate()?;
 //! let decryption_keys = cert.keys().with_policy(p, None)
 //!     .for_storage_encryption().for_transport_encryption()
@@ -322,7 +322,7 @@ pub trait PrimaryKey<'a, P, R>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let fpr = cert.fingerprint();
     /// // This works if the type is concrete:
@@ -377,7 +377,7 @@ pub trait PrimaryKey<'a, P, R>: seal::Sealed
 /// # fn main() -> openpgp::Result<()> {
 /// #     let p = &StandardPolicy::new();
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// for ka in cert.keys() {
@@ -397,7 +397,7 @@ pub trait PrimaryKey<'a, P, R>: seal::Sealed
 /// # fn main() -> openpgp::Result<()> {
 /// #     let p = &StandardPolicy::new();
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// let ka: PrimaryKeyAmalgamation<_> = cert.primary_key();
@@ -415,7 +415,7 @@ pub trait PrimaryKey<'a, P, R>: seal::Sealed
 /// # fn main() -> openpgp::Result<()> {
 /// #     let p = &StandardPolicy::new();
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// // We can skip the primary key (it's always first):
@@ -471,7 +471,7 @@ where
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the keys.
     /// for ka in cert.keys() {
@@ -559,7 +559,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the subkeys' revocation status.
     /// for ka in cert.keys().subkeys() {
@@ -861,7 +861,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about the primary key's current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -907,7 +907,7 @@ impl<'a, P: 'a + key::KeyParts> SubordinateKeyAmalgamation<'a, P> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about each keys' current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -977,7 +977,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.keys() {
     ///     // It's not only an identical `Cert`, it's the same one.
@@ -1004,7 +1004,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about any unknown components.
     /// for k in cert.keys() {
@@ -1034,7 +1034,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
@@ -1060,7 +1060,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.keys() {
     ///     eprintln!("Key {} has {:?} unverified, third-party certifications",
@@ -1090,7 +1090,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.keys() {
     ///     eprintln!("Key {} has {:?} revocation certificates.",
@@ -1120,7 +1120,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.keys() {
     ///     eprintln!("Key {} has {:?} unverified, third-party revocation certificates.",
@@ -1154,7 +1154,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
@@ -1626,7 +1626,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.with_policy(p, None)?.keys() {
     ///     // It's not only an identical `Cert`, it's the same one.
@@ -1657,7 +1657,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about each User ID's current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -1688,7 +1688,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about any unknown components.
     /// for k in cert.with_policy(p, None)?.keys() {
@@ -1721,7 +1721,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.with_policy(p, None)?.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
@@ -1750,7 +1750,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.with_policy(p, None)?.keys() {
     ///     eprintln!("Key {} has {:?} unverified, third-party certifications",
@@ -1780,7 +1780,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.with_policy(p, None)?.keys() {
     ///     eprintln!("Key {} has {:?} revocation certificates.",
@@ -1810,7 +1810,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for k in cert.with_policy(p, None)?.keys() {
     ///     eprintln!("Key {} has {:?} unverified, third-party revocation certificates.",
@@ -1844,7 +1844,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.with_policy(p, None)?.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
@@ -2343,7 +2343,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let fpr = cert.fingerprint();
     /// let vc = cert.with_policy(P, None)?;
@@ -2898,7 +2898,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p: &dyn Policy = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let cert = cert.with_policy(p, None)?;
     /// let ka = cert.primary_key();
@@ -2986,7 +2986,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.has_any_key_flag(KeyFlags::empty()
@@ -3041,7 +3041,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.primary() || ka.for_certification() {
@@ -3075,7 +3075,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.for_signing() {
@@ -3108,7 +3108,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.for_authentication() {
@@ -3153,7 +3153,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.for_storage_encryption() {
@@ -3200,7 +3200,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// for ka in cert.keys().with_policy(p, None) {
     ///     if ka.for_transport_encryption() {
@@ -3250,7 +3250,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let a_week = time::Duration::from_secs(7 * 24 * 60 * 60);
     ///
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .set_creation_time(now)
     ///     .set_validity_period(a_week)
     ///     .generate()?;
@@ -3301,7 +3301,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// let a_week_later = now + a_week;
     ///
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .set_creation_time(now)
     ///     .set_validity_period(a_week)
     ///     .generate()?;
@@ -3429,7 +3429,7 @@ mod test {
         let p = &StandardPolicy::new();
 
         let (cert, _) =
-            CertBuilder::general_purpose(None, Some("alice@example.org"))
+            CertBuilder::general_purpose(Some("alice@example.org"))
             .set_validity_period(None)
             .generate()?;
 

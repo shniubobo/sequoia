@@ -675,6 +675,8 @@ impl<'a> Parse<'a, RawCertParser<'a>> for RawCertParser<'a>
     }
 }
 
+impl<'a> crate::seal::Sealed for RawCertParser<'a> {}
+
 impl<'a> Iterator for RawCertParser<'a>
 {
     type Item = Result<RawCert<'a>>;
@@ -1223,7 +1225,7 @@ mod test {
         tracer!(TRACE, "invalid_packets", 0);
 
         let (cert, _) =
-            CertBuilder::general_purpose(None, Some("alice@example.org"))
+            CertBuilder::general_purpose(Some("alice@example.org"))
             .generate()?;
         let cert = cert.into_packets().collect::<Vec<_>>();
 
@@ -1403,7 +1405,7 @@ mod test {
         for i in 0..n {
             let (cert, _) =
                 CertBuilder::general_purpose(
-                    None, Some(format!("{}@example.org", i)))
+                    Some(format!("{}@example.org", i)))
                 .generate()?;
 
             cert.as_tsk().serialize(&mut data)?;
@@ -1511,14 +1513,14 @@ mod test {
 
         let (cert_1, _) =
             CertBuilder::general_purpose(
-                None, Some("a@example.org"))
+                Some("a@example.org"))
             .generate()?;
         let cert_1_packets: Vec<Packet>
             = cert_1.into_packets().collect();
 
         let (cert_2, _) =
             CertBuilder::general_purpose(
-                None, Some("b@example.org"))
+                Some("b@example.org"))
             .generate()?;
 
         for n in 1..cert_1_packets.len() {

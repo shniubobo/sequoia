@@ -36,12 +36,12 @@ use crate::{
 /// let p = &StandardPolicy::new();
 ///
 /// let (alice, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 ///
 /// // Make Alice a designated revoker for Bob.
 /// let (bob, _) =
-///     CertBuilder::general_purpose(None, Some("bob@example.org"))
+///     CertBuilder::general_purpose(Some("bob@example.org"))
 ///     .set_revocation_keys(vec![(&alice).into()])
 ///     .generate()?;
 ///

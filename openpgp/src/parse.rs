@@ -285,7 +285,16 @@ pub(crate) const RECOVERY_THRESHOLD: usize = 32 * 1024;
 ///
 /// This is a uniform interface to parse packets, messages, keys, and
 /// related data structures.
-pub trait Parse<'a, T> {
+///
+/// # Sealed trait
+///
+/// This trait is [sealed] and cannot be implemented for types outside this crate.
+/// Therefore it can be extended in a non-breaking way.
+/// If you want to implement the trait inside the crate
+/// you also need to implement the `seal::Sealed` marker trait.
+///
+/// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
+pub trait Parse<'a, T>: crate::seal::Sealed {
     /// Reads from the given buffered reader.
     ///
     /// Implementations of this function should be short.  Ideally,
@@ -4684,6 +4693,8 @@ impl<'a> Parse<'a, PacketParserResult<'a>> for PacketParser<'a> {
         PacketParserBuilder::from_buffered_reader(reader.into_boxed())?.build()
     }
 }
+
+impl<'a> crate::seal::Sealed for PacketParser<'a> {}
 
 impl <'a> PacketParser<'a> {
     /// Starts parsing an OpenPGP message stored in a `BufferedReader`

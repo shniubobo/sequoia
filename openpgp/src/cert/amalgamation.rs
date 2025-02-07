@@ -244,7 +244,7 @@ pub mod key;
 /// }
 /// # fn main() -> openpgp::Result<()> {
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let ua = cert.userids().nth(0).expect("User IDs");
 /// #     f(ua);
@@ -342,7 +342,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let fpr = cert.fingerprint();
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
@@ -371,7 +371,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// #     let p = &StandardPolicy::new();
     /// #     let t = UNIX_EPOCH + Duration::from_secs(1554542220);
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .set_creation_time(t)
     /// #         .generate()?;
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
@@ -399,7 +399,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p: &dyn Policy = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
     /// #     let ua = ua.with_policy(p, None)?;
@@ -426,7 +426,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p: &dyn Policy = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
     /// #     let ua = ua.with_policy(p, None)?;
@@ -458,7 +458,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p: &dyn Policy = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let cert = cert.with_policy(p, None)?;
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
@@ -500,7 +500,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// # fn main() -> openpgp::Result<()> {
     /// #     let p = &StandardPolicy::new();
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let cert = cert.with_policy(p, None)?;
     /// #     let ua = cert.userids().nth(0).expect("User IDs");
@@ -546,11 +546,11 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// let p = &StandardPolicy::new();
     ///
     /// let (alice, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     /// // Make Alice a designated revoker for Bob.
     /// let (bob, _) =
-    ///     CertBuilder::general_purpose(None, Some("bob@example.org"))
+    ///     CertBuilder::general_purpose(Some("bob@example.org"))
     ///     .set_revocation_keys(vec![(&alice).into()])
     ///     .generate()?;
     ///
@@ -626,7 +626,7 @@ pub trait ValidBindingSignature<'a, C: 'a>: ValidAmalgamation<'a, C> + seal::Sea
 /// # fn main() -> openpgp::Result<()> {
 /// #     let p = &StandardPolicy::new();
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// // Iterate over all User IDs.
@@ -703,7 +703,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     // It's not only an identical `Cert`, it's the same one.
@@ -734,7 +734,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about each User ID's current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -785,7 +785,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about any unknown components.
     /// for u in cert.unknowns() {
@@ -813,7 +813,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
@@ -842,7 +842,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for ua in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party certifications",
@@ -901,7 +901,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} revocation certificates.",
@@ -931,7 +931,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party revocation certificates.",
@@ -970,7 +970,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.userids().enumerate() {
     ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
@@ -1006,7 +1006,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
@@ -1220,7 +1220,7 @@ impl<'a> UserIDAmalgamation<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User IDs.
     /// for ua in cert.userids() {
@@ -1260,7 +1260,7 @@ impl<'a> UserIDAmalgamation<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the User IDs' revocation status.
     /// for ua in cert.userids() {
@@ -1686,7 +1686,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User Attributes
     /// for ua in cert.user_attributes() {
@@ -1722,7 +1722,7 @@ impl<'a> UserAttributeAmalgamation<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the User Attributes' revocation status.
     /// for (i, ua) in cert.user_attributes().enumerate() {
@@ -1908,7 +1908,7 @@ impl<'a> UnknownComponentAmalgamation<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the Unknown components.
     /// for u in cert.unknowns() {
@@ -2018,7 +2018,7 @@ impl<'a, C> ValidComponentAmalgamation<'a, C> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     // It's not only an identical `Cert`, it's the same one.
@@ -2049,7 +2049,7 @@ impl<'a, C> ValidComponentAmalgamation<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about each User ID's current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -2096,7 +2096,7 @@ impl<'a, C> ValidComponentAmalgamation<'a, C> {
     /// # use openpgp::cert::prelude::*;
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// let p = &openpgp::policy::StandardPolicy::new();
     ///
@@ -2132,7 +2132,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.with_policy(p, None)?.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
@@ -2166,7 +2166,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for ua in cert.with_policy(p, None)?.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party certifications",
@@ -2201,7 +2201,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.with_policy(p, None)?.userids() {
     ///     eprintln!("User ID {} has {:?} revocation certificates.",
@@ -2236,7 +2236,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.with_policy(p, None)?.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party revocation certificates.",
@@ -2279,7 +2279,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.with_policy(p, None)?.userids().enumerate() {
     ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
@@ -2322,7 +2322,7 @@ where
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.with_policy(p, None)?.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
@@ -2361,7 +2361,7 @@ impl<'a> ValidUserIDAmalgamation<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User IDs.
     /// for ua in cert.userids() {
@@ -2558,7 +2558,7 @@ impl<'a> ValidUserAttributeAmalgamation<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User IDs.
     /// for ua in cert.user_attributes() {

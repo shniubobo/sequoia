@@ -2375,10 +2375,10 @@ impl<'a> Recipient<'a> {
 /// let p = &StandardPolicy::new();
 ///
 /// # let (cert_0, _) =
-/// #     CertBuilder::general_purpose(None, Some("Mr. Pink ☮☮☮"))
+/// #     CertBuilder::general_purpose(Some("Mr. Pink ☮☮☮"))
 /// #     .generate()?;
 /// # let (cert_1, _) =
-/// #     CertBuilder::general_purpose(None, Some("Mr. Pink ☮☮☮"))
+/// #     CertBuilder::general_purpose(Some("Mr. Pink ☮☮☮"))
 /// #     .generate()?;
 /// let recipient_certs = vec![cert_0, cert_1];
 /// let mut recipients = Vec::new();
@@ -2580,9 +2580,9 @@ impl<'a, 'b> Encryptor<'a, 'b> {
     /// #
     /// // Generate two keys.
     /// let (alice, _) = CertBuilder::general_purpose(
-    ///         None, Some("Alice Lovelace <alice@example.org>")).generate()?;
+    ///         Some("Alice Lovelace <alice@example.org>")).generate()?;
     /// let (bob, _) = CertBuilder::general_purpose(
-    ///         None, Some("Bob Babbage <bob@example.org>")).generate()?;
+    ///         Some("Bob Babbage <bob@example.org>")).generate()?;
     ///
     /// // Encrypt a message for both keys.
     /// let recipients = vec![&alice, &bob].into_iter().flat_map(|cert| {

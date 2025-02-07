@@ -72,10 +72,13 @@ impl<'a> Keybox<'a> {
         let kbx_record = KeyboxRecord::new(offset, (&content[..len]).to_vec())?;
         Ok(kbx_record)
     }
-}
 
-impl<'a> Parse<'a, Keybox<'a>> for Keybox<'a> {
-    fn from_buffered_reader<R>(reader: R) -> Result<Self>
+    /// Reads from the given buffered reader.
+    ///
+    /// Implementations of this function should be short.  Ideally,
+    /// they should hand of the reader to a private function erasing
+    /// the readers type by invoking [`BufferedReader::into_boxed`].
+    pub fn from_buffered_reader<R>(reader: R) -> Result<Self>
     where
         R: BufferedReader<Cookie> + 'a,
     {
@@ -83,6 +86,43 @@ impl<'a> Parse<'a, Keybox<'a>> for Keybox<'a> {
             offset: 0,
             reader: buffered_reader::Adapter::new(reader).into_boxed(),
         })
+    }
+
+    /// Reads from the given reader.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_reader<R: 'a + std::io::Read + Send + Sync>(reader: R) -> Result<Self> {
+        Self::from_buffered_reader(
+            buffered_reader::Generic::with_cookie(reader,
+                                                  None,
+                                                  Default::default())
+                .into_boxed())
+    }
+
+    /// Reads from the given file.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_file<P: AsRef<std::path::Path>>(path: P) -> Result<Self>
+    {
+        Self::from_buffered_reader(
+            buffered_reader::File::with_cookie(path.as_ref(),
+                                               Default::default())?
+                .into_boxed())
+    }
+
+    /// Reads from the given slice.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_bytes<D: AsRef<[u8]> + ?Sized + Send + Sync>(data: &'a D) -> Result<Self> {
+        Self::from_buffered_reader(
+            buffered_reader::Memory::with_cookie(data.as_ref(), Default::default())
+                .into_boxed())
     }
 }
 

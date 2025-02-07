@@ -37,7 +37,7 @@ use crate::types::Bitfield;
 /// let p = &StandardPolicy::new();
 ///
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 ///
 /// match cert.with_policy(p, None)?.primary_userid()?.key_server_preferences() {

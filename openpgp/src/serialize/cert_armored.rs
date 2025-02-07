@@ -73,7 +73,7 @@ impl Cert {
     ///
     /// # fn main() -> openpgp::Result<()> {
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("Mr. Pink ☮☮☮"))
+    ///     CertBuilder::general_purpose(Some("Mr. Pink ☮☮☮"))
     ///     .generate()?;
     /// let armored = String::from_utf8(cert.armored().to_vec()?)?;
     ///
@@ -105,7 +105,7 @@ impl<'a> TSK<'a> {
     ///
     /// # fn main() -> openpgp::Result<()> {
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("Mr. Pink ☮☮☮"))
+    ///     CertBuilder::general_purpose(Some("Mr. Pink ☮☮☮"))
     ///     .generate()?;
     /// let armored = String::from_utf8(cert.as_tsk().armored().to_vec()?)?;
     ///
@@ -345,7 +345,7 @@ mod tests {
         let userid5: String = userid5.into_iter().collect();
 
         // Create a Cert with the userids.
-        let (cert, _) = CertBuilder::general_purpose(None, Some(&userid1[..]))
+        let (cert, _) = CertBuilder::general_purpose(Some(&userid1[..]))
             .add_userid(&userid2[..])
             .add_userid(&userid3[..])
             .add_userid(&userid4[..])

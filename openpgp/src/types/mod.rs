@@ -615,7 +615,7 @@ impl Arbitrary for ReasonForRevocation {
 ///
 /// let t0 = SystemTime::now();
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .set_creation_time(t0)
 ///     .generate()?;
 ///
@@ -854,7 +854,7 @@ impl DataFormat {
 /// let p = &StandardPolicy::new();
 ///
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 /// let cert = cert.with_policy(p, None)?;
 /// let ua = cert.userids().nth(0).expect("User IDs");

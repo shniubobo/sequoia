@@ -171,7 +171,7 @@ impl Decryptor for Box<dyn Decryptor + Send + Sync> {
 ///
 /// // Or from a query over a certificate:
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///         .generate()?;
 /// let keypair =
 ///     cert.keys().unencrypted_secret().nth(0).unwrap().key().clone()

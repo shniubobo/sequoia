@@ -193,7 +193,7 @@ const TRACE : bool = false;
 ///
 /// # fn main() -> Result<()> {
 /// let (_cert, rev) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 /// let rev : Packet = rev.into();
 /// # let output = &mut Vec::new();
@@ -217,7 +217,7 @@ const TRACE : bool = false;
 /// #
 /// # fn main() -> Result<()> {
 /// # let (_cert, rev) =
-/// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #     CertBuilder::general_purpose(Some("alice@example.org"))
 /// #     .generate()?;
 /// # let rev : Packet = rev.into();
 /// # let output = &mut Vec::new();

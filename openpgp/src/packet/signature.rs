@@ -4285,7 +4285,7 @@ mod test {
         // Create a certificate and try to update the userid's binding
         // signature.
         let (mut alice, _) =
-            CertBuilder::general_purpose(None, Some("alice@example.org"))
+            CertBuilder::general_purpose(Some("alice@example.org"))
             .generate()?;
         let mut primary_signer = alice.primary_key().key().clone()
             .parts_into_secret()?.into_keypair()?;

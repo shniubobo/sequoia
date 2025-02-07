@@ -43,7 +43,7 @@ use crate::{
 /// #
 /// # fn main() -> openpgp::Result<()> {
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// // Iterate over all User IDs.
@@ -65,7 +65,7 @@ use crate::{
 /// let p = &StandardPolicy::new();
 ///
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// // Iterate over all valid User IDs.
@@ -158,7 +158,7 @@ impl<'a, C> ComponentAmalgamationIter<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let fpr = cert.fingerprint();
     /// // Iterate over all valid User Attributes.
@@ -212,7 +212,7 @@ impl<'a, C> ComponentAmalgamationIter<'a, C> {
 /// let p = &StandardPolicy::new();
 ///
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #     let fpr = cert.fingerprint();
 /// // Iterate over all valid User Attributes.
@@ -339,7 +339,7 @@ impl<'a, C> ValidComponentAmalgamationIter<'a, C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// # let timestamp = None;
     /// let non_revoked_uas = cert

@@ -390,7 +390,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// # use openpgp::cert::prelude::*;
     /// # fn main() -> Result<()> {
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let key_handle = cert.primary_key().key().key_handle();
     /// # let mut i = 0;
@@ -437,7 +437,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// # use openpgp::cert::prelude::*;
     /// # fn main() -> Result<()> {
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let key_handles = &[cert.primary_key().key().key_handle()][..];
     /// # let mut i = 0;
@@ -519,7 +519,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// # use sequoia_openpgp as openpgp;
     /// # use openpgp::cert::prelude::*;
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let mut i = 0;
     /// for ka in cert.keys().supported() {
@@ -604,7 +604,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #     let fpr = cert.fingerprint();
     /// // Iterate over all valid User Attributes.
@@ -683,7 +683,7 @@ impl<'a, P, R> KeyAmalgamationIter<'a, P, R>
 /// let p = &StandardPolicy::new();
 ///
 /// #     let (cert, _) =
-/// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #         CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// # let mut i = 0;
 /// // The certificate *and* keys need to be valid.
@@ -1358,7 +1358,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     ///
     /// # fn main() -> Result<()> {
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// let p = &StandardPolicy::new();
     ///
@@ -1568,7 +1568,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let key_handle = cert.primary_key().key().key_handle();
     /// # let mut i = 0;
@@ -1619,7 +1619,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let key_handles = &[cert.primary_key().key().key_handle()][..];
     /// # let mut i = 0;
@@ -1701,7 +1701,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// # use sequoia_openpgp as openpgp;
     /// # use openpgp::cert::prelude::*;
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// # let mut i = 0;
     /// use openpgp::policy::StandardPolicy;

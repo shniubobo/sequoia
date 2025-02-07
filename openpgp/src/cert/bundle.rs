@@ -209,7 +209,7 @@ impl<C> ComponentBundle<C> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about any unknown components.
     /// for u in cert.unknowns() {
@@ -245,7 +245,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display information about each User ID's current active
     /// // binding signature (the `time` parameter is `None`), if any.
@@ -455,7 +455,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} self signatures",
@@ -485,7 +485,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for ua in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party certifications",
@@ -516,7 +516,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} revocation certificates.",
@@ -547,7 +547,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for u in cert.userids() {
     ///     eprintln!("User ID {} has {:?} unverified, third-party revocation certificates.",
@@ -587,7 +587,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, uid) in cert.userids().enumerate() {
     ///     eprintln!("UserID #{} ({:?}) has {:?} certification approval key signatures",
@@ -623,7 +623,7 @@ impl<C> ComponentBundle<C> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// for (i, ka) in cert.keys().enumerate() {
     ///     eprintln!("Key #{} ({}) has {:?} signatures",
@@ -878,7 +878,7 @@ impl<P: key::KeyParts, R: key::KeyRole> ComponentBundle<Key<P, R>> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the keys.
     /// for ka in cert.keys() {
@@ -958,7 +958,7 @@ impl<P: key::KeyParts> ComponentBundle<Key<P, key::SubordinateRole>> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the subkeys' revocation status.
     /// for ka in cert.keys().subkeys() {
@@ -994,7 +994,7 @@ impl ComponentBundle<UserID> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User IDs.
     /// for ua in cert.userids() {
@@ -1034,7 +1034,7 @@ impl ComponentBundle<UserID> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the User IDs' revocation status.
     /// for ua in cert.userids() {
@@ -1069,7 +1069,7 @@ impl ComponentBundle<UserAttribute> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User Attributes
     /// for ua in cert.user_attributes() {
@@ -1105,7 +1105,7 @@ impl ComponentBundle<UserAttribute> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display the User Attributes' revocation status.
     /// for (i, ua) in cert.user_attributes().enumerate() {
@@ -1140,7 +1140,7 @@ impl ComponentBundle<Unknown> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// // Display some information about the User Attributes
     /// for u in cert.unknowns() {

@@ -42,7 +42,7 @@ use crate::types::{
 /// let p = &StandardPolicy::new();
 ///
 /// # let (cert, _) =
-/// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #     CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #
 /// let vc = cert.with_policy(p, None)?;
@@ -299,7 +299,7 @@ impl KeyBuilder {
 /// let p = &StandardPolicy::new();
 ///
 /// # let (cert, _) =
-/// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #     CertBuilder::general_purpose(Some("alice@example.org"))
 /// #         .generate()?;
 /// #
 /// let vc = cert.with_policy(p, None)?;
@@ -914,7 +914,7 @@ impl<'a> SubkeyBuilder<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// #
     /// let vc = cert.with_policy(p, None)?;
@@ -991,7 +991,7 @@ mod test {
         let validity = t2.duration_since(t0).unwrap();
 
         let (pre, _) =
-            CertBuilder::general_purpose(None, Some("alice@example.org"))
+            CertBuilder::general_purpose(Some("alice@example.org"))
             .set_creation_time(t0)
             .set_validity_period(validity)
             .generate()?;

@@ -301,7 +301,7 @@ impl fmt::Display for Cert {
 /// let p = &StandardPolicy::new();
 ///
 /// # let (cert, _) =
-/// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+/// #     CertBuilder::general_purpose(Some("alice@example.org"))
 /// #     .generate()?;
 /// match cert.with_policy(p, None)?.primary_userid()?.preferred_symmetric_algorithms() {
 ///     Some(algos) => {
@@ -556,7 +556,7 @@ pub trait Preferences<'a>: seal::Sealed {
 /// }
 ///
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 /// assert_eq!(cert, identity_filter(&cert)?);
 /// #     Ok(())
@@ -582,7 +582,7 @@ pub trait Preferences<'a>: seal::Sealed {
 ///
 /// // Generate a cert with secrets.
 /// let (cert_with_secrets, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 ///
 /// // Derive a cert without secrets.
@@ -751,7 +751,7 @@ impl Cert {
     /// let p = &StandardPolicy::new();
     ///
     /// let (cert, rev) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     ///
     /// assert_eq!(cert.revocation_status(p, None), RevocationStatus::NotAsFarAsWeKnow);
@@ -964,7 +964,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, rev) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// println!("{}'s User IDs:", cert.fingerprint());
     /// for ua in cert.userids() {
@@ -998,7 +998,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, rev) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// println!("{}'s has {} User Attributes.",
     ///          cert.fingerprint(),
@@ -1099,7 +1099,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// # let tag = Tag::Private(61);
     /// # let unknown
@@ -1144,7 +1144,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, rev) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// println!("{}'s has {} bad signatures.",
     ///          cert.fingerprint(),
@@ -1184,11 +1184,11 @@ impl Cert {
     /// let p = &StandardPolicy::new();
     ///
     /// let (alice, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     /// // Make Alice a designated revoker for Bob.
     /// let (bob, _) =
-    ///     CertBuilder::general_purpose(None, Some("bob@example.org"))
+    ///     CertBuilder::general_purpose(Some("bob@example.org"))
     ///     .set_revocation_keys(vec![(&alice).into()])
     ///     .generate()?;
     ///
@@ -1247,7 +1247,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// assert!(cert.is_tsk());
     /// // But:
@@ -1299,7 +1299,7 @@ impl Cert {
     ///
     /// # fn main() -> openpgp::Result<()> {
     /// let (cert, rev) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     ///
     /// // We should be able to turn a certificate into a PacketPile
@@ -1339,7 +1339,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// let pp = cert.into_packet_pile();
     /// # let _ : PacketPile = pp;
@@ -2101,7 +2101,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// #
     /// println!("{}", cert.key_handle());
@@ -2129,7 +2129,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// #
     /// println!("{}", cert.fingerprint());
@@ -2157,7 +2157,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// #
     /// println!("{}", cert.keyid());
@@ -2225,7 +2225,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (local, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// # let keyserver = local.clone();
     /// // Merge the local version with the version from the keyserver.
@@ -2245,7 +2245,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2274,7 +2274,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .set_password(Some(p0.clone()))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
@@ -2311,7 +2311,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2427,7 +2427,7 @@ impl Cert {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (local, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// # let other_device = local.clone();
     /// // Merge the local version with the version from your other device.
@@ -2445,7 +2445,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2480,7 +2480,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .set_password(Some(p0.clone()))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
@@ -2517,7 +2517,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2712,7 +2712,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2766,7 +2766,7 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -2801,7 +2801,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert_eq!(cert.userids().nth(0).unwrap().self_signatures().count(), 1);
     ///
@@ -2891,7 +2891,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .set_password(Some(p0.clone()))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
@@ -2928,7 +2928,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, rev) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .set_password(Some(p0.clone()))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
@@ -3160,7 +3160,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -3202,7 +3202,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .generate()?;
     /// assert!(cert.is_tsk());
     ///
@@ -3243,7 +3243,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       .add_userid("Alice Lovelace <alice@lovelace.name>")
     ///       .generate()?;
     /// assert_eq!(cert.userids().count(), 2);
@@ -3288,7 +3288,7 @@ impl Cert {
     ///
     /// // Create a new key.
     /// let (cert, _) =
-    ///       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///       CertBuilder::general_purpose(Some("alice@example.org"))
     ///       // Add nonsensical user attribute.
     ///       .add_user_attribute(vec![0, 1, 2])
     ///       .generate()?;
@@ -3398,7 +3398,7 @@ impl Cert {
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// let vc = cert.with_policy(p, None)?;
     /// # assert!(std::ptr::eq(vc.policy(), p));
@@ -3439,7 +3439,7 @@ impl<'a> TSK<'a> {
     /// #
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #       CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #       CertBuilder::general_purpose(Some("alice@example.org"))
     /// #       .generate()?;
     /// assert!(cert.is_tsk());
     /// let a = cert.as_tsk().to_vec()?;
@@ -3580,7 +3580,7 @@ impl TryFrom<PacketPile> for Cert {
     ///
     /// # fn main() -> openpgp::Result<()> {
     /// let (cert, rev) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     ///
     /// // We should be able to turn a certificate into a PacketPile
@@ -3701,7 +3701,7 @@ impl<'a> ValidCert<'a> {
     ///
     /// let t = UNIX_EPOCH + Duration::from_secs(1307732220);
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .set_creation_time(t)
     /// #         .generate()?;
     /// let vc = cert.with_policy(p, t)?;
@@ -3726,7 +3726,7 @@ impl<'a> ValidCert<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// let vc = cert.with_policy(p, None)?;
     /// assert!(std::ptr::eq(vc.policy(), p));
@@ -3753,7 +3753,7 @@ impl<'a> ValidCert<'a> {
     ///
     /// # fn main() -> openpgp::Result<()> {
     /// #     let (cert, _) =
-    /// #         CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #         CertBuilder::general_purpose(Some("alice@example.org"))
     /// #         .generate()?;
     /// let sp = &StandardPolicy::new();
     /// let vc = cert.with_policy(sp, None)?;
@@ -3840,7 +3840,7 @@ impl<'a> ValidCert<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// let (cert, rev) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     ///
     /// // Not revoked.
@@ -4104,7 +4104,7 @@ impl<'a> ValidCert<'a> {
     /// # let t1 = t0 + time::Duration::from_secs(1);
     /// # let t2 = t1 + time::Duration::from_secs(1);
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .set_creation_time(t0)
     /// #     .generate()?;
     /// // `cert` was created at t0.  Add a second User ID at t1.
@@ -4164,7 +4164,7 @@ impl<'a> ValidCert<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// let vc = cert.with_policy(p, None)?;
     /// let ua = vc.primary_user_attribute();
@@ -4198,7 +4198,7 @@ impl<'a> ValidCert<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// #
     /// # // Create some user attribute. Doctests do not pass cfg(test),
@@ -4247,11 +4247,11 @@ impl<'a> ValidCert<'a> {
     /// let p = &StandardPolicy::new();
     ///
     /// let (alice, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///     .generate()?;
     /// // Make Alice a designated revoker for Bob.
     /// let (bob, _) =
-    ///     CertBuilder::general_purpose(None, Some("bob@example.org"))
+    ///     CertBuilder::general_purpose(Some("bob@example.org"))
     ///     .set_revocation_keys(vec![(&alice).into()])
     ///     .generate()?;
     ///
@@ -4871,7 +4871,7 @@ mod test {
         use crate::packet::signature::subpacket::Subpacket;
         use crate::packet::signature::subpacket::SubpacketValue;
 
-        let (cert, _) = CertBuilder::general_purpose(None, Some("Test"))
+        let (cert, _) = CertBuilder::general_purpose(Some("Test"))
             .generate()?;
         let packets = cert.clone().into_packets().count();
 
@@ -4931,7 +4931,7 @@ mod test {
 
     #[test]
     fn insert_packets_add_userid() -> Result<()> {
-        let (cert, _) = CertBuilder::general_purpose(None, Some("a"))
+        let (cert, _) = CertBuilder::general_purpose(Some("a"))
             .generate()?;
         let packets = cert.clone().into_packets().count();
 
@@ -5006,7 +5006,7 @@ mod test {
     fn set_validity_period() {
         let p = &P::new();
 
-        let (cert, _) = CertBuilder::general_purpose(None, Some("Test"))
+        let (cert, _) = CertBuilder::general_purpose(Some("Test"))
             .generate().unwrap();
         assert_eq!(cert.clone().into_packet_pile().children().count(),
                    1 // primary key
@@ -5047,7 +5047,7 @@ mod test {
         }
 
         let (cert, _) = CertBuilder::general_purpose(
-            None, Some(userid1))
+            Some(userid1))
             .add_userid(userid2)
             .generate()?;
         let primary_uid = cert.with_policy(p, None)?.primary_userid()?.userid().clone();
@@ -5285,7 +5285,7 @@ mod test {
     fn revoke() {
         let p = &P::new();
 
-        let (cert, _) = CertBuilder::general_purpose(None, Some("Test"))
+        let (cert, _) = CertBuilder::general_purpose(Some("Test"))
             .generate().unwrap();
         assert_eq!(RevocationStatus::NotAsFarAsWeKnow,
                    cert.revocation_status(p, None));
@@ -5310,7 +5310,7 @@ mod test {
 
 
         // Have other revoke cert.
-        let (other, _) = CertBuilder::general_purpose(None, Some("Test 2"))
+        let (other, _) = CertBuilder::general_purpose(Some("Test 2"))
             .generate().unwrap();
 
         let mut keypair = other.primary_key().key().clone().parts_into_secret()
@@ -5732,7 +5732,7 @@ mod test {
     // subkeys with and without a private key are merged.
     #[test]
     fn public_private_merge() {
-        let (tsk, _) = CertBuilder::general_purpose(None, Some("foo@example.com"))
+        let (tsk, _) = CertBuilder::general_purpose(Some("foo@example.com"))
             .generate().unwrap();
         // tsk is now a cert, but it still has its private bits.
         assert!(tsk.primary.key().has_secret());
@@ -6363,7 +6363,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     fn merge_keeps_secrets() -> Result<()> {
         let (cert_s, _) =
-            CertBuilder::general_purpose(None, Some("uid")).generate()?;
+            CertBuilder::general_purpose(Some("uid")).generate()?;
         let cert_p = cert_s.clone().strip_secret_key_material();
 
         // Merge key into cert.
@@ -6383,7 +6383,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     fn merge_prefers_merged_in_secrets() -> Result<()> {
         let pw: crate::crypto::Password = "foo".into();
         let (cert_encrypted_secrets, _) =
-            CertBuilder::general_purpose(None, Some("uid"))
+            CertBuilder::general_purpose(Some("uid"))
             .set_password(Some(pw.clone()))
             .generate()?;
 
@@ -6764,7 +6764,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         use crate::packet::signature::subpacket::*;
 
         let (cert, _) = CertBuilder::general_purpose(
-            None, Some("alice@example.org")).generate().unwrap();
+            Some("alice@example.org")).generate().unwrap();
         assert_eq!(cert.userids().count(), 1);
         assert_eq!(cert.subkeys().count(), 2);
         assert_eq!(cert.unknowns().count(), 0);
@@ -7200,7 +7200,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         let p = &crate::policy::StandardPolicy::new();
 
         let (alice, _) = CertBuilder::general_purpose(
-            None, Some("alice@example.org")).generate().unwrap();
+            Some("alice@example.org")).generate().unwrap();
         assert!(alice.keys().subkeys().count() > 0);
         let mut alice_signer =
             alice.primary_key().key().clone().parts_into_secret()?

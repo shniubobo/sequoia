@@ -36,14 +36,14 @@ impl Cert {
     /// # fn main() -> openpgp::Result<()> {
     /// // By default, certificates are exportable.
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///         .generate()?;
     /// assert!(cert.exportable());
     ///
     /// // Setting the exportable flag to false makes them
     /// // not-exportable.
     /// let (cert, _) =
-    ///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    ///     CertBuilder::general_purpose(Some("alice@example.org"))
     ///         .set_exportable(false)
     ///         .generate()?;
     /// assert!(! cert.exportable());

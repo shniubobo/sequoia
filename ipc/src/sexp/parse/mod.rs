@@ -12,7 +12,7 @@ use std::rc::Rc;
 use buffered_reader::{self, BufferedReader};
 use lalrpop_util::{lalrpop_mod, ParseError};
 use sequoia_openpgp as openpgp;
-use openpgp::parse::{Cookie, Parse};
+use openpgp::parse::Cookie;
 
 use openpgp::Error;
 use crate::Result;
@@ -29,15 +29,52 @@ lalrpop_mod!(
     "/sexp/parse/grammar.rs"
 );
 
-impl<'a> Parse<'a, Sexp> for Sexp {
-    fn from_buffered_reader<R>(mut reader: R) -> Result<Self>
+impl<'a> Sexp {
+    /// Reads from the given buffered reader.
+    ///
+    /// Implementations of this function should be short.  Ideally,
+    /// they should hand of the reader to a private function erasing
+    /// the readers type by invoking [`BufferedReader::into_boxed`].
+    pub fn from_buffered_reader<R>(mut reader: R) -> Result<Self>
     where
         R: BufferedReader<Cookie> + 'a,
     {
         Self::from_bytes(reader.data_eof()?)
     }
 
-    fn from_bytes<D: AsRef<[u8]> + ?Sized>(data: &'a D) -> Result<Sexp> {
+
+    /// Reads from the given reader.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_reader<R: 'a + std::io::Read + Send + Sync>(reader: R) -> Result<Self> {
+        Self::from_buffered_reader(
+            buffered_reader::Generic::with_cookie(reader,
+                                                  None,
+                                                  Default::default())
+                .into_boxed())
+    }
+
+    /// Reads from the given file.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_file<P: AsRef<std::path::Path>>(path: P) -> Result<Self>
+    {
+        Self::from_buffered_reader(
+            buffered_reader::File::with_cookie(path.as_ref(),
+                                               Default::default())?
+                .into_boxed())
+    }
+
+    /// Reads from the given slice.
+    ///
+    /// The default implementation just uses
+    /// [`Parse::from_buffered_reader`], but implementations can
+    /// provide their own specialized version.
+    pub fn from_bytes<D: AsRef<[u8]> + ?Sized>(data: &'a D) -> Result<Sexp> {
         Self::from_bytes_private(data.as_ref())
     }
 }
@@ -87,7 +124,6 @@ impl Sexp {
 #[cfg(test)]
 mod tests {
     use crate::sexp::{Sexp, String_};
-    use sequoia_openpgp::parse::Parse;
 
     #[test]
     fn basics() {

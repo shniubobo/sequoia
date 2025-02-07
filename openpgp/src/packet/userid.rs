@@ -801,7 +801,7 @@ impl UserID {
     /// # use sequoia_openpgp as openpgp;
     /// # use openpgp::packet::UserID;
     /// assert_eq!(UserID::from_address(
-    ///                "John Smith".into(),
+    ///                "John Smith",
     ///                None,
     ///                "boat@example.org")?.value(),
     ///            &b"John Smith <boat@example.org>"[..]);
@@ -813,10 +813,12 @@ impl UserID {
     ///            &b"John Smith (Who is Advok?) <boat@example.org>"[..]);
     /// # Ok(()) }
     /// ```
-    pub fn from_address<O, S>(name: O, comment: O, email: S)
+    pub fn from_address<'a, N, C, E>(name: N, comment: C, email: E)
         -> Result<Self>
-        where S: AsRef<str>,
-              O: Into<Option<S>>
+    where
+        N: Into<Option<&'a str>>,
+        C: Into<Option<&'a str>>,
+        E: AsRef<str>,
     {
         Self::assemble(name.into().as_ref().map(|s| s.as_ref()),
                        comment.into().as_ref().map(|s| s.as_ref()),
@@ -843,15 +845,17 @@ impl UserID {
     /// # use sequoia_openpgp as openpgp;
     /// # use openpgp::packet::UserID;
     /// assert_eq!(UserID::from_unchecked_address(
-    ///                "NAS".into(),
+    ///                "NAS",
     ///                None, "ssh://host.example.org")?.value(),
     ///            &b"NAS <ssh://host.example.org>"[..]);
     /// # Ok(()) }
     /// ```
-    pub fn from_unchecked_address<O, S>(name: O, comment: O, address: S)
+    pub fn from_unchecked_address<'a, N, C, E>(name: N, comment: C, address: E)
         -> Result<Self>
-        where S: AsRef<str>,
-              O: Into<Option<S>>
+    where
+        N: Into<Option<&'a str>>,
+        C: Into<Option<&'a str>>,
+        E: AsRef<str>,
     {
         Self::assemble(name.into().as_ref().map(|s| s.as_ref()),
                        comment.into().as_ref().map(|s| s.as_ref()),
@@ -1400,7 +1404,7 @@ mod tests {
                        .unwrap().value(),
                    b"<foo@bar.com>");
         assert!(UserID::from_address(None, None, "foo@@bar.com").is_err());
-        assert_eq!(UserID::from_address("Foo Q. Bar".into(), None, "foo@bar.com")
+        assert_eq!(UserID::from_address("Foo Q. Bar", None, "foo@bar.com")
                       .unwrap().value(),
                    b"Foo Q. Bar <foo@bar.com>");
     }

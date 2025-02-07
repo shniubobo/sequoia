@@ -210,6 +210,8 @@ impl<'a> Parse<'a, PacketPileParser<'a>> for PacketPileParser<'a> {
     }
 }
 
+impl<'a> crate::seal::Sealed for PacketPileParser<'a> {}
+
 impl<'a> PacketPileParser<'a> {
     /// Creates a `PacketPileParser` from a *fresh* `PacketParser`.
     fn from_packet_parser(ppr: PacketParserResult<'a>)

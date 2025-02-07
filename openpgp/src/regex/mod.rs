@@ -119,7 +119,7 @@
 //! let p = &StandardPolicy::new();
 //!
 //! let (ca, _)
-//!     = CertBuilder::general_purpose(None, Some("OpenPGP CA <openpgp-ca@example.com>"))
+//!     = CertBuilder::general_purpose(Some("OpenPGP CA <openpgp-ca@example.com>"))
 //!         .generate()?;
 //! let mut ca_signer = ca.primary_key().key().clone()
 //!     .parts_into_secret()?.into_keypair()?;
@@ -128,7 +128,7 @@
 //!
 //! // The CA certifies "Alice <alice@example.com>".
 //! let (alice, _)
-//!     = CertBuilder::general_purpose(None, Some("Alice <alice@example.com>"))
+//!     = CertBuilder::general_purpose(Some("Alice <alice@example.com>"))
 //!         .generate()?;
 //! let alice_userid = alice.with_policy(p, None)?
 //!     .userids().nth(0).expect("Added a User ID").userid();
@@ -147,7 +147,7 @@
 //!
 //! // The CA certifies "Bob <bob@some.org>".
 //! let (bob, _)
-//!     = CertBuilder::general_purpose(None, Some("Bob <bob@some.org>"))
+//!     = CertBuilder::general_purpose(Some("Bob <bob@some.org>"))
 //!         .generate()?;
 //! let bob_userid = bob.with_policy(p, None)?
 //!     .userids().nth(0).expect("Added a User ID").userid();
@@ -167,7 +167,7 @@
 //!
 //! // Carol tsigns the CA's certificate.
 //! let (carol, _)
-//!     = CertBuilder::general_purpose(None, Some("Carol <carol@another.net>"))
+//!     = CertBuilder::general_purpose(Some("Carol <carol@another.net>"))
 //!         .generate()?;
 //! let mut carol_signer = carol.primary_key().key().clone()
 //!     .parts_into_secret()?.into_keypair()?;
@@ -841,13 +841,13 @@ impl RegexSet {
     /// # let p = &StandardPolicy::new();
     /// #
     /// # let (alice, _)
-    /// #     = CertBuilder::general_purpose(None, Some("Alice <alice@example.org>"))
+    /// #     = CertBuilder::general_purpose(Some("Alice <alice@example.org>"))
     /// #         .generate()?;
     /// # let mut alices_signer = alice.primary_key().key().clone()
     /// #     .parts_into_secret()?.into_keypair()?;
     /// #
     /// # let (example_com, _)
-    /// #     = CertBuilder::general_purpose(None, Some("OpenPGP CA <openpgp-ca@example.com>"))
+    /// #     = CertBuilder::general_purpose(Some("OpenPGP CA <openpgp-ca@example.com>"))
     /// #         .generate()?;
     /// # let example_com_userid = example_com.with_policy(p, None)?
     /// #     .userids().nth(0).expect("Added a User ID").userid();

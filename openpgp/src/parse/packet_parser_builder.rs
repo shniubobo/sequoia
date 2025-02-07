@@ -109,6 +109,8 @@ impl<'a> Parse<'a, PacketParserBuilder<'a>> for PacketParserBuilder<'a> {
     }
 }
 
+impl<'a> crate::seal::Sealed for PacketParserBuilder<'a> {}
+
 impl<'a> PacketParserBuilder<'a> {
     // Creates a `PacketParserBuilder` for an OpenPGP message stored
     // in a `BufferedReader` object.

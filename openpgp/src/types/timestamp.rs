@@ -41,7 +41,7 @@ use crate::{
 ///
 /// # fn main() -> Result<()> {
 /// let (cert, _) =
-///     CertBuilder::general_purpose(None, Some("alice@example.org"))
+///     CertBuilder::general_purpose(Some("alice@example.org"))
 ///     .generate()?;
 ///
 /// let subkey = cert.keys().subkeys().next().unwrap();

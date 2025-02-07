@@ -136,6 +136,21 @@
    - PacketPile::pretty_print removed
    - parse::stream::MessageStructure no longer derefs to [MessageLayer]
    - packet::Container no longer derefs to packet::Body
+   - Key6::import_public_cv25519 renamed to import_public_x25519
+   - Key6::import_public_x25519 now produces a X25519 key, not an ECDH
+     key
+   - Key6::import_public_ed25519 now produces an Ed25519 key, not an
+     EdDSALegacy key
+   - CertBuilder::general_purpose is more ergonomic now.  Its first
+     parameter is dropped, the second can take any number of user IDs.
+   - UserID::from_address now uses distinct types for its arguments.
+     The name and comment argument now take an Into<Option<&str>>.
+   - UserID::from_unchecked address now uses distinct types for its
+     arguments.  The name and comment argument now take an
+     Into<Option<&str>>.
+   - SignatureBuilder::set_revocation_key now takes a single key
+   - parse::stream::VerificationError is now marked non-exhaustive
+   - Parse is now sealed
 
 ** New functionality
    - Signature::hash_userid_attestation
@@ -188,6 +203,14 @@
    - ValidKeyAmalgamation::approvals
    - ValidKeyAmalgamation::signatures
    - parse::stream::MessageStructure::iter
+   - Key6::import_secret_x25519
+   - Key6::import_secret_ed25519
+   - Key6::import_public_x448
+   - Key6::import_secret_x448
+   - Key6::import_public_ed448
+   - Key6::import_secret_ed448
+   - SignatureBuilder::add_revocation_key
+   - parse::stream::VerificationError::UnknownSignature
 
 ** Deprecated functionality
    - Cert::insert_packets, use Cert::insert_packets2 instead

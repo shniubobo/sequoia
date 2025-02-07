@@ -200,7 +200,7 @@ pub trait KeyParts: fmt::Debug + seal::Sealed {
     /// }
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// # f(&cert, cert.primary_key().key().clone().role_into_unspecified())?;
     /// # Ok(())
@@ -386,7 +386,7 @@ pub trait KeyRole: fmt::Debug + seal::Sealed {
     /// }
     /// # fn main() -> openpgp::Result<()> {
     /// # let (cert, _) =
-    /// #     CertBuilder::general_purpose(None, Some("alice@example.org"))
+    /// #     CertBuilder::general_purpose(Some("alice@example.org"))
     /// #     .generate()?;
     /// # f(&cert, cert.primary_key().key().clone().parts_into_unspecified())?;
     /// # Ok(())
