@@ -9,13 +9,16 @@ cargo-fuzz = true
 
 [dependencies]
 anyhow = "1"
-lazy_static = "1"
 libfuzzer-sys = "0.4"
 
 [dependencies.sequoia-openpgp]
 path = ".."
 default-features = false
-features = ["crypto-fuzzing", "allow-experimental-crypto", "allow-variable-time-crypto"]
+features = [
+    "crypto-fuzzing",
+    "allow-experimental-crypto",
+    "allow-variable-time-crypto",
+]
 
 # Prevent this from interfering with workspaces
 [workspace]
