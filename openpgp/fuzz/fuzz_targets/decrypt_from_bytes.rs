@@ -1,19 +1,16 @@
 #![no_main]
 
-use libfuzzer_sys::{Corpus, fuzz_target};
+use libfuzzer_sys::{fuzz_target, Corpus};
 
-use sequoia_openpgp as openpgp;
 use openpgp::{
-    Cert,
-    Fingerprint,
-    KeyHandle,
-    Result,
     crypto::SessionKey,
     packet::prelude::*,
-    parse::{Parse, stream::*},
+    parse::{stream::*, Parse},
     policy::StandardPolicy,
     types::*,
+    Cert, Fingerprint, KeyHandle, Result,
 };
+use sequoia_openpgp as openpgp;
 
 const P: &StandardPolicy = &StandardPolicy::new();
 const CERT_BYTES: &[u8; 665] = b"
@@ -39,39 +36,39 @@ lazy_static::lazy_static! {
     static ref SK: SessionKey = vec![].into();
 }
 
-
 fuzz_target!(|data: &[u8]| -> Corpus {
     struct Helper {}
     impl VerificationHelper for Helper {
-        fn get_certs(&mut self, _ids: &[KeyHandle])
-                     -> openpgp::Result<Vec<Cert>> {
+        fn get_certs(&mut self, _ids: &[KeyHandle]) -> openpgp::Result<Vec<Cert>> {
             Ok(vec![CERT.clone()])
         }
 
-        fn check(&mut self, structure: MessageStructure)
-                 -> openpgp::Result<()> {
+        fn check(&mut self, structure: MessageStructure) -> openpgp::Result<()> {
             for (i, layer) in structure.into_iter().enumerate() {
                 match layer {
                     MessageLayer::Encryption { .. } if i == 0 => (),
                     MessageLayer::Compression { .. } if i == 1 => (),
                     MessageLayer::SignatureGroup { ref results } => {
-                        if ! results.iter().any(|r| r.is_ok()) {
-                            return Err(anyhow::anyhow!(
-                                "No valid signature"));
+                        if !results.iter().any(|r| r.is_ok()) {
+                            return Err(anyhow::anyhow!("No valid signature"));
                         }
                     }
-                    _ => return Err(anyhow::anyhow!(
-                        "Unexpected message structure")),
+                    _ => return Err(anyhow::anyhow!("Unexpected message structure")),
                 }
             }
             Ok(())
         }
     }
     impl DecryptionHelper for Helper {
-        fn decrypt<D>(&mut self, _: &[PKESK], _: &[SKESK],
-                      _sym_algo: Option<SymmetricAlgorithm>,
-                      mut decrypt: D) -> Result<Option<openpgp::Fingerprint>>
-        where D: FnMut(SymmetricAlgorithm, &SessionKey) -> bool
+        fn decrypt<D>(
+            &mut self,
+            _: &[PKESK],
+            _: &[SKESK],
+            _sym_algo: Option<SymmetricAlgorithm>,
+            mut decrypt: D,
+        ) -> Result<Option<openpgp::Fingerprint>>
+        where
+            D: FnMut(SymmetricAlgorithm, &SessionKey) -> bool,
         {
             decrypt(SymmetricAlgorithm::AES128, &SK);
             Ok(Some(FP.clone()))
@@ -79,9 +76,7 @@ fuzz_target!(|data: &[u8]| -> Corpus {
     }
 
     let h = Helper {};
-    if let Ok(mut v) = DecryptorBuilder::from_bytes(data)
-        .and_then(|b| b.with_policy(P, None, h))
-    {
+    if let Ok(mut v) = DecryptorBuilder::from_bytes(data).and_then(|b| b.with_policy(P, None, h)) {
         let _ = std::io::copy(&mut v, &mut std::io::sink());
         Corpus::Keep
     } else {

@@ -1,14 +1,13 @@
 #![no_main]
 
-use libfuzzer_sys::{Corpus, fuzz_target};
+use libfuzzer_sys::{fuzz_target, Corpus};
 
-use sequoia_openpgp as openpgp;
 use openpgp::{
-    Cert,
-    KeyHandle,
-    parse::{Parse, stream::*},
+    parse::{stream::*, Parse},
     policy::StandardPolicy,
+    Cert, KeyHandle,
 };
+use sequoia_openpgp as openpgp;
 
 const P: &StandardPolicy = &StandardPolicy::new();
 
@@ -31,7 +30,6 @@ W2hrBY5x0sZ8H7JlAP47mCfCuRVBqyaePuzKbxLJeLe2BpDdc0n2izMVj8t9Cg==
 ").unwrap();
 }
 
-
 fuzz_target!(|data: &[u8]| -> Corpus {
     const NEEDLE: &[u8] = b"-----BEGIN PGP SIGNED MESSAGE-----";
     if data.len() < NEEDLE.len() || &data[..NEEDLE.len()] != NEEDLE {
@@ -40,25 +38,21 @@ fuzz_target!(|data: &[u8]| -> Corpus {
 
     struct Helper {}
     impl VerificationHelper for Helper {
-        fn get_certs(&mut self, _ids: &[KeyHandle])
-                     -> openpgp::Result<Vec<Cert>> {
+        fn get_certs(&mut self, _ids: &[KeyHandle]) -> openpgp::Result<Vec<Cert>> {
             Ok(vec![CERT.clone()])
         }
 
-        fn check(&mut self, structure: MessageStructure)
-                 -> openpgp::Result<()> {
+        fn check(&mut self, structure: MessageStructure) -> openpgp::Result<()> {
             for (i, layer) in structure.into_iter().enumerate() {
                 match layer {
                     MessageLayer::Encryption { .. } if i == 0 => (),
                     MessageLayer::Compression { .. } if i == 1 => (),
                     MessageLayer::SignatureGroup { ref results } => {
-                        if ! results.iter().any(|r| r.is_ok()) {
-                            return Err(anyhow::anyhow!(
-                                "No valid signature"));
+                        if !results.iter().any(|r| r.is_ok()) {
+                            return Err(anyhow::anyhow!("No valid signature"));
                         }
                     }
-                    _ => return Err(anyhow::anyhow!(
-                        "Unexpected message structure")),
+                    _ => return Err(anyhow::anyhow!("Unexpected message structure")),
                 }
             }
             Ok(())
@@ -66,9 +60,7 @@ fuzz_target!(|data: &[u8]| -> Corpus {
     }
 
     let h = Helper {};
-    if let Ok(mut v) = VerifierBuilder::from_bytes(data)
-        .and_then(|b| b.with_policy(P, None, h))
-    {
+    if let Ok(mut v) = VerifierBuilder::from_bytes(data).and_then(|b| b.with_policy(P, None, h)) {
         let _ = std::io::copy(&mut v, &mut std::io::sink());
         Corpus::Keep
     } else {
