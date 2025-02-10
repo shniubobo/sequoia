@@ -60,18 +60,15 @@ fuzz_target!(|data: &[u8]| -> Corpus {
         }
     }
     impl DecryptionHelper for Helper {
-        fn decrypt<D>(
+        fn decrypt(
             &mut self,
             _: &[PKESK],
             _: &[SKESK],
             _sym_algo: Option<SymmetricAlgorithm>,
-            mut decrypt: D,
-        ) -> Result<Option<openpgp::Fingerprint>>
-        where
-            D: FnMut(SymmetricAlgorithm, &SessionKey) -> bool,
-        {
-            decrypt(SymmetricAlgorithm::AES128, &SK);
-            Ok(Some(FP.clone()))
+            decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool,
+        ) -> Result<Option<openpgp::Cert>> {
+            decrypt(Some(SymmetricAlgorithm::AES128), &SK);
+            Ok(Some(CERT.clone()))
         }
     }
 
