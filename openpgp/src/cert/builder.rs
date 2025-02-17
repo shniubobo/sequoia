@@ -457,7 +457,8 @@ impl CertBuilder<'_> {
     /// ```
     pub fn general_purpose<U>(userids: U) -> Self
     where
-        U: IntoIterator<Item: Into<packet::UserID>>,
+        U: IntoIterator,
+        U::Item: Into<packet::UserID>,
     {
         let mut builder = Self::new()
             .set_primary_key_flags(KeyFlags::empty().set_certification())
