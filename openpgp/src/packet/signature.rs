@@ -310,6 +310,14 @@ impl SBVersion {
             SBVersion::V6 { .. } => 6,
         }
     }
+
+    /// Returns the salt, if any.
+    pub(crate) fn salt(&self) -> Option<&[u8]> {
+        match self {
+            SBVersion::V4 { .. } => None,
+            SBVersion::V6 { salt, .. } => Some(&salt),
+        }
+    }
 }
 
 /// A Signature builder.
@@ -2953,7 +2961,7 @@ impl Signature {
             let mut additional_issuers = Vec::with_capacity(0);
 
             let id = KeyHandle::from(key.keyid());
-            if ! issuers.contains(&id) {
+            if self.version() <= 4 && ! issuers.contains(&id) {
                 additional_issuers.push(id);
             }
 

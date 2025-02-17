@@ -144,7 +144,7 @@ pub use iter::KeyIter;
 /// #     Ok(())
 /// # }
 /// ```
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct RawPacket<'a> {
     tag: Tag,
     header_len: usize,

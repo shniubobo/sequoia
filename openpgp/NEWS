@@ -4,6 +4,20 @@
 #+STARTUP: content hidestars
 
 
+* Changes in 2.0.0.alpha.2
+** API changes
+   - ValidKeyAmalgamation::into_key_amalgamation removed
+
+** New functionality
+   - ValidCert::key_handle
+   - ValidCert::fingerprint
+   - ValidCert::keyid
+   - ValidComponentAmalgamation::amalgamation
+   - ValidKeyAmalgamation::amalgamation
+
+** Notable fixes
+   - Generation of v6 certification approval signatures is fixed
+
 * Changes in 2.0.0.alpha.1
 ** API changes
    - ComponentBundle::self_signatures2 renamed to ComponentBundle::self_signatures

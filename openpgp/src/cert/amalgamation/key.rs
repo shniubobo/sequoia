@@ -437,7 +437,7 @@ pub trait PrimaryKey<'a, P, R>: seal::Sealed
 /// [`Cert::keys`]: crate::cert::Cert::keys()
 /// [`ValidateAmalgamation`]: super::ValidateAmalgamation
 /// [`KeyAmalgamation::with_policy`]: super::ValidateAmalgamation::with_policy()
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct KeyAmalgamation<'a, P, R, R2>
     where P: 'a + key::KeyParts,
           R: 'a + key::KeyRole,
@@ -1670,6 +1670,38 @@ where
         self.binding_signature
     }
 
+    /// Returns the valid amalgamation's amalgamation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use sequoia_openpgp as openpgp;
+    /// # use openpgp::cert::prelude::*;
+    /// use openpgp::policy::StandardPolicy;
+    ///
+    /// # fn main() -> openpgp::Result<()> {
+    /// let p = &StandardPolicy::new();
+    ///
+    /// # let (cert, _) = CertBuilder::new()
+    /// #     .add_userid("Alice")
+    /// #     .add_signing_subkey()
+    /// #     .add_transport_encryption_subkey()
+    /// #     .generate()?;
+    /// // Get a key amalgamation.
+    /// let ka = cert.primary_key();
+    ///
+    /// // Validate it, yielding a valid key amalgamation.
+    /// let vka = ka.with_policy(p, None)?;
+    ///
+    /// // And here we get the amalgamation back.
+    /// let ka2 = vka.amalgamation();
+    /// assert_eq!(&ka, ka2);
+    /// # Ok(()) }
+    /// ```
+    pub fn amalgamation(&self) -> &KeyAmalgamation<'a, P, R, R2> {
+        &self.ka
+    }
+
     /// Returns this amalgamation's bundle.
     pub fn bundle(&self) -> &'a crate::cert::ComponentBundle<Key<P, R>> {
         self.ka.bundle()
@@ -2276,37 +2308,6 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
             Ok(())
         }
     }
-
-    /// Returns the wrapped `KeyAmalgamation`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use sequoia_openpgp as openpgp;
-    /// # use openpgp::cert::prelude::*;
-    /// use openpgp::policy::StandardPolicy;
-    ///
-    /// # fn main() -> openpgp::Result<()> {
-    /// let p = &StandardPolicy::new();
-    ///
-    /// # let (cert, _) = CertBuilder::new()
-    /// #     .add_userid("Alice")
-    /// #     .add_signing_subkey()
-    /// #     .add_transport_encryption_subkey()
-    /// #     .generate()?;
-    /// let ka = cert.primary_key();
-    ///
-    /// // `with_policy` takes ownership of `ka`.
-    /// let vka = ka.with_policy(p, None)?;
-    ///
-    /// // And here we get it back:
-    /// let ka = vka.into_key_amalgamation();
-    /// # Ok(()) }
-    /// ```
-    pub fn into_key_amalgamation(self) -> KeyAmalgamation<'a, P, R, R2> {
-        self.ka
-    }
-
 }
 
 impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>

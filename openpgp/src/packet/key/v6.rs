@@ -661,9 +661,13 @@ where R: KeyRole,
     /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
     /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
     /// [`Key::decrypt_secret`]: super::Key::decrypt_secret()
-    pub fn decrypt_secret(mut self, password: &Password) -> Result<Self> {
-        self.common = self.common.decrypt_secret(password)?;
-        Ok(self)
+    pub fn decrypt_secret(self, password: &Password) -> Result<Self> {
+        let (key, mut secret) = self.take_secret();
+        // Note: Key version is authenticated.
+        let key = Key::V6(key);
+        secret.decrypt_in_place(&key, password)?;
+        let key = if let Key::V6(k) = key { k } else { unreachable!() };
+        Ok(key.add_secret(secret).0)
     }
 
     /// Encrypts the secret key material using `password`.
@@ -680,11 +684,15 @@ where R: KeyRole,
     /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
     /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
     /// [`Key::encrypt_secret`]: super::Key::encrypt_secret()
-    pub fn encrypt_secret(mut self, password: &Password)
+    pub fn encrypt_secret(self, password: &Password)
                           -> Result<Key6<SecretParts, R>>
     {
-        self.common = self.common.encrypt_secret(password)?;
-        Ok(self)
+        let (key, mut secret) = self.take_secret();
+        // Note: Key version is authenticated.
+        let key = Key::V6(key);
+        secret.encrypt_in_place(&key, password)?;
+        let key = if let Key::V6(k) = key { k } else { unreachable!() };
+        Ok(key.add_secret(secret).0)
     }
 }
 

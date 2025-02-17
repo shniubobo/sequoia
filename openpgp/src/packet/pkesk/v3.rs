@@ -143,6 +143,7 @@ impl PKESK3 {
         -> Result<(SymmetricAlgorithm, SessionKey)>
     {
         packet::PKESK::decrypt_common(&self.esk, decryptor, sym_algo_hint, true)
+            .map(|(sym_algo, sk)| (sym_algo.expect("known for v3 PKESK"), sk))
     }
 }
 

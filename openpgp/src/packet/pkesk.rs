@@ -221,7 +221,7 @@ impl packet::PKESK {
                       decryptor: &mut dyn Decryptor,
                       sym_algo_hint: Option<SymmetricAlgorithm>,
                       seipdv1: bool)
-                      -> Result<(SymmetricAlgorithm, SessionKey)>
+                      -> Result<(Option<SymmetricAlgorithm>, SessionKey)>
     {
         let (checksummed, unencrypted_cipher_octet, encrypted_cipher_octet) =
             classify_pk_algo(decryptor.public().pk_algo(), seipdv1)?;
@@ -282,17 +282,17 @@ impl packet::PKESK {
         if encrypted_cipher_octet {
             sym_algo = Some(plain[0].into());
         }
-        let sym_algo = sym_algo.or(sym_algo_hint)
-            .ok_or_else(|| Error::InvalidOperation(
-                "No symmetric algorithm discovered or given".into()))?;
-        let mut key: SessionKey = vec![0u8; sym_algo.key_size()?].into();
+        let sym_algo = sym_algo.or(sym_algo_hint);
 
-        if key_rgn.len() != sym_algo.key_size()? {
-            return Err(Error::MalformedPacket(
-                format!("session key has the wrong size (got: {}, expected: {})",
-                        key_rgn.len(), sym_algo.key_size()?)).into())
+        if let Some(sym_algo) = sym_algo {
+            if key_rgn.len() != sym_algo.key_size()? {
+                return Err(Error::MalformedPacket(
+                    format!("session key has the wrong size (got: {}, expected: {})",
+                            key_rgn.len(), sym_algo.key_size()?)).into())
+            }
         }
 
+        let mut key: SessionKey = vec![0u8; key_rgn.len()].into();
         key.copy_from_slice(&plain[key_rgn]);
 
         if checksummed {
