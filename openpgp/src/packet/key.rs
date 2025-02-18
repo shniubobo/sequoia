@@ -2098,10 +2098,22 @@ impl Unencrypted {
         P: KeyParts,
         R: KeyRole,
     {
-        self.encrypt_with(key, S2K::default(),
-                          SymmetricAlgorithm::AES128,
-                          Some(AEADAlgorithm::OCB),
-                          password)
+        // Pick sensible parameters according to the key version.
+        let (s2k, symm, aead) = match key.version() {
+            6 => (
+                S2K::default(),
+                SymmetricAlgorithm::AES128,
+                Some(AEADAlgorithm::OCB),
+            ),
+
+            _ => (
+                S2K::default(),
+                SymmetricAlgorithm::default(),
+                None,
+            ),
+        };
+
+        self.encrypt_with(key, s2k, symm, aead, password)
     }
 
     /// Encrypts the secret key material using `password` and the

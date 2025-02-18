@@ -17,6 +17,7 @@
 
 ** Notable fixes
    - Generation of v6 certification approval signatures is fixed
+   - Key encryption now only uses AEAD by default for v6 keys
 
 * Changes in 2.0.0.alpha.1
 ** API changes
