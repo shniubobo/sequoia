@@ -1543,12 +1543,15 @@ impl SignatureBuilder {
             _ => return Err(Error::UnsupportedSignatureType(self.typ).into()),
         }
 
+        self = self.pre_sign(signer)?;
+
         // Hash the message
         let mut hash =
             self.hash_algo.context()?.for_signature(self.version());
+        if let Some(salt) = self.sb_version.salt() {
+            hash.update(salt);
+        }
         hash.update(msg.as_ref());
-
-        self = self.pre_sign(signer)?;
 
         self.hash(&mut hash)?;
         let mut digest = vec![0u8; hash.digest_size()];
@@ -3612,6 +3615,10 @@ impl Signature {
         // Compute the digest.
         let mut hash =
             self.hash_algo().context()?.for_signature(self.version());
+        if let Some(salt) = self.salt() {
+            hash.update(salt);
+        }
+
         hash.update(msg.as_ref());
         self.hash(&mut hash)?;
         self.verify_digest_internal(

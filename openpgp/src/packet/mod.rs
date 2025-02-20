@@ -2115,11 +2115,10 @@ mod test {
             }
 
             let mut buf = p.to_vec().unwrap();
-            let bit =
-                // Avoid first two bytes so that we don't change the
-                // type and reduce the chance of changing the length.
-                i.saturating_add(16)
-                % (buf.len() * 8);
+            // Avoid first two bytes so that we don't change the
+            // type and reduce the chance of changing the length.
+            if buf.len() < 3 { return true; }
+            let bit = i % ((buf.len() - 2) * 8) + 16;
             buf[bit / 8] ^= 1 << (bit % 8);
             match Packet::from_bytes(&buf) {
                 Ok(q) => p != q,

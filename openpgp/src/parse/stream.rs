@@ -2351,8 +2351,23 @@ impl<'a, H: VerificationHelper + DecryptionHelper> Decryptor<'a, H> {
         let mut skesks: Vec<packet::SKESK> = Vec::new();
 
         while let PacketParserResult::Some(mut pp) = ppr {
-            t!("Found a {:?} at depth {}", pp.packet.tag(),
-               pp.recursion_depth());
+            match &pp.packet {
+                Packet::PKESK(p) =>
+                    t!("Found a {:?}v{} at depth {}",
+                       pp.packet.tag(), p.version(),
+                       pp.recursion_depth()),
+                Packet::SKESK(p) =>
+                    t!("Found a {:?}v{} at depth {}",
+                       pp.packet.tag(), p.version(),
+                       pp.recursion_depth()),
+                Packet::SEIP(p) =>
+                    t!("Found a {:?}v{} at depth {}",
+                       pp.packet.tag(), p.version(),
+                       pp.recursion_depth()),
+                _ =>
+                    t!("Found a {:?} at depth {}", pp.packet.tag(),
+                       pp.recursion_depth()),
+            }
 
             // Check whether we are actually processing a cleartext
             // signature framework message.
@@ -3030,7 +3045,7 @@ pub(crate) mod test {
     };
 
     /// Verification helper for the tests.
-    #[derive(Clone, PartialEq)]
+    #[derive(Clone)]
     pub struct VHelper {
         good: usize,
         unknown: usize,
@@ -3041,6 +3056,7 @@ pub(crate) mod test {
         passwords: Vec<Password>,
         for_decryption: bool,
         error_out: bool,
+        pub packets: Vec<Packet>,
     }
 
     impl std::fmt::Debug for VHelper {
@@ -3067,6 +3083,7 @@ pub(crate) mod test {
                 passwords: Default::default(),
                 for_decryption: false,
                 error_out: true,
+                packets: Default::default(),
             }
         }
     }
@@ -3086,6 +3103,7 @@ pub(crate) mod test {
                 passwords: Default::default(),
                 for_decryption: false,
                 error_out: true,
+                packets: Default::default(),
             }
         }
 
@@ -3106,11 +3124,25 @@ pub(crate) mod test {
                 passwords,
                 for_decryption: true,
                 error_out: true,
+                packets: Default::default(),
             }
+        }
+
+        /// Compares the stats.
+        pub fn assert_stats_eq(&self, other: &Self) {
+            assert_eq!(self.good, other.good);
+            assert_eq!(self.unknown, other.unknown);
+            assert_eq!(self.bad, other.bad);
+            assert_eq!(self.error, other.error);
         }
     }
 
     impl VerificationHelper for VHelper {
+        fn inspect(&mut self, pp: &PacketParser<'_>) -> Result<()> {
+            self.packets.push(pp.packet.clone());
+            Ok(())
+        }
+
         fn get_certs(&mut self, _ids: &[crate::KeyHandle]) -> Result<Vec<Cert>> {
             Ok(self.certs.clone())
         }
@@ -3325,7 +3357,7 @@ pub(crate) mod test {
                     },
                 };
             assert!(v.message_processed());
-            assert_eq!(v.helper_ref(), r);
+            r.assert_stats_eq(v.helper_ref());
 
             if v.helper_ref().error > 0 {
                 // Expected error.  No point in trying to read
@@ -3356,7 +3388,7 @@ pub(crate) mod test {
                     },
                 };
             assert!(v.message_processed());
-            assert_eq!(v.helper_ref(), r);
+            r.assert_stats_eq(v.helper_ref());
 
             if v.helper_ref().error > 0 {
                 // Expected error.  No point in trying to read

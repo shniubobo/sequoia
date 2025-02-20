@@ -2635,7 +2635,7 @@ mod test {
     #[test]
     fn key_verify_binary_signature() -> Result<()> {
         use crate::packet::signature;
-        use crate::serialize::Serialize;
+        use crate::serialize::SerializeInto;
         use crate::Packet;
         use crate::types::KeyFlags;
 
@@ -2708,7 +2708,10 @@ mod test {
                             for result in results {
                                 match result {
                                     Ok(_) => self.good += 1,
-                                    Err(_) => self.errors += 1,
+                                    Err(e) => {
+                                        eprintln!("{}", e);
+                                        self.errors += 1
+                                    },
                                 }
                             }
                         MessageLayer::Compression { .. } => (),
@@ -2755,12 +2758,7 @@ mod test {
             sig.verify_message(key, msg).unwrap();
 
             // Turn it into a detached signature.
-            let sig = {
-                let mut v = Vec::new();
-                let sig : Packet = sig.into();
-                sig.serialize(&mut v).unwrap();
-                v
-            };
+            let sig = Packet::from(sig).to_vec().unwrap();
 
             let h = VHelper::new(vec![ cert.clone() ]);
             let mut v = DetachedVerifierBuilder::from_bytes(&sig).unwrap()

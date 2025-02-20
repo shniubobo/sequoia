@@ -2349,8 +2349,8 @@ impl<P, R> Marshal for Key6<P, R>
                         o.write_all(aead_iv)?;
                         o.write_all(e.raw_ciphertext())?;
                     } else {
-                        // S2K usage.
                         o.write_all(&[
+                            // S2K usage.
                             match e.checksum() {
                                 Some(SecretKeyChecksum::SHA1) => 254,
                                 Some(SecretKeyChecksum::Sum16) => 255,
@@ -2358,9 +2358,13 @@ impl<P, R> Marshal for Key6<P, R>
                                     "In Key6 packets, CFB encrypted secret keys \
                                      must be checksummed".into()).into()),
                             },
-                            (1 + 1 + e.s2k().serialized_len())
+                            // Parameter length octet.
+                            (1 + 1 + e.s2k().serialized_len()
+                             + e.cfb_iv_len())
                                 .try_into().unwrap_or(0),
+                            // Cipher octet.
                             e.algo().into(),
+                            // S2k length octet.
                             e.s2k().serialized_len().try_into().unwrap_or(0),
                         ])?;
                         e.s2k().serialize(o)?;

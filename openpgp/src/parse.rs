@@ -2795,7 +2795,7 @@ impl Key4<key::UnspecifiedParts, key::UnspecifiedRole>
                             _ => Some(mpi::SecretKeyChecksum::Sum16),
                         },
                         if s2k_supported {
-                            Ok(cipher)
+                            Ok((0, cipher))
                         } else {
                             Err(cipher)
                         },
@@ -2999,6 +2999,7 @@ impl Key6<key::UnspecifiedParts, key::UnspecifiedRole>
                         php_try!(php.parse_bytes_eof("encrypted_mpis"));
 
                     // But we store "IV" and ciphertext as one.
+                    let cfb_iv_len = cfb_iv.len();
                     let mut combined_ciphertext = cfb_iv;
                     combined_ciphertext.extend_from_slice(&cipher);
 
@@ -3009,7 +3010,8 @@ impl Key6<key::UnspecifiedParts, key::UnspecifiedRole>
                         } else {
                             Some(mpi::SecretKeyChecksum::Sum16)
                         },
-                        Ok(combined_ciphertext.into())).into()
+                        Ok((cfb_iv_len, combined_ciphertext.into())))
+                        .into()
                 },
             };
 

@@ -2210,7 +2210,8 @@ pub struct Encrypted {
     /// how large its parameters are, so we cannot cleanly parse it,
     /// and have to accept that the S2K's body bleeds into the rest of
     /// the data.
-    ciphertext: std::result::Result<Box<[u8]>,  // IV + ciphertext.
+    ciphertext: std::result::Result<(usize, // IV length
+                                     Box<[u8]>),    // IV + ciphertext.
                                     Box<[u8]>>, // S2K body + IV + ciphertext.
 }
 
@@ -2224,15 +2225,20 @@ impl PartialEq for Encrypted {
         self.algo == other.algo
             && self.aead == other.aead
             && self.checksum == other.checksum
-            // Treat S2K and ciphertext as opaque blob.
-            && {
-                // XXX: This would be nicer without the allocations.
-                use crate::serialize::MarshalInto;
-                let mut a = self.s2k.to_vec().unwrap();
-                let mut b = other.s2k.to_vec().unwrap();
-                a.extend_from_slice(self.raw_ciphertext());
-                b.extend_from_slice(other.raw_ciphertext());
-                a == b
+            && match (&self.ciphertext, &other.ciphertext) {
+                (Ok(a), Ok(b)) =>
+                    self.s2k == other.s2k && a == b,
+                (Err(a_raw), Err(b_raw)) => {
+                    // Treat S2K and ciphertext as opaque blob.
+                    // XXX: This would be nicer without the allocations.
+                    use crate::serialize::MarshalInto;
+                    let mut a = self.s2k.to_vec().unwrap();
+                    let mut b = other.s2k.to_vec().unwrap();
+                    a.extend_from_slice(a_raw);
+                    b.extend_from_slice(b_raw);
+                    a == b
+                },
+                _ => false,
             }
     }
 }
@@ -2242,13 +2248,22 @@ impl Eq for Encrypted {}
 impl std::hash::Hash for Encrypted {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.algo.hash(state);
+        self.aead.hash(state);
         self.checksum.hash(state);
-        // Treat S2K and ciphertext as opaque blob.
-        // XXX: This would be nicer without the allocations.
-        use crate::serialize::MarshalInto;
-        let mut a = self.s2k.to_vec().unwrap();
-        a.extend_from_slice(self.raw_ciphertext());
-        a.hash(state);
+        match &self.ciphertext {
+            Ok(c) => {
+                self.s2k.hash(state);
+                c.hash(state);
+            },
+            Err(c) => {
+                // Treat S2K and ciphertext as opaque blob.
+                // XXX: This would be nicer without the allocations.
+                use crate::serialize::MarshalInto;
+                let mut a = self.s2k.to_vec().unwrap();
+                a.extend_from_slice(c);
+                a.hash(state);
+            },
+        }
     }
 }
 
@@ -2258,7 +2273,7 @@ impl Encrypted {
                checksum: Option<mpi::SecretKeyChecksum>, ciphertext: Box<[u8]>)
         -> Self
     {
-        Self::new_raw(s2k, algo, checksum, Ok(ciphertext))
+        Self::new_raw(s2k, algo, checksum, Ok((0, ciphertext)))
     }
 
     /// Creates a new encrypted key object.
@@ -2274,14 +2289,14 @@ impl Encrypted {
             algo: sym_algo,
             aead: Some((aead_algo, aead_iv)),
             checksum: None,
-            ciphertext: Ok(ciphertext),
+            ciphertext: Ok((0, ciphertext)),
         }
     }
 
     /// Creates a new encrypted key object.
     pub(crate) fn new_raw(s2k: S2K, algo: SymmetricAlgorithm,
                           checksum: Option<mpi::SecretKeyChecksum>,
-                          ciphertext: std::result::Result<Box<[u8]>,
+                          ciphertext: std::result::Result<(usize, Box<[u8]>),
                                                           Box<[u8]>>)
         -> Self
     {
@@ -2327,7 +2342,7 @@ impl Encrypted {
     pub fn ciphertext(&self) -> Result<&[u8]> {
         self.ciphertext
             .as_ref()
-            .map(|ciphertext| &ciphertext[..])
+            .map(|(_cfb_iv_len, ciphertext)| &ciphertext[..])
             .map_err(|_| Error::MalformedPacket(
                 format!("Unknown S2K: {:?}", self.s2k)).into())
     }
@@ -2336,9 +2351,23 @@ impl Encrypted {
     /// the body of the S2K object.
     pub(crate) fn raw_ciphertext(&self) -> &[u8] {
         match self.ciphertext.as_ref() {
-            Ok(ciphertext) => &ciphertext[..],
+            Ok((_cfb_iv_len, ciphertext)) => &ciphertext[..],
             Err(s2k_ciphertext) => &s2k_ciphertext[..],
         }
+    }
+
+    /// Returns the length of the CFB IV, if used.
+    ///
+    /// In v6 key packets, we explicitly model the length of the IV,
+    /// but in Sequoia we store the IV and the ciphertext as one
+    /// block, due to how bad this was modeled in v4 key packets.
+    /// However, now that our in-core representation is less precise
+    /// to support v4, we need to track this length to uphold our
+    /// equality guarantee.
+    pub(crate) fn cfb_iv_len(&self) -> usize {
+        self.ciphertext.as_ref().ok()
+            .map(|(cfb_iv_len, _)| *cfb_iv_len)
+            .unwrap_or(0)
     }
 
     /// Decrypts the secret key material using `password`.
@@ -3189,7 +3218,8 @@ FwPoSAbbsLkNS/iNN2MDGAVYvezYn2QZ
         let mut buf = p.to_vec().unwrap();
         // Avoid first two bytes so that we don't change the
         // type and reduce the chance of changing the length.
-        let bit = i.saturating_add(2 * 8) % (buf.len() * 8);
+        if buf.len() < 3 { return true; }
+        let bit = i % ((buf.len() - 2) * 8) + 16;
         buf[bit / 8] ^= 1 << (bit % 8);
         let ok = match Packet::from_bytes(&buf) {
             Ok(q) => p != q,

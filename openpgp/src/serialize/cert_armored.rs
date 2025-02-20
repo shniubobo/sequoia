@@ -137,6 +137,14 @@ impl<'a> Encoder<'a> {
         Encoder::TSK(tsk)
     }
 
+    /// Returns the cert's primary key version.
+    fn primary_key_version(&self) -> u8 {
+        match self {
+            Encoder::Cert(cert) => cert.primary_key().key().version(),
+            Encoder::TSK(tsk) => tsk.cert.primary_key().key().version(),
+        }
+    }
+
     fn serialize_common(&self, o: &mut dyn io::Write, export: bool)
                         -> Result<()> {
         if export {
@@ -168,6 +176,13 @@ impl<'a> Encoder<'a> {
 
         let mut w =
             armor::Writer::with_headers(o, prelude, headers)?;
+
+        if self.primary_key_version() > 4 {
+            w.set_profile(crate::Profile::RFC9580)?;
+        } else {
+            w.set_profile(crate::Profile::RFC4880)?;
+        }
+
         if export {
             match self {
                 Encoder::Cert(cert) => cert.export(&mut w)?,
@@ -212,6 +227,12 @@ impl<'a> MarshalInto for Encoder<'a> {
             Self::TSK(ref tsk) => tsk.serialized_len(),
         } + 2) / 3 * 4; // base64
 
+        let crc_len = if self.primary_key_version() > 4 {
+            0
+        } else {
+            "=FUaG\n".len()
+        };
+
         let word = match self {
             Self::Cert(_) => "PUBLIC",
             Self::TSK(tsk) => if tsk.emits_secret_key_packets() {
@@ -225,7 +246,8 @@ impl<'a> MarshalInto for Encoder<'a> {
             + headers_len
             + body_len
             + (body_len + armor::LINE_LENGTH - 1) / armor::LINE_LENGTH // NLs
-            + "=FUaG\n-----END PGP ".len() + word + " KEY BLOCK-----\n".len()
+            + crc_len
+            + "-----END PGP ".len() + word + " KEY BLOCK-----\n".len()
     }
 
     fn serialize_into(&self, buf: &mut [u8]) -> Result<usize> {

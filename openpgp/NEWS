@@ -7,6 +7,17 @@
 * Changes in 2.0.0.alpha.2
 ** API changes
    - ValidKeyAmalgamation::into_key_amalgamation removed
+   - serialize::stream::Recipient::new now takes a KeyHandle
+   - serialize::stream::Recipient::keyid renamed to key_handle, now
+     returns an Option<KeyHandle>
+   - serialize::stream::Recipient::set_keyid renamed to
+     set_key_handle, now takes an Option<KeyHandle>, and is fallible
+   - serialize::stream::Recipient new now also takes a Features
+     argument
+   - serialize::stream::Recipient now only implements
+     From<ValidSubordinateKeyAmalgamation> and
+     From<ValidErasedKeyAmalgamation>
+
 
 ** New functionality
    - ValidCert::key_handle
@@ -14,10 +25,14 @@
    - ValidCert::keyid
    - ValidComponentAmalgamation::amalgamation
    - ValidKeyAmalgamation::amalgamation
+   - armor::Writer::set_profile
+   - CertBuilder::set_features
 
 ** Notable fixes
    - Generation of v6 certification approval signatures is fixed
    - Key encryption now only uses AEAD by default for v6 keys
+   - Messages using SEIPDv1 for a v6 recipient, and those using
+     SEIPDv2 for a v4 recipient are now correctly encrypted
 
 * Changes in 2.0.0.alpha.1
 ** API changes

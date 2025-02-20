@@ -19,6 +19,7 @@ use crate::types::{
     SymmetricAlgorithm,
 };
 use crate::{
+    Profile,
     Result,
     crypto::SessionKey,
 };
@@ -364,6 +365,25 @@ impl<'a> Armorer<'a, Cookie> {
                 cookie),
         })))
     }
+
+    /// Sets the version of OpenPGP to generate ASCII Armor for.
+    ///
+    /// Walks up the writer stack, looking for the next Armorer.
+    /// Configure it to use the given profile.
+    ///
+    /// This function can only be called once.  Calling it repeatedly
+    /// does nothing.
+    pub fn set_profile(stack: &mut (dyn Stackable<'a, Cookie> + Send + Sync),
+                       profile: Profile)
+    {
+        map_mut(stack, |w| match &mut w.cookie_mut().private {
+            super::Private::Armorer { set_profile, .. } => {
+                *set_profile = Some(profile);
+                false
+            },
+            _ => true, // Keep looking.
+        });
+    }
 }
 
 impl<'a, C: 'a> fmt::Debug for Armorer<'a, C> {
@@ -374,8 +394,21 @@ impl<'a, C: 'a> fmt::Debug for Armorer<'a, C> {
     }
 }
 
-impl<'a, C: 'a> io::Write for Armorer<'a, C> {
+impl<'a> io::Write for Armorer<'a, Cookie> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if bytes.len() == 0 {
+            return Ok(0);
+        }
+
+        // Lazily configure the armor writer.
+        if let Some(p) = match &mut self.cookie_mut().private {
+            super::Private::Armorer { set_profile } =>
+                set_profile.take(),
+            _ => None,
+        } {
+            let _ = self.inner.inner.set_profile(p);
+        }
+
         self.inner.write(bytes)
     }
 
@@ -384,30 +417,30 @@ impl<'a, C: 'a> io::Write for Armorer<'a, C> {
     }
 }
 
-impl<'a, C: 'a> Stackable<'a, C> for Armorer<'a, C> {
-    fn into_inner(self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
+impl<'a> Stackable<'a, Cookie> for Armorer<'a, Cookie> {
+    fn into_inner(self: Box<Self>) -> Result<Option<BoxStack<'a, Cookie>>> {
         let inner = self.inner.inner.finalize()?;
         Ok(Some(inner))
     }
-    fn pop(&mut self) -> Result<Option<BoxStack<'a, C>>> {
+    fn pop(&mut self) -> Result<Option<BoxStack<'a, Cookie>>> {
         unreachable!("Only implemented by Signer")
     }
-    fn mount(&mut self, _new: BoxStack<'a, C>) {
+    fn mount(&mut self, _new: BoxStack<'a, Cookie>) {
         unreachable!("Only implemented by Signer")
     }
-    fn inner_mut(&mut self) -> Option<&mut (dyn Stackable<'a, C> + Send + Sync)> {
+    fn inner_mut(&mut self) -> Option<&mut (dyn Stackable<'a, Cookie> + Send + Sync)> {
         Some(self.inner.inner.get_mut().as_mut())
     }
-    fn inner_ref(&self) -> Option<&(dyn Stackable<'a, C> + Send + Sync)> {
+    fn inner_ref(&self) -> Option<&(dyn Stackable<'a, Cookie> + Send + Sync)> {
         Some(self.inner.inner.get_ref().as_ref())
     }
-    fn cookie_set(&mut self, cookie: C) -> C {
+    fn cookie_set(&mut self, cookie: Cookie) -> Cookie {
         self.inner.cookie_set(cookie)
     }
-    fn cookie_ref(&self) -> &C {
+    fn cookie_ref(&self) -> &Cookie {
         self.inner.cookie_ref()
     }
-    fn cookie_mut(&mut self) -> &mut C {
+    fn cookie_mut(&mut self) -> &mut Cookie {
         self.inner.cookie_mut()
     }
     fn position(&self) -> u64 {

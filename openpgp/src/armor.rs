@@ -46,6 +46,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as base64std;
 use base64::engine::general_purpose::STANDARD_NO_PAD as base64nopad;
 
+use crate::Profile;
 use crate::packet::prelude::*;
 use crate::packet::header::{BodyLength, CTBNew, CTBOld};
 use crate::parse::Cookie;
@@ -243,6 +244,7 @@ impl Kind {
 /// A filter that applies ASCII Armor to the data written to it.
 pub struct Writer<W: Write> {
     sink: W,
+    profile: Option<Profile>,
     kind: Kind,
     stash: Vec<u8>,
     column: usize,
@@ -316,6 +318,7 @@ impl<W: Write> Writer<W> {
     {
         let mut w = Writer {
             sink: inner,
+            profile: None,
             kind,
             stash: Vec::<u8>::with_capacity(2),
             column: 0,
@@ -339,6 +342,48 @@ impl<W: Write> Writer<W> {
         }
 
         Ok(w)
+    }
+
+    /// Sets the version of OpenPGP to generate ASCII Armor for.
+    ///
+    /// This function can only be called once.  Calling it repeatedly
+    /// will return an error.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::io::{Read, Write, Cursor};
+    /// use sequoia_openpgp as openpgp;
+    /// use openpgp::armor::{Writer, Kind};
+    ///
+    /// # fn main() -> std::io::Result<()> {
+    /// let mut writer = Writer::new(Vec::new(), Kind::File)?;
+    ///
+    /// writer.set_profile(openpgp::Profile::RFC9580)?;
+    /// writer.set_profile(openpgp::Profile::RFC9580).unwrap_err();
+    /// writer.set_profile(openpgp::Profile::RFC4880).unwrap_err();
+    ///
+    /// writer.write_all(b"Hello world!")?;
+    /// let buffer = writer.finalize()?;
+    /// assert_eq!(
+    ///     String::from_utf8_lossy(&buffer),
+    ///     "-----BEGIN PGP ARMORED FILE-----
+    ///
+    /// SGVsbG8gd29ybGQh
+    /// -----END PGP ARMORED FILE-----
+    /// ");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn set_profile(&mut self, profile: Profile) -> Result<()> {
+        if self.profile.is_some() {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "profile already selected"));
+        }
+
+        self.profile = Some(profile);
+        Ok(())
     }
 
     /// Returns a reference to the inner writer.
@@ -404,14 +449,22 @@ impl<W: Write> Writer<W> {
             write!(self.sink, "{}", LINE_ENDING)?;
         }
 
-        // 24-bit CRC
-        let crc = self.crc.finalize();
-        let bytes = &crc.to_be_bytes()[1..4];
+        match self.profile {
+            None | Some(Profile::RFC4880) => {
+                // 24-bit CRC
+                let crc = self.crc.finalize();
+                let bytes = &crc.to_be_bytes()[1..4];
 
-        // CRC and footer.
-        write!(self.sink, "={}{}{}{}",
-               base64nopad.encode(&bytes),
-               LINE_ENDING, self.kind.end(), LINE_ENDING)?;
+                // Emit the CRC line.
+                write!(self.sink, "={}{}",
+                       base64nopad.encode(&bytes), LINE_ENDING)?;
+            },
+
+            Some(Profile::RFC9580) => (),
+        }
+
+        // Finally, emit the footer.
+        write!(self.sink, "{}{}", self.kind.end(), LINE_ENDING)?;
 
         self.dirty = false;
         crate::vec_truncate(&mut self.scratch, 0);
@@ -434,8 +487,14 @@ impl<W: Write> Write for Writer<W> {
         self.finalize_headers()?;
         assert!(self.dirty);
 
-        // Update CRC on the unencoded data.
-        self.crc.update(buf);
+        match self.profile {
+            None | Some(Profile::RFC4880) => {
+                // Update CRC on the unencoded data.
+                self.crc.update(buf);
+            },
+
+            Some(Profile::RFC9580) => (),
+        }
 
         let mut input = buf;
         let mut written = 0;

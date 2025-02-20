@@ -124,7 +124,8 @@ use crate::{
     Error,
     Fingerprint,
     HashAlgorithm,
-    KeyID,
+    KeyHandle,
+    Profile,
     Result,
     crypto::Password,
     crypto::SessionKey,
@@ -144,6 +145,7 @@ use crate::types::{
     CompressionAlgorithm,
     CompressionLevel,
     DataFormat,
+    Features,
     SignatureType,
     SymmetricAlgorithm,
 };
@@ -170,6 +172,9 @@ struct Cookie {
 enum Private {
     Nothing,
     Signer,
+    Armorer {
+        set_profile: Option<Profile>,
+    },
 }
 
 impl Cookie {
@@ -500,9 +505,14 @@ impl<'a> Armorer<'a> {
     /// # Ok(()) }
     pub fn build(self) -> Result<Message<'a>> {
         let level = self.inner.as_ref().cookie_ref().level;
+        let mut cookie = Cookie::new(level + 1);
+        cookie.private = Private::Armorer {
+            set_profile: None,
+        };
+
         writer::Armorer::new(
             self.inner,
-            Cookie::new(level + 1),
+            cookie,
             self.kind,
             self.headers,
         )
@@ -1288,6 +1298,11 @@ impl<'a> Signer<'a> {
     {
         assert!(!self.signers.is_empty(), "The constructor adds a signer.");
         assert!(self.inner.is_some(), "The constructor adds an inner writer.");
+
+        // Possibly configure any armor writer above us.
+        if self.signers.iter().all(|(kp, _, _)| kp.public().version() > 4) {
+            writer::Armorer::set_profile(&mut self, Profile::RFC9580);
+        }
 
         for (keypair, signer_hash, signer_salt) in self.signers.iter_mut() {
             let algo = if let Some(a) = self.hash_algo {
@@ -2138,28 +2153,51 @@ impl<'a> writer::Stackable<'a, Cookie> for Compressor<'a> {
 /// however, suggest to encrypt to all suitable subkeys.
 #[derive(Debug)]
 pub struct Recipient<'a> {
-    keyid: KeyID,
+    handle: Option<KeyHandle>,
+    features: Features,
     key: &'a Key<key::PublicParts, key::UnspecifiedRole>,
 }
 assert_send_and_sync!(Recipient<'_>);
 
-impl<'a, P, R> From<&'a Key<P, R>> for Recipient<'a>
-    where P: key::KeyParts,
-          R: key::KeyRole,
+impl<'a, P> From<ValidSubordinateKeyAmalgamation<'a, P>>
+    for Recipient<'a>
+where
+    P: key::KeyParts,
 {
-    fn from(key: &'a Key<P, R>) -> Self {
-        Self::new(key.keyid(), key.parts_as_public().role_as_unspecified())
+    fn from(ka: ValidSubordinateKeyAmalgamation<'a, P>) -> Self {
+        let features = ka.valid_cert().features()
+            .unwrap_or_else(Features::empty);
+        let handle: KeyHandle = if features.supports_seipdv2() {
+            ka.key().fingerprint().into()
+        } else {
+            ka.key().keyid().into()
+        };
+
+        use crate::cert::Preferences;
+        use crate::cert::amalgamation::ValidAmalgamation;
+        Self::new(features, handle,
+                  ka.key().parts_as_public().role_as_unspecified())
     }
 }
 
-impl<'a, P, R, R2> From<ValidKeyAmalgamation<'a, P, R, R2>>
+impl<'a, P> From<ValidErasedKeyAmalgamation<'a, P>>
     for Recipient<'a>
-    where P: key::KeyParts,
-          R: key::KeyRole,
-          R2: Copy,
+where
+    P: key::KeyParts,
 {
-    fn from(ka: ValidKeyAmalgamation<'a, P, R, R2>) -> Self {
-        ka.key().into()
+    fn from(ka: ValidErasedKeyAmalgamation<'a, P>) -> Self {
+        let features = ka.valid_cert().features()
+            .unwrap_or_else(Features::empty);
+        let handle: KeyHandle = if features.supports_seipdv2() {
+            ka.key().fingerprint().into()
+        } else {
+            ka.key().keyid().into()
+        };
+
+        use crate::cert::Preferences;
+        use crate::cert::amalgamation::ValidAmalgamation;
+        Self::new(features, handle,
+                  ka.key().parts_as_public().role_as_unspecified())
     }
 }
 
@@ -2214,7 +2252,8 @@ impl<'a> Recipient<'a> {
     ///     cert.keys().with_policy(p, None).supported().alive().revoked(false)
     ///     // Or `for_storage_encryption()`, for data at rest.
     ///     .for_transport_encryption()
-    ///     .map(|ka| Recipient::new(ka.key().keyid(), ka.key()));
+    ///     // Make an anonymous recipient.
+    ///     .map(|ka| Recipient::new(ka.valid_cert().features(), None, ka.key()));
     ///
     /// # let mut sink = vec![];
     /// let message = Message::new(&mut sink);
@@ -2222,12 +2261,17 @@ impl<'a> Recipient<'a> {
     /// # let _ = message;
     /// # Ok(()) }
     /// ```
-    pub fn new<P, R>(keyid: KeyID, key: &'a Key<P, R>) -> Recipient<'a>
-        where P: key::KeyParts,
-              R: key::KeyRole,
+    pub fn new<F, H, P, R>(features: F, handle: H, key: &'a Key<P, R>)
+                           -> Recipient<'a>
+    where
+        F: Into<Option<Features>>,
+        H: Into<Option<KeyHandle>>,
+        P: key::KeyParts,
+        R: key::KeyRole,
     {
         Recipient {
-            keyid,
+            features: features.into().unwrap_or_else(Features::sequoia),
+            handle: handle.into(),
             key: key.parts_as_public().role_as_unspecified(),
         }
     }
@@ -2275,15 +2319,19 @@ impl<'a> Recipient<'a> {
     ///     .map(Into::into)
     ///     .collect::<Vec<Recipient>>();
     ///
-    /// assert_eq!(recipients[0].keyid(),
-    ///            &"8BD8 8E94 C0D2 0333".parse()?);
+    /// assert_eq!(recipients[0].key_handle().unwrap(),
+    ///            "8BD8 8E94 C0D2 0333".parse()?);
     /// # Ok(()) }
     /// ```
-    pub fn keyid(&self) -> &KeyID {
-        &self.keyid
+    pub fn key_handle(&self) -> Option<KeyHandle> {
+        self.handle.clone()
     }
 
-    /// Sets the recipient keyid.
+    /// Sets the recipient key ID or fingerprint.
+    ///
+    /// When setting the recipient for a v6 key, either `None` or a
+    /// fingerprint must be supplied.  Returns
+    /// [`Error::InvalidOperation`] if a key ID is given instead.
     ///
     /// # Examples
     ///
@@ -2291,7 +2339,7 @@ impl<'a> Recipient<'a> {
     /// # fn main() -> sequoia_openpgp::Result<()> {
     /// use std::io::Write;
     /// use sequoia_openpgp as openpgp;
-    /// use openpgp::KeyID;
+    /// use openpgp::{KeyHandle, KeyID};
     /// use openpgp::cert::prelude::*;
     /// use openpgp::serialize::stream::{
     ///     Recipient, Message, Encryptor,
@@ -2328,7 +2376,11 @@ impl<'a> Recipient<'a> {
     ///     .for_transport_encryption()
     ///     .map(|ka| Recipient::from(ka)
     ///         // Set the recipient keyid to the wildcard id.
-    ///         .set_keyid(KeyID::wildcard())
+    ///         .set_key_handle(None)
+    ///             .expect("always safe")
+    ///         // Same, but explicit.  Don't do this.
+    ///         .set_key_handle(KeyHandle::KeyID(KeyID::wildcard()))
+    ///             .expect("safe for v4 recipient")
     ///     );
     ///
     /// # let mut sink = vec![];
@@ -2337,9 +2389,20 @@ impl<'a> Recipient<'a> {
     /// # let _ = message;
     /// # Ok(()) }
     /// ```
-    pub fn set_keyid(mut self, keyid: KeyID) -> Self {
-        self.keyid = keyid;
-        self
+    pub fn set_key_handle<H>(mut self, handle: H) -> Result<Self>
+    where
+        H: Into<Option<KeyHandle>>,
+    {
+        let handle = handle.into();
+        if self.key.version() == 6
+            && matches!(handle, Some(KeyHandle::KeyID(_)))
+        {
+            return Err(Error::InvalidOperation(
+                "need a fingerprint for v6 recipient key".into()).into());
+        }
+
+        self.handle = handle;
+        Ok(self)
     }
 }
 
@@ -2610,7 +2673,9 @@ impl<'a, 'b> Encryptor<'a, 'b> {
     ///     Packet::from(p).serialize(&mut message)?;
     /// }
     /// let message = Encryptor::with_session_key(
-    ///     message, algo.unwrap_or_default(), sk)?.build()?;
+    ///     message, algo.unwrap_or_default(), sk)?
+    ///     .aead_algo(Default::default())
+    ///     .build()?;
     /// let mut w = LiteralWriter::new(message).build()?;
     /// w.write_all(b"Encrypted reply")?;
     /// w.finalize()?;
@@ -2982,11 +3047,7 @@ impl<'a, 'b> Encryptor<'a, 'b> {
             // See whether all recipients support SEIPDv2.
             if ! self.recipients.is_empty()
                 && self.recipients.iter().all(|r| {
-                    // XXX: We should be looking at the features, but
-                    // we don't have that context here.  Instead, we
-                    // infer support for SEIPDv2 by looking at the key
-                    // version.
-                    r.key.version() == 6
+                    r.features.supports_seipdv2()
                 })
             {
                 // This prefers OCB if supported.  OCB is MTI.
@@ -3001,6 +3062,9 @@ impl<'a, 'b> Encryptor<'a, 'b> {
         }
 
         let aead = if let Some(algo) = self.aead_algo {
+            // Configure any armor writer above us.
+            writer::Armorer::set_profile(&mut self, Profile::RFC9580);
+
             let mut salt = [0u8; 32];
             crypto::random(&mut salt)?;
             Some(AEADParameters {
@@ -3029,14 +3093,16 @@ impl<'a, 'b> Encryptor<'a, 'b> {
         // Write the PKESK packet(s).
         for recipient in self.recipients.iter() {
             if aead.is_some() {
-                let pkesk =
+                let mut pkesk =
                     PKESK6::for_recipient(&sk, recipient.key)?;
-                // XXX: handle anonymous recipient/ different recipient fps
+                pkesk.set_recipient(recipient.key_handle()
+                                    .map(TryInto::try_into)
+                                    .transpose()?);
                 Packet::from(pkesk).serialize(&mut inner)?;
             } else {
                 let mut pkesk =
                     PKESK3::for_recipient(self.sym_algo, &sk, recipient.key)?;
-                pkesk.set_recipient(Some(recipient.keyid.clone()));
+                pkesk.set_recipient(recipient.key_handle().map(Into::into));
                 Packet::PKESK(pkesk.into()).serialize(&mut inner)?;
             }
         }
@@ -3565,6 +3631,8 @@ mod test {
     fn test_aead_messages_v(algo: AEADAlgorithm, profile: Profile)
                             -> Result<()>
     {
+        eprintln!("Testing with {:?}", profile);
+
         if ! algo.is_supported() {
             eprintln!("Skipping because {} is not supported.", algo);
             return Ok(());
@@ -4239,5 +4307,90 @@ mod test {
 
             Ok(sink)
         }
+    }
+
+    /// Encrypts to a v4 and a v6 recipient using SEIPDv1.
+    #[test]
+    fn mixed_recipients_seipd1() -> Result<()> {
+        let alice = CertBuilder::general_purpose(Some("alice"))
+            .set_profile(Profile::RFC9580)?
+            .generate()?.0;
+        let bob = CertBuilder::general_purpose(Some("bob"))
+            .set_profile(Profile::RFC4880)?
+            .set_features(Features::empty().set_seipdv1())?
+            .generate()?.0;
+        mixed_recipients_intern(alice, bob, 1)
+    }
+
+    /// Encrypts to a v4 and a v6 recipient using SEIPDv2.
+    #[test]
+    fn mixed_recipients_seipd2() -> Result<()> {
+        let alice = CertBuilder::general_purpose(Some("alice"))
+            .set_profile(Profile::RFC9580)?
+            .generate()?.0;
+        let bob = CertBuilder::general_purpose(Some("bob"))
+            .set_profile(Profile::RFC4880)?
+            .generate()?.0;
+        mixed_recipients_intern(alice, bob, 2)
+    }
+
+    fn mixed_recipients_intern(alice: Cert, bob: Cert, seipdv: u8)
+                               -> Result<()>
+    {
+        use crate::policy::StandardPolicy;
+        use crate::parse::stream::{
+            DecryptorBuilder,
+            test::VHelper,
+        };
+
+        let p = StandardPolicy::new();
+        let recipients = [&alice, &bob].into_iter().flat_map(
+            |c| c.keys().with_policy(&p, None).for_storage_encryption());
+
+        let mut sink = vec![];
+        let message = Message::new(&mut sink);
+        let message =
+            Encryptor::for_recipients(message, recipients)
+            .build()?;
+        let mut message = LiteralWriter::new(message).build()?;
+        message.write_all(b"Hello world.")?;
+        message.finalize()?;
+
+        for key in [alice, bob] {
+            eprintln!("Decrypting with key version {}",
+                      key.primary_key().key().version());
+            let h = VHelper::for_decryption(0, 0, 0, 0, Vec::new(),
+                                            vec![key], Vec::new());
+            let mut d = DecryptorBuilder::from_bytes(&sink)?
+                .with_policy(&p, None, h)?;
+            assert!(d.message_processed());
+
+            let mut content = Vec::new();
+            d.read_to_end(&mut content).unwrap();
+            assert_eq!(&b"Hello world."[..], &content[..]);
+
+            use Packet::*;
+            match seipdv {
+                1 => d.helper_ref().packets.iter().for_each(
+                    |p| match p {
+                        PKESK(p) => assert_eq!(p.version(), 3),
+                        SKESK(p) => assert_eq!(p.version(), 4),
+                        SEIP(p) => assert_eq!(p.version(), 1),
+                        _ => (),
+                    }),
+
+                2 => d.helper_ref().packets.iter().for_each(
+                    |p| match p {
+                        PKESK(p) => assert_eq!(p.version(), 6),
+                        SKESK(p) => assert_eq!(p.version(), 6),
+                        SEIP(p) => assert_eq!(p.version(), 2),
+                        _ => (),
+                    }),
+
+                _ => unreachable!(),
+            }
+        }
+
+        Ok(())
     }
 }
