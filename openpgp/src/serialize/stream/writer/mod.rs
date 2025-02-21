@@ -142,28 +142,37 @@ impl <'a, C> Stackable<'a, C> for BoxStack<'a, C> {
 
 /// Maps a function over the stack of writers.
 #[allow(dead_code)]
-pub(crate) fn map<C, F>(head: &(dyn Stackable<C> + Send + Sync), mut fun: F)
-    where F: FnMut(&(dyn Stackable<C> + Send + Sync)) -> bool {
+pub(crate) fn map<C, F, T>(head: &(dyn Stackable<C> + Send + Sync),
+                           mut fun: F) -> Option<T>
+where
+    F: FnMut(&(dyn Stackable<C> + Send + Sync)) -> Option<T>,
+{
     let mut ow = Some(head);
     while let Some(w) = ow {
-        if ! fun(w) {
-            break;
+        if let Some(r) = fun(w) {
+            return Some(r);
         }
         ow = w.inner_ref()
     }
+
+    None
 }
 
 /// Maps a function over the stack of mutable writers.
 #[allow(dead_code)]
-pub(crate) fn map_mut<C, F>(head: &mut (dyn Stackable<C> + Send + Sync), mut fun: F)
-    where F: FnMut(&mut (dyn Stackable<C> + Send + Sync)) -> bool {
+pub(crate) fn map_mut<C, F, T>(head: &mut (dyn Stackable<C> + Send + Sync),
+                               mut fun: F) -> Option<T>
+where F: FnMut(&mut (dyn Stackable<C> + Send + Sync)) -> Option<T>
+{
     let mut ow = Some(head);
     while let Some(w) = ow {
-        if ! fun(w) {
-            break;
+        if let Some(r) = fun(w) {
+            return Some(r);
         }
         ow = w.inner_mut()
     }
+
+    None
 }
 
 /// Dumps the writer stack.
@@ -173,7 +182,7 @@ pub(crate) fn dump<C>(head: &(dyn Stackable<C> + Send + Sync)) {
     map(head, |w| {
         eprintln!("{}: {:?}", depth, w);
         depth += 1;
-        true
+        Some(())
     });
 }
 
@@ -379,9 +388,9 @@ impl<'a> Armorer<'a, Cookie> {
         map_mut(stack, |w| match &mut w.cookie_mut().private {
             super::Private::Armorer { set_profile, .. } => {
                 *set_profile = Some(profile);
-                false
+                Some(())
             },
-            _ => true, // Keep looking.
+            _ => None, // Keep looking.
         });
     }
 }
@@ -612,12 +621,12 @@ mod test {
 
             w.write_all(b"be happy").unwrap();
             let mut count = 0;
-            map_mut(w.as_mut(), |g| {
+            map_mut(w.as_mut(), |g| -> Option<()> {
                 let new = Cookie::new(0);
                 let old = g.cookie_set(new);
                 assert_eq!(old.level, 1);
                 count += 1;
-                true
+                None
             });
             assert_eq!(count, 1);
             assert_eq!(w.as_ref().cookie_ref().level, 0);
@@ -636,10 +645,10 @@ mod test {
             dump(w.as_ref());
 
             let mut count = 0;
-            map(w.as_ref(), |g| {
+            map(w.as_ref(), |g| -> Option<()> {
                 assert_eq!(g.cookie_ref().level, 0);
                 count += 1;
-                true
+                None
             });
             assert_eq!(count, 2);
         }

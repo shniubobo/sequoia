@@ -112,6 +112,14 @@ mod for_each_artifact {
                 return Ok(());
             };
 
+            if ! p.primary_key().key().pk_algo().is_supported() {
+                eprintln!("Skipping {} because we don't support {}",
+                          src.display(),
+                          p.primary_key().key().pk_algo());
+                return Ok(());
+            }
+
+
             let mut v = Vec::new();
             p.as_tsk().serialize(&mut v)?;
             let q = openpgp::Cert::from_bytes(&v)?;

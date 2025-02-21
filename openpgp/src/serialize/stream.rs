@@ -68,7 +68,7 @@
 //!
 //! This example demonstrates how to create the most common OpenPGP
 //! message structure (see [Section 11.3 of RFC 4880]).  The plaintext
-//! is first signed, then encrypted, and finally ASCII armored.
+//! is first signed, then padded, encrypted, and finally ASCII armored.
 //!
 //! ```
 //! # fn main() -> sequoia_openpgp::Result<()> {
@@ -77,7 +77,7 @@
 //! use openpgp::policy::StandardPolicy;
 //! use openpgp::cert::prelude::*;
 //! use openpgp::serialize::stream::{
-//!     Message, Armorer, Encryptor, Signer, LiteralWriter,
+//!     Message, Armorer, Encryptor, Signer, LiteralWriter, padding::Padder,
 //! };
 //! # use openpgp::parse::Parse;
 //!
@@ -104,6 +104,7 @@
 //! let message = Armorer::new(message).build()?;
 //! let message = Encryptor::for_recipients(message, recipients).build()?;
 //! // Reduce metadata leakage by concealing the message size.
+//! let message = Padder::new(message).build()?;
 //! let message = Signer::new(message, signing_keypair)?
 //!     // Prevent Surreptitious Forwarding.
 //!     .add_intended_recipient(&recipient)
@@ -168,12 +169,24 @@ struct Cookie {
     private: Private,
 }
 
+impl Cookie {
+    /// Sets the private data part of the cookie.
+    pub fn set_private(mut self, p: Private) -> Self {
+        self.private = p;
+        self
+    }
+}
+
+/// An enum to store writer-specific data.
 #[derive(Debug)]
 enum Private {
     Nothing,
     Signer,
     Armorer {
         set_profile: Option<Profile>,
+    },
+    Encryptor {
+        profile: Profile,
     },
 }
 
@@ -2709,7 +2722,7 @@ impl<'a, 'b> Encryptor<'a, 'b> {
     ///         for pkesk in pkesks { // Try each PKESK until we succeed.
     ///             for ka in self.key.keys().with_policy(p, None)
     ///                 .supported().unencrypted_secret()
-    ///                 .key_handles2(pkesk.recipient())
+    ///                 .key_handles(pkesk.recipient())
     ///                 .for_storage_encryption().for_transport_encryption()
     ///             {
     ///                 let mut pair = ka.key().clone().into_keypair().unwrap();
@@ -3146,7 +3159,9 @@ impl<'a, 'b> Encryptor<'a, 'b> {
 
             writer::AEADEncryptor::new(
                 inner,
-                Cookie::new(level),
+                Cookie::new(level).set_private(Private::Encryptor {
+                    profile: Profile::RFC9580,
+                }),
                 seip.symmetric_algo(),
                 seip.aead(),
                 aead.chunk_size,
@@ -3167,7 +3182,10 @@ impl<'a, 'b> Encryptor<'a, 'b> {
                 self.sym_algo,
                 &sk,
             )?.into();
-            self.cookie = Cookie::new(level);
+            self.cookie = Cookie::new(level)
+                .set_private(Private::Encryptor {
+                    profile: Profile::RFC4880,
+                });
 
             // Write the initialization vector, and the quick-check
             // bytes.  The hash for the MDC must include the

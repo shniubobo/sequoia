@@ -844,7 +844,7 @@ impl<P, R> Key<P, R>
                 ikm[1 * 56..2 * 56].copy_from_slice(&U[..]);
                 ikm[2 * 56..3 * 56].copy_from_slice(&S[..]);
                 let mut kek = vec![0; wrap_algo.key_size()?].into();
-                Backend::hkdf_sha256(&ikm, None, b"OpenPGP X448", &mut kek)?;
+                Backend::hkdf_sha512(&ikm, None, b"OpenPGP X448", &mut kek)?;
 
                 let esk = aes_key_wrap(wrap_algo, kek.as_protected(),
                                        data.as_protected())?;

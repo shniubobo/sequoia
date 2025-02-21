@@ -474,7 +474,7 @@ impl SBVersion {
 /// }
 ///
 /// // Merge in the new signatures.
-/// let cert = cert.insert_packets2(sigs.into_iter().map(Packet::from))?.0;
+/// let cert = cert.insert_packets(sigs.into_iter().map(Packet::from))?.0;
 /// # assert_eq!(cert.bad_signatures().count(), 0);
 /// # Ok(())
 /// # }
@@ -1092,7 +1092,7 @@ impl SignatureBuilder {
     ///     .set_key_flags(KeyFlags::empty().set_transport_encryption())?
     ///     .sign_subkey_binding(&mut pk_signer, None, &subkey)?;
     ///
-    /// let cert = cert.insert_packets2(vec![Packet::SecretSubkey(subkey),
+    /// let cert = cert.insert_packets(vec![Packet::SecretSubkey(subkey),
     ///                                    sig.into()])?.0;
     ///
     /// assert_eq!(cert.with_policy(p, None)?.keys().count(), 2);
@@ -1234,7 +1234,7 @@ impl SignatureBuilder {
     ///             .sign_primary_key_binding(&mut sk_signer, &pk, &subkey)?)?
     ///     .sign_subkey_binding(&mut pk_signer, None, &subkey)?;
     ///
-    /// let cert = cert.insert_packets2(vec![Packet::SecretSubkey(subkey),
+    /// let cert = cert.insert_packets(vec![Packet::SecretSubkey(subkey),
     ///                                    sig.into()])?.0;
     ///
     /// assert_eq!(cert.with_policy(p, None)?.keys().count(), 2);
@@ -1369,7 +1369,7 @@ impl SignatureBuilder {
     /// // Verify it.
     /// sig.verify_user_attribute_binding(signer.public(), pk, &ua)?;
     ///
-    /// let cert = cert.insert_packets2(vec![Packet::from(ua), sig.into()])?.0;
+    /// let cert = cert.insert_packets(vec![Packet::from(ua), sig.into()])?.0;
     /// assert_eq!(cert.with_policy(p, None)?.user_attributes().count(), 1);
     /// # Ok(())
     /// # }
@@ -4336,7 +4336,7 @@ mod test {
 
             // Merge it and check that the new binding signature is
             // the current one.
-            alice = alice.insert_packets2(new_sig.clone())?.0;
+            alice = alice.insert_packets(new_sig.clone())?.0;
             let sig = alice.with_policy(p, None)?.userids().next().unwrap()
                 .binding_signature();
             assert_eq!(sig, &new_sig);

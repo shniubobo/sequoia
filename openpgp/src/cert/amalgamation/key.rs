@@ -1262,7 +1262,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #         .sign_direct_key(
     /// #             &mut alice_signer,
     /// #             bob.primary_key().key())?;
-    /// #     bob = bob.insert_packets2(certification)?.0;
+    /// #     bob = bob.insert_packets(certification)?.0;
     /// #
     /// #     let ka = bob.primary_key();
     /// #     assert_eq!(
@@ -1452,7 +1452,7 @@ impl<'a, P, R, R2> KeyAmalgamation<'a, P, R, R2>
     /// #     .sign_direct_key(
     /// #         &mut alice_signer,
     /// #         bob.primary_key().key())?;
-    /// # let bob = bob.insert_packets2(certification)?.0;
+    /// # let bob = bob.insert_packets(certification)?.0;
     /// let ka = bob.primary_key();
     ///
     /// let revs = ka.valid_third_party_revocations_by_key(
@@ -2469,7 +2469,7 @@ impl<'a, P> ValidPrimaryKeyAmalgamation<'a, P>
     ///     .key().clone().parts_into_secret()?.into_keypair()?;
     ///
     /// let sigs = vc.primary_key().set_expiration_time(&mut signer, Some(t))?;
-    /// let cert = cert.insert_packets2(sigs)?.0;
+    /// let cert = cert.insert_packets(sigs)?.0;
     ///
     /// // The primary key isn't expired yet.
     /// let vc = cert.with_policy(p, None)?;
@@ -2572,7 +2572,7 @@ impl<'a, P> ValidSubordinateKeyAmalgamation<'a, P>
     ///                                                 Some(t))?);
     ///     }
     /// }
-    /// let cert = cert.insert_packets2(sigs)?.0;
+    /// let cert = cert.insert_packets(sigs)?.0;
     ///
     /// // They aren't expired yet.
     /// let vc = cert.with_policy(p, None)?;
@@ -2812,7 +2812,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
     ///                                                 Some(t))?);
     ///     }
     /// }
-    /// let cert = cert.insert_packets2(sigs)?.0;
+    /// let cert = cert.insert_packets(sigs)?.0;
     ///
     /// // They aren't expired yet.
     /// let vc = cert.with_policy(p, None)?;
@@ -3389,7 +3389,7 @@ mod test {
                     .map(Into::into)
             })
             .collect::<Vec<Packet>>();
-        let cert = cert.insert_packets2(sigs).unwrap().0;
+        let cert = cert.insert_packets(sigs).unwrap().0;
 
         for ka in cert.keys().with_policy(p, None) {
             assert!(ka.alive().is_ok());
@@ -3463,7 +3463,7 @@ mod test {
             s.typ() == SignatureType::DirectKey
         }));
 
-        let cert = cert.insert_packets2(sigs)?.0;
+        let cert = cert.insert_packets(sigs)?.0;
 
         // Make sure the primary key *and* all subkeys expire in a
         // week: the subkeys inherit the KeyExpirationTime subpacket
@@ -3551,7 +3551,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(certification.clone())?.0;
+        let carol = carol.insert_packets(certification.clone())?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3591,7 +3591,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(certification.clone())?.0;
+        let carol = carol.insert_packets(certification.clone())?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3636,7 +3636,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(certification.clone())?.0;
+        let carol = carol.insert_packets(certification.clone())?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3682,7 +3682,7 @@ mod test {
             .sign_direct_key(
                 &mut bob_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(certification.clone())?.0;
+        let carol = carol.insert_packets(certification.clone())?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3744,7 +3744,7 @@ mod test {
             .sign_direct_key(
                 &mut bob_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(certification.clone())?.0;
+        let carol = carol.insert_packets(certification.clone())?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3866,7 +3866,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(rev)?.0;
+        let carol = carol.insert_packets(rev)?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3894,7 +3894,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(rev)?.0;
+        let carol = carol.insert_packets(rev)?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3924,7 +3924,7 @@ mod test {
             .sign_direct_key(
                 &mut alice_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(rev)?.0;
+        let carol = carol.insert_packets(rev)?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3956,7 +3956,7 @@ mod test {
             .sign_direct_key(
                 &mut bob_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(rev)?.0;
+        let carol = carol.insert_packets(rev)?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();
@@ -3996,7 +3996,7 @@ mod test {
             .sign_direct_key(
                 &mut bob_signer,
                 carol.primary_key().key())?;
-        let carol = carol.insert_packets2(rev)?.0;
+        let carol = carol.insert_packets(rev)?.0;
 
         // Check that it is returned.
         let ka = carol.primary_key();

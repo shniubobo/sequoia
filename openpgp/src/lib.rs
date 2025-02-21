@@ -209,7 +209,7 @@ fn frozen_time() -> std::time::SystemTime {
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Profiles select versions of the OpenPGP standard.
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Profile {
     /// RFC9580, published in 2024, defines "v6" OpenPGP.
