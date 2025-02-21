@@ -1,3 +1,4 @@
+// Test.
 //! OpenPGP data types and associated machinery.
 //!
 //! This crate aims to provide a complete implementation of OpenPGP as
