@@ -18,6 +18,7 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
+use std::fmt::Debug;
 use std::fs::File;
 use std::str;
 
@@ -35,6 +36,7 @@ use openpgp::parse::{
     Parse,
     PacketParserResult, PacketParser,
 };
+use buffered_reader::BufferedReader;
 use openpgp::serialize::Serialize;
 use openpgp::serialize::stream::{
     Message, LiteralWriter, Encryptor,
@@ -357,6 +359,16 @@ impl AutocryptHeaders {
     /// emails, then only the first mail is considered.
     pub fn from_reader<R: io::Read>(reader: R) -> Result<Self> {
         Self::from_lines(BufReader::new(reader).lines())
+    }
+
+    /// Parses an autocrypt header.
+    ///
+    /// `reader` should be all of a mail's headers.
+    pub fn from_buffered_reader<R, C>(mut reader: R) -> Result<Self>
+    where R: BufferedReader<C>,
+          C: Debug + Send + Sync
+    {
+        Self::from_bytes(reader.data_eof()?)
     }
 }
 
