@@ -926,6 +926,40 @@ mod test {
         assert_eq!(ac, ac2);
     }
 
+    #[test]
+    fn parse_from_buffered_reader() {
+        // This test relies on 'from_bytes(...)' parser which, in case of a bug,
+        // may cause this test to fail as well.
+        let ac1_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/hpk.txt")[..]
+        )
+        .unwrap();
+        let ac2_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/vincent.txt")[..]
+        )
+        .unwrap();
+        let ac3_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/patrick_unfolded.txt")[..]
+        )
+        .unwrap();
+
+        let ac1_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/hpk.txt").unwrap()
+        )
+        .unwrap();
+        let ac2_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/vincent.txt").unwrap()
+        )
+        .unwrap();
+        let ac3_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/patrick_unfolded.txt").unwrap()
+        )
+        .unwrap();
+
+        assert_eq!(ac1_bytes, ac1_br);
+        assert_eq!(ac2_bytes, ac2_br);
+        assert_eq!(ac3_bytes, ac3_br);
+    }
 
     #[test]
     fn decode_gossip() {
