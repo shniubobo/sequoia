@@ -1524,7 +1524,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// ```
     ///
     /// [`KeyHandle`s]: super::super::super::KeyHandle
-    /// [`key_handles`]: ValidKeyAmalgamationIter::key_handles2()
+    /// [`key_handles`]: ValidKeyAmalgamationIter::key_handles()
     /// [`KeyHandle::aliases`]: super::super::super::KeyHandle::aliases()
     pub fn key_handle<H>(mut self, h: H) -> Self
         where H: Into<KeyHandle>

@@ -34,9 +34,6 @@ use crate::Result;
 ///   [`KeyID`]: crate::KeyID
 ///   [`KeyHandle`]: crate::KeyHandle
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// ```rust

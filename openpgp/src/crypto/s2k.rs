@@ -30,9 +30,6 @@ use quickcheck::{Arbitrary, Gen};
 ///   [Section 3.7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.7
 ///   [`SKESK`]: crate::packet::SKESK
 ///   [`key::Encrypted`]: crate::packet::key::Encrypted
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum S2K {

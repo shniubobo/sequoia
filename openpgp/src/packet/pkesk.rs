@@ -37,9 +37,6 @@ pub use v6::PKESK6;
 /// using the [streaming serializer], or parsing an encrypted message
 /// using the [`PacketParser`].
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// [`SEIP`]: crate::packet::SEIP
 /// [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
 /// [streaming serializer]: crate::serialize::stream

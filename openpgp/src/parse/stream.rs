@@ -242,9 +242,6 @@ assert_send_and_sync!(GoodChecksum<'_>);
 ///
 ///   [`Error`]: super::super::Error
 ///   [`From`]: std::convert::From
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Debug)]
 pub enum VerificationError<'a> {

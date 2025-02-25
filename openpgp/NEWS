@@ -38,6 +38,8 @@
    - stream::padding::Padder now emits padding packets when creating
      RFC9580 messages, and nothing when creating RFC4880 messages
    - X448 encryption and decryption fixed
+   - Sequoia no longer ignores formatting errors when reading secret
+     keys.  This reverts a change introduced with version 1.17.0.
 
 * Changes in 2.0.0.alpha.1
 ** API changes

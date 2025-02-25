@@ -36,9 +36,6 @@ pub use v6::OnePassSig6;
 /// message using the [streaming serializer], or parsing a signed
 /// message using the [`PacketParser`].
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// [One-Pass Signature Packet]: https://www.rfc-editor.org/rfc/rfc9580.html#name-one-pass-signature-packet-t
 /// [`PacketParser`]: crate::parse::PacketParser
 /// [streaming serializer]: crate::serialize::stream

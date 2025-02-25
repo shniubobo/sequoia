@@ -8,7 +8,8 @@ use std::time;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
-use crate::crypto::{mpi, hash::Hash, mem::Protected};
+use crate::Error;
+use crate::crypto::{mpi, hash::Hash, mem::Protected, KeyPair};
 use crate::packet::key::{
     KeyParts,
     KeyRole,
@@ -179,6 +180,137 @@ where
     P: KeyParts,
     R: KeyRole,
 {
+    /// Gets the `Key`'s creation time.
+    pub fn creation_time(&self) -> time::SystemTime {
+        self.common.creation_time()
+    }
+
+    /// Gets the `Key`'s creation time without converting it to a
+    /// system time.
+    ///
+    /// This conversion may truncate the time to signed 32-bit time_t.
+    pub(crate) fn creation_time_raw(&self) -> Timestamp {
+        self.common.creation_time_raw()
+    }
+
+    /// Sets the `Key`'s creation time.
+    ///
+    /// `timestamp` is converted to OpenPGP's internal format,
+    /// [`Timestamp`]: a 32-bit quantity containing the number of
+    /// seconds since the Unix epoch.
+    ///
+    /// `timestamp` is silently rounded to match the internal
+    /// resolution.  An error is returned if `timestamp` is out of
+    /// range.
+    ///
+    /// [`Timestamp`]: crate::types::Timestamp
+    pub fn set_creation_time<T>(&mut self, timestamp: T)
+                                -> Result<time::SystemTime>
+    where T: Into<time::SystemTime>
+    {
+        self.common.set_creation_time(timestamp)
+    }
+
+    /// Gets the public key algorithm.
+    pub fn pk_algo(&self) -> PublicKeyAlgorithm {
+        self.common.pk_algo()
+    }
+
+    /// Sets the public key algorithm.
+    ///
+    /// Returns the old public key algorithm.
+    pub fn set_pk_algo(&mut self, pk_algo: PublicKeyAlgorithm)
+                       -> PublicKeyAlgorithm
+    {
+        self.common.set_pk_algo(pk_algo)
+    }
+
+    /// Returns a reference to the `Key`'s MPIs.
+    pub fn mpis(&self) -> &mpi::PublicKey {
+        self.common.mpis()
+    }
+
+    /// Returns a mutable reference to the `Key`'s MPIs.
+    pub fn mpis_mut(&mut self) -> &mut mpi::PublicKey {
+        self.common.mpis_mut()
+    }
+
+    /// Sets the `Key`'s MPIs.
+    ///
+    /// This function returns the old MPIs, if any.
+    pub fn set_mpis(&mut self, mpis: mpi::PublicKey) -> mpi::PublicKey {
+        self.common.set_mpis(mpis)
+    }
+
+    /// Returns whether the `Key` contains secret key material.
+    pub fn has_secret(&self) -> bool {
+        self.common.has_secret()
+    }
+
+    /// Returns whether the `Key` contains unencrypted secret key
+    /// material.
+    ///
+    /// This returns false if the `Key` doesn't contain any secret key
+    /// material.
+    pub fn has_unencrypted_secret(&self) -> bool {
+        self.common.has_unencrypted_secret()
+    }
+
+    /// Returns `Key`'s secret key material, if any.
+    pub fn optional_secret(&self) -> Option<&SecretKeyMaterial> {
+        self.common.optional_secret()
+    }
+
+    /// Computes and returns the `Key`'s `Fingerprint` and returns it as
+    /// a `KeyHandle`.
+    ///
+    /// See [Section 12.2 of RFC 4880].
+    ///
+    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    pub fn key_handle(&self) -> KeyHandle {
+        self.fingerprint().into()
+    }
+
+    /// Computes and returns the `Key`'s `Fingerprint`.
+    ///
+    /// See [Key IDs and Fingerprints].
+    ///
+    /// [Key IDs and Fingerprints]: https://www.rfc-editor.org/rfc/rfc9580.html#key-ids-fingerprints
+    pub fn fingerprint(&self) -> Fingerprint {
+        let fp = self.common.fingerprint.get_or_init(|| {
+            let mut h = HashAlgorithm::SHA256.context()
+                .expect("SHA256 is MTI for RFC9580")
+            // v6 fingerprints are computed the same way a key is
+            // hashed for v6 signatures.
+                .for_signature(6);
+
+            self.hash(&mut h).expect("v6 key hashing is infallible");
+
+            let mut digest = [0u8; 32];
+            let _ = h.digest(&mut digest);
+            Fingerprint::V6(digest)
+        });
+
+        // Currently, it could happen that a Key4 has its fingerprint
+        // computed, and is then converted to a Key6.  That is only
+        // possible within this crate, and should not happen.  Assert
+        // that.  The better way to handle this is to have a CommonKey
+        // struct which both Key4 and Key6 use, so that a Key6 does
+        // not start out as a Key4, preventing this issue.
+        debug_assert!(matches!(fp, Fingerprint::V6(_)));
+
+        fp.clone()
+    }
+
+    /// Computes and returns the `Key`'s `Key ID`.
+    ///
+    /// See [Section 12.2 of RFC 4880].
+    ///
+    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    pub fn keyid(&self) -> KeyID {
+        self.fingerprint().into()
+    }
+
     /// Creates a v6 key from a v4 key.  Used internally in
     /// constructors.
     pub(crate) fn from_common(common: Key4<P, R>) -> Self {
@@ -441,141 +573,24 @@ where R: KeyRole,
                 x: private_key.into(),
             }.into())
     }
-}
 
-impl<P, R> Key6<P, R>
-where P: KeyParts,
-      R: KeyRole,
-{
-    /// Gets the `Key`'s creation time.
-    pub fn creation_time(&self) -> time::SystemTime {
-        self.common.creation_time()
-    }
-
-    /// Gets the `Key`'s creation time without converting it to a
-    /// system time.
+    /// Creates a new key pair from a secret `Key` with an unencrypted
+    /// secret key.
     ///
-    /// This conversion may truncate the time to signed 32-bit time_t.
-    pub(crate) fn creation_time_raw(&self) -> Timestamp {
-        self.common.creation_time_raw()
-    }
-
-    /// Sets the `Key`'s creation time.
+    /// # Errors
     ///
-    /// `timestamp` is converted to OpenPGP's internal format,
-    /// [`Timestamp`]: a 32-bit quantity containing the number of
-    /// seconds since the Unix epoch.
-    ///
-    /// `timestamp` is silently rounded to match the internal
-    /// resolution.  An error is returned if `timestamp` is out of
-    /// range.
-    ///
-    /// [`Timestamp`]: crate::types::Timestamp
-    pub fn set_creation_time<T>(&mut self, timestamp: T)
-                                -> Result<time::SystemTime>
-    where T: Into<time::SystemTime>
-    {
-        self.common.set_creation_time(timestamp)
-    }
+    /// Fails if the secret key is encrypted.  You can use
+    /// [`Key::decrypt_secret`] to decrypt a key.
+    pub fn into_keypair(self) -> Result<KeyPair> {
+        let (key, secret) = self.take_secret();
+        let secret = match secret {
+            SecretKeyMaterial::Unencrypted(secret) => secret,
+            SecretKeyMaterial::Encrypted(_) =>
+                return Err(Error::InvalidArgument(
+                    "secret key material is encrypted".into()).into()),
+        };
 
-    /// Gets the public key algorithm.
-    pub fn pk_algo(&self) -> PublicKeyAlgorithm {
-        self.common.pk_algo()
-    }
-
-    /// Sets the public key algorithm.
-    ///
-    /// Returns the old public key algorithm.
-    pub fn set_pk_algo(&mut self, pk_algo: PublicKeyAlgorithm)
-                       -> PublicKeyAlgorithm
-    {
-        self.common.set_pk_algo(pk_algo)
-    }
-
-    /// Returns a reference to the `Key`'s MPIs.
-    pub fn mpis(&self) -> &mpi::PublicKey {
-        self.common.mpis()
-    }
-
-    /// Returns a mutable reference to the `Key`'s MPIs.
-    pub fn mpis_mut(&mut self) -> &mut mpi::PublicKey {
-        self.common.mpis_mut()
-    }
-
-    /// Sets the `Key`'s MPIs.
-    ///
-    /// This function returns the old MPIs, if any.
-    pub fn set_mpis(&mut self, mpis: mpi::PublicKey) -> mpi::PublicKey {
-        self.common.set_mpis(mpis)
-    }
-
-    /// Returns whether the `Key` contains secret key material.
-    pub fn has_secret(&self) -> bool {
-        self.common.has_secret()
-    }
-
-    /// Returns whether the `Key` contains unencrypted secret key
-    /// material.
-    ///
-    /// This returns false if the `Key` doesn't contain any secret key
-    /// material.
-    pub fn has_unencrypted_secret(&self) -> bool {
-        self.common.has_unencrypted_secret()
-    }
-
-    /// Returns `Key`'s secret key material, if any.
-    pub fn optional_secret(&self) -> Option<&SecretKeyMaterial> {
-        self.common.optional_secret()
-    }
-
-    /// Computes and returns the `Key`'s `Fingerprint` and returns it as
-    /// a `KeyHandle`.
-    ///
-    /// See [Section 12.2 of RFC 4880].
-    ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
-    pub fn key_handle(&self) -> KeyHandle {
-        self.fingerprint().into()
-    }
-
-    /// Computes and returns the `Key`'s `Fingerprint`.
-    ///
-    /// See [Key IDs and Fingerprints].
-    ///
-    /// [Key IDs and Fingerprints]: https://www.rfc-editor.org/rfc/rfc9580.html#key-ids-fingerprints
-    pub fn fingerprint(&self) -> Fingerprint {
-        let fp = self.common.fingerprint.get_or_init(|| {
-            let mut h = HashAlgorithm::SHA256.context()
-                .expect("SHA256 is MTI for RFC9580")
-            // v6 fingerprints are computed the same way a key is
-            // hashed for v6 signatures.
-                .for_signature(6);
-
-            self.hash(&mut h).expect("v6 key hashing is infallible");
-
-            let mut digest = [0u8; 32];
-            let _ = h.digest(&mut digest);
-            Fingerprint::V6(digest)
-        });
-
-        // Currently, it could happen that a Key4 has its fingerprint
-        // computed, and is then converted to a Key6.  That is only
-        // possible within this crate, and should not happen.  Assert
-        // that.  The better way to handle this is to have a CommonKey
-        // struct which both Key4 and Key6 use, so that a Key6 does
-        // not start out as a Key4, preventing this issue.
-        debug_assert!(matches!(fp, Fingerprint::V6(_)));
-
-        fp.clone()
-    }
-
-    /// Computes and returns the `Key`'s `Key ID`.
-    ///
-    /// See [Section 12.2 of RFC 4880].
-    ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
-    pub fn keyid(&self) -> KeyID {
-        self.fingerprint().into()
+        KeyPair::new(key.role_into_unspecified().into(), secret)
     }
 }
 
@@ -744,5 +759,426 @@ impl Arbitrary for Key6<SecretParts, PrimaryRole> {
 impl Arbitrary for Key6<SecretParts, SubordinateRole> {
     fn arbitrary(g: &mut Gen) -> Self {
         Key6::from_common(Key4::arbitrary(g))
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use std::time::Duration;
+    use std::time::UNIX_EPOCH;
+
+    use crate::crypto::S2K;
+    use crate::packet::Key;
+    use crate::packet::key;
+    use crate::packet::Packet;
+    use super::*;
+    use crate::PacketPile;
+    use crate::serialize::Serialize;
+    use crate::types::*;
+    use crate::parse::Parse;
+
+    #[test]
+    fn primary_key_encrypt_decrypt() -> Result<()> {
+        key_encrypt_decrypt::<PrimaryRole>()
+    }
+
+    #[test]
+    fn subkey_encrypt_decrypt() -> Result<()> {
+        key_encrypt_decrypt::<SubordinateRole>()
+    }
+
+    fn key_encrypt_decrypt<R>() -> Result<()>
+    where
+        R: KeyRole + PartialEq,
+    {
+        let mut g = quickcheck::Gen::new(256);
+        let p: Password = Vec::<u8>::arbitrary(&mut g).into();
+
+        let check = |key: Key6<SecretParts, R>| -> Result<()> {
+            let key: Key<_, _> = key.into();
+            let encrypted = key.clone().encrypt_secret(&p)?;
+            let decrypted = encrypted.decrypt_secret(&p)?;
+            assert_eq!(key, decrypted);
+            Ok(())
+        };
+
+        use crate::types::Curve::*;
+        for curve in vec![NistP256, NistP384, NistP521, Ed25519] {
+            if ! curve.is_supported() {
+                eprintln!("Skipping unsupported {}", curve);
+                continue;
+            }
+
+            let key: Key6<_, R>
+                = Key6::generate_ecc(true, curve.clone())?;
+            check(key)?;
+        }
+
+        for bits in vec![2048, 3072] {
+            if ! PublicKeyAlgorithm::RSAEncryptSign.is_supported() {
+                eprintln!("Skipping unsupported RSA");
+                continue;
+            }
+
+            let key: Key6<_, R>
+                = Key6::generate_rsa(bits)?;
+            check(key)?;
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn eq() {
+        use crate::types::Curve::*;
+
+        for curve in vec![NistP256, NistP384, NistP521] {
+            if ! curve.is_supported() {
+                eprintln!("Skipping unsupported {}", curve);
+                continue;
+            }
+
+            let sign_key : Key6<_, key::UnspecifiedRole>
+                = Key6::generate_ecc(true, curve.clone()).unwrap();
+            let enc_key : Key6<_, key::UnspecifiedRole>
+                = Key6::generate_ecc(false, curve).unwrap();
+            let sign_clone = sign_key.clone();
+            let enc_clone = enc_key.clone();
+
+            assert_eq!(sign_key, sign_clone);
+            assert_eq!(enc_key, enc_clone);
+        }
+
+        for bits in vec![1024, 2048, 3072, 4096] {
+            if ! PublicKeyAlgorithm::RSAEncryptSign.is_supported() {
+                eprintln!("Skipping unsupported RSA");
+                continue;
+            }
+
+            let key : Key6<_, key::UnspecifiedRole>
+                = Key6::generate_rsa(bits).unwrap();
+            let clone = key.clone();
+            assert_eq!(key, clone);
+        }
+    }
+
+    #[test]
+    fn generate_roundtrip() {
+        use crate::types::Curve::*;
+
+        let keys = vec![NistP256, NistP384, NistP521].into_iter().flat_map(|cv|
+        {
+            if ! cv.is_supported() {
+                eprintln!("Skipping unsupported {}", cv);
+                return Vec::new();
+            }
+
+            let sign_key : Key6<key::SecretParts, key::PrimaryRole>
+                = Key6::generate_ecc(true, cv.clone()).unwrap();
+            let enc_key = Key6::generate_ecc(false, cv).unwrap();
+
+            vec![sign_key, enc_key]
+        }).chain(vec![1024, 2048, 3072, 4096].into_iter().filter_map(|b| {
+            Key6::generate_rsa(b).ok()
+        }));
+
+        for key in keys {
+            let mut b = Vec::new();
+            Packet::SecretKey(key.clone().into()).serialize(&mut b).unwrap();
+
+            let pp = PacketPile::from_bytes(&b).unwrap();
+            if let Some(Packet::SecretKey(Key::V6(ref parsed_key))) =
+                pp.path_ref(&[0])
+            {
+                assert_eq!(key.creation_time(), parsed_key.creation_time());
+                assert_eq!(key.pk_algo(), parsed_key.pk_algo());
+                assert_eq!(key.mpis(), parsed_key.mpis());
+                assert_eq!(key.secret(), parsed_key.secret());
+
+                assert_eq!(&key, parsed_key);
+            } else {
+                panic!("bad packet: {:?}", pp.path_ref(&[0]));
+            }
+
+            let mut b = Vec::new();
+            let pk4 : Key6<PublicParts, PrimaryRole> = key.clone().into();
+            Packet::PublicKey(pk4.into()).serialize(&mut b).unwrap();
+
+            let pp = PacketPile::from_bytes(&b).unwrap();
+            if let Some(Packet::PublicKey(Key::V6(ref parsed_key))) =
+                pp.path_ref(&[0])
+            {
+                assert!(! parsed_key.has_secret());
+
+                let key = key.take_secret().0;
+                assert_eq!(&key, parsed_key);
+            } else {
+                panic!("bad packet: {:?}", pp.path_ref(&[0]));
+            }
+        }
+    }
+
+    #[test]
+    fn encryption_roundtrip() {
+        use crate::crypto::SessionKey;
+        use crate::types::Curve::*;
+
+        let keys = vec![NistP256, NistP384, NistP521].into_iter()
+            .filter_map(|cv| {
+                Key6::generate_ecc(false, cv).ok()
+            }).chain(vec![1024, 2048, 3072, 4096].into_iter().filter_map(|b| {
+                Key6::generate_rsa(b).ok()
+            }));
+
+        for key in keys.into_iter() {
+            let key: Key<key::SecretParts, key::UnspecifiedRole> = key.into();
+            let mut keypair = key.clone().into_keypair().unwrap();
+            let cipher = SymmetricAlgorithm::AES256;
+            let sk = SessionKey::new(cipher.key_size().unwrap()).unwrap();
+
+            let pkesk = PKESK6::for_recipient(&sk, &key).unwrap();
+            let sk_ = pkesk.decrypt(&mut keypair, None)
+                .expect("keypair should be able to decrypt PKESK");
+            assert_eq!(sk, sk_);
+
+            let sk_ =
+                pkesk.decrypt(&mut keypair, Some(cipher)).unwrap();
+            assert_eq!(sk, sk_);
+        }
+    }
+
+    #[test]
+    fn signature_roundtrip() {
+        use crate::types::{Curve::*, SignatureType};
+
+        let keys = vec![NistP256, NistP384, NistP521].into_iter()
+            .filter_map(|cv| {
+                Key6::generate_ecc(true, cv).ok()
+            }).chain(vec![1024, 2048, 3072, 4096].into_iter().filter_map(|b| {
+                Key6::generate_rsa(b).ok()
+            }));
+
+        for key in keys.into_iter() {
+            let key: Key<key::SecretParts, key::UnspecifiedRole> = key.into();
+            let mut keypair = key.clone().into_keypair().unwrap();
+            let hash = HashAlgorithm::default();
+
+            // Sign.
+            let ctx = hash.context().unwrap().for_signature(key.version());
+            let sig = SignatureBuilder::new(SignatureType::Binary)
+                .sign_hash(&mut keypair, ctx).unwrap();
+
+            // Verify.
+            let ctx = hash.context().unwrap().for_signature(key.version());
+            sig.verify_hash(&key, ctx).unwrap();
+        }
+    }
+
+    #[test]
+    fn secret_encryption_roundtrip() {
+        use crate::types::Curve::*;
+        use crate::types::SymmetricAlgorithm::*;
+        use crate::types::AEADAlgorithm::*;
+
+        let keys = vec![NistP256, NistP384, NistP521].into_iter()
+            .filter_map(|cv| -> Option<Key<key::SecretParts, key::PrimaryRole>> {
+                Key6::generate_ecc(false, cv).map(Into::into).ok()
+            }).chain(vec![1024, 2048, 3072, 4096].into_iter().filter_map(|b| {
+                Key6::generate_rsa(b).map(Into::into).ok()
+            }));
+
+        for key in keys {
+          for (symm, aead) in [(AES128, None),
+                               (AES128, Some(OCB)),
+                               (AES256, Some(EAX))] {
+            if ! aead.map(|a| a.is_supported()).unwrap_or(true) {
+                continue;
+            }
+            assert!(! key.secret().is_encrypted());
+
+            let password = Password::from("foobarbaz");
+            let mut encrypted_key = key.clone();
+
+            encrypted_key.secret_mut()
+                .encrypt_in_place_with(&key, S2K::default(), symm, aead,
+                                       &password).unwrap();
+            assert!(encrypted_key.secret().is_encrypted());
+
+            encrypted_key.secret_mut()
+                .decrypt_in_place(&key, &password).unwrap();
+            assert!(! key.secret().is_encrypted());
+            assert_eq!(key, encrypted_key);
+            assert_eq!(key.secret(), encrypted_key.secret());
+          }
+        }
+    }
+
+    #[test]
+    fn encrypt_huge_plaintext() -> Result<()> {
+        let sk = crate::crypto::SessionKey::new(256).unwrap();
+
+        if PublicKeyAlgorithm::RSAEncryptSign.is_supported() {
+            let rsa2k: Key<SecretParts, UnspecifiedRole> =
+                Key6::generate_rsa(2048)?.into();
+            assert!(matches!(
+                rsa2k.encrypt(&sk).unwrap_err().downcast().unwrap(),
+                crate::Error::InvalidArgument(_)
+            ));
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn issue_1016() {
+        // The fingerprint is a function of the creation time,
+        // algorithm, and public MPIs.  When we change them make sure
+        // the fingerprint also changes.
+
+        let mut g = quickcheck::Gen::new(256);
+
+        let mut key = Key6::<PublicParts, UnspecifiedRole>::arbitrary(&mut g);
+        let fpr1 = key.fingerprint();
+        if key.creation_time() == UNIX_EPOCH {
+            key.set_creation_time(UNIX_EPOCH + Duration::new(1, 0)).expect("ok");
+        } else {
+            key.set_creation_time(UNIX_EPOCH).expect("ok");
+        }
+        assert_ne!(fpr1, key.fingerprint());
+
+        let mut key = Key6::<PublicParts, UnspecifiedRole>::arbitrary(&mut g);
+        let fpr1 = key.fingerprint();
+        key.set_pk_algo(PublicKeyAlgorithm::from(u8::from(key.pk_algo()) + 1));
+        assert_ne!(fpr1, key.fingerprint());
+
+        let mut key = Key6::<PublicParts, UnspecifiedRole>::arbitrary(&mut g);
+        let fpr1 = key.fingerprint();
+        loop {
+            let mpis2 = mpi::PublicKey::arbitrary(&mut g);
+            if key.mpis() != &mpis2 {
+                *key.mpis_mut() = mpis2;
+                break;
+            }
+        }
+        assert_ne!(fpr1, key.fingerprint());
+
+        let mut key = Key6::<PublicParts, UnspecifiedRole>::arbitrary(&mut g);
+        let fpr1 = key.fingerprint();
+        loop {
+            let mpis2 = mpi::PublicKey::arbitrary(&mut g);
+            if key.mpis() != &mpis2 {
+                key.set_mpis(mpis2);
+                break;
+            }
+        }
+        assert_ne!(fpr1, key.fingerprint());
+    }
+
+    /// Smoke test for ECC key creation, signing and verification, and
+    /// encryption and decryption.
+    #[test]
+    fn ecc_support() -> Result<()> {
+        for for_signing in [true, false] {
+            for curve in Curve::variants()
+                .filter(Curve::is_supported)
+            {
+                match curve {
+                    Curve::Cv25519 if for_signing => continue,
+                    Curve::Ed25519 if ! for_signing => continue,
+                    _ => (),
+                }
+
+                eprintln!("curve {}, for signing {:?}", curve, for_signing);
+                let key: Key<SecretParts, UnspecifiedRole> =
+                    Key6::generate_ecc(for_signing, curve.clone())?.into();
+                let mut pair = key.into_keypair()?;
+
+                if for_signing {
+                    use crate::crypto::Signer;
+                    let hash = HashAlgorithm::default();
+                    let digest = hash.context()?
+                        .for_signature(pair.public().version())
+                        .into_digest()?;
+                    let sig = pair.sign(hash, &digest)?;
+                    pair.public().verify(&sig, hash, &digest)?;
+                } else {
+                    use crate::crypto::{SessionKey, Decryptor};
+                    let sk = SessionKey::new(32).unwrap();
+                    let ciphertext = pair.public().encrypt(&sk)?;
+                    assert_eq!(pair.decrypt(&ciphertext, Some(sk.len()))?, sk);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn ecc_encoding() -> Result<()> {
+        for for_signing in [true, false] {
+            for curve in Curve::variants()
+                .filter(Curve::is_supported)
+            {
+                match curve {
+                    Curve::Cv25519 if for_signing => continue,
+                    Curve::Ed25519 if ! for_signing => continue,
+                    _ => (),
+                }
+
+                use crate::crypto::mpi::{Ciphertext, MPI, PublicKey};
+                eprintln!("curve {}, for signing {:?}", curve, for_signing);
+
+                let key: Key<SecretParts, UnspecifiedRole> =
+                    Key6::generate_ecc(for_signing, curve.clone())?.into();
+
+                let uncompressed = |mpi: &MPI| mpi.value()[0] == 0x04;
+
+                match key.mpis() {
+                    PublicKey::X25519 { .. } if ! for_signing => (),
+                    PublicKey::X448 { .. } if ! for_signing => (),
+                    PublicKey::Ed25519 { .. } if for_signing => (),
+                    PublicKey::Ed448 { .. } if for_signing => (),
+                    PublicKey::ECDSA { curve: c, q } if for_signing => {
+                        assert!(c == &curve);
+                        assert!(c != &Curve::Ed25519);
+                        assert!(uncompressed(q));
+                    },
+                    PublicKey::ECDH { curve: c, q, .. } if ! for_signing => {
+                        assert!(c == &curve);
+                        assert!(c != &Curve::Cv25519);
+                        assert!(uncompressed(q));
+
+                        use crate::crypto::SessionKey;
+                        let sk = SessionKey::new(32).unwrap();
+                        let ciphertext = key.encrypt(&sk)?;
+                        if let Ciphertext::ECDH { e, .. } = &ciphertext {
+                            assert!(uncompressed(e));
+                        } else {
+                            panic!("unexpected ciphertext: {:?}", ciphertext);
+                        }
+                    },
+                    mpi => unreachable!(
+                        "curve {}, mpi {:?}, for signing {:?}",
+                        curve, mpi, for_signing),
+                }
+            }
+        }
+        Ok(())
+    }
+
+
+    #[test]
+    fn v6_key_fingerprint() -> Result<()> {
+        let p = Packet::from_bytes("-----BEGIN PGP ARMORED FILE-----
+
+xjcGY4d/4xYAAAAtCSsGAQQB2kcPAQEHQPlNp7tI1gph5WdwamWH0DMZmbudiRoI
+JC6thFQ9+JWj
+=SgmS
+-----END PGP ARMORED FILE-----")?;
+        let k: &Key<PublicParts, PrimaryRole> = p.downcast_ref().unwrap();
+        assert_eq!(k.fingerprint().to_string(),
+                   "4EADF309C6BC874AE04702451548F93F\
+                    96FA7A01D0A33B5AF7D4E379E0F9F8EE".to_string());
+        Ok(())
     }
 }

@@ -524,9 +524,6 @@ impl fmt::Debug for ProtectedMPI {
 /// the occasional elliptic curve) in [`Key`] packets.
 ///
 ///   [`Key`]: crate::packet::Key
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub enum PublicKey {
@@ -750,9 +747,6 @@ pub(crate) fn arbitrary<T: Default + AsMut<[u8]>>(g: &mut Gen) -> T
 /// them using [`ProtectedMPI`].
 ///
 ///   [`Key`]: crate::packet::Key
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 // Deriving Hash here is okay: PartialEq is manually implemented to
 // ensure that secrets are compared in constant-time.
 #[non_exhaustive]
@@ -1118,9 +1112,6 @@ impl SecretKeyChecksum {
 /// [`PKESK`] packets.
 ///
 ///   [`PKESK`]: crate::packet::PKESK
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub enum Ciphertext {
@@ -1251,9 +1242,6 @@ impl Arbitrary for Ciphertext {
 /// [`Signature`] packets.
 ///
 ///   [`Signature`]: crate::packet::Signature
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub enum Signature {

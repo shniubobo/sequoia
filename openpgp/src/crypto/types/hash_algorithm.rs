@@ -9,9 +9,6 @@ use quickcheck::{Arbitrary, Gen};
 
 /// The OpenPGP hash algorithms as defined in [Section 9.4 of RFC 4880].
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// Use `HashAlgorithm` to set the preferred hash algorithms on a signature:

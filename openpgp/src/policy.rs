@@ -1695,9 +1695,6 @@ impl<'a> Policy for StandardPolicy<'a> {
 /// Key sizes put into are buckets, rounding down to the nearest
 /// bucket.  For example, a 3253-bit RSA key is categorized as
 /// `RSA3072`.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Clone, Debug, PartialEq, Eq, Copy)]
 pub enum AsymmetricAlgorithm {

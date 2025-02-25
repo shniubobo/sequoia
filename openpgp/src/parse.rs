@@ -3834,7 +3834,11 @@ impl ProtectedMPI {
     fn parse(name_len: &'static str,
              name: &'static str,
              php: &mut PacketHeaderParser<'_>) -> Result<Self> {
-        Ok(MPI::parse_common(name_len, name, true, true, php)?.into())
+        // XXX: While lenient parsing seemed like the right thing to
+        // do, this breaks equality and round-tripping: we normalize
+        // the non-canonical encoding, so two distinct wire
+        // representations are folded into one in-core representation.
+        Ok(MPI::parse_common(name_len, name, true, false, php)?.into())
     }
 }
 impl PKESK {
@@ -7373,6 +7377,11 @@ heLBX8Pq0kUBwQz2iFAzRwOdgTBvH5KsDU9lmE
 
     /// Tests issue 1024.
     #[test]
+    // XXX: While lenient parsing seemed like the right thing to do,
+    // this breaks equality and round-tripping: we normalize the
+    // non-canonical encoding, so two distinct wire representations
+    // are folded into one in-core representation.
+    #[ignore]
     fn parse_secret_with_leading_zeros() -> Result<()> {
         crate::Cert::from_bytes(
             crate::tests::key("leading-zeros-private.pgp"))?

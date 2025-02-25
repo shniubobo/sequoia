@@ -78,9 +78,6 @@ pub use crate::crypto::SymmetricAlgorithm;
 ///
 ///   [Section 9.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.3
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// Use `CompressionAlgorithm` to set the preferred compressions algorithms on
@@ -234,9 +231,6 @@ impl Arbitrary for CompressionAlgorithm {
 /// Signature type as defined in [Section 5.2.1 of RFC 4880].
 ///
 ///   [Section 5.2.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.1
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 ///
 /// # Examples
 ///
@@ -435,9 +429,6 @@ impl SignatureType {
 /// See the description of revocation subpackets [Section 5.2.3.23 of RFC 4880].
 ///
 ///   [Section 5.2.3.23 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 ///
 /// # Examples
 ///
@@ -712,9 +703,6 @@ impl ReasonForRevocation {
 /// See the description of literal data packets [Section 5.9 of RFC 4880].
 ///
 ///   [Section 5.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.9
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 ///
 /// # Examples
 ///

@@ -57,7 +57,10 @@ impl<R> Key6<SecretParts, R>
     /// `curve == Cv25519` will produce an error. Likewise
     /// `for_signing == false` and `curve == Ed25519` will produce an error.
     pub fn generate_ecc(for_signing: bool, curve: Curve) -> Result<Self> {
-        Key4::generate_ecc(for_signing, curve)
-            .map(Key6::from_common)
+        match (for_signing, curve) {
+            (true, Curve::Ed25519) => Self::generate_ed25519(),
+            (false, Curve::Cv25519) => Self::generate_x25519(),
+            (s, c) => Key4::generate_ecc(s, c).map(Key6::from_common),
+        }
     }
 }

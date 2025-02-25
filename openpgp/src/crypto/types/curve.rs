@@ -13,9 +13,6 @@ use quickcheck::{Arbitrary, Gen};
 /// curves.  Instead, the curve is specified using an OID prepended to
 /// the key material.  We provide this type to be able to match on the
 /// curves.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[non_exhaustive]
 pub enum Curve {

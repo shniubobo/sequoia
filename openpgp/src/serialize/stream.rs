@@ -152,7 +152,6 @@ use crate::types::{
 };
 
 pub(crate) mod writer;
-#[cfg(feature = "compression-deflate")]
 pub mod padding;
 mod partial_body;
 use partial_body::PartialBodyFilter;

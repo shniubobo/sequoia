@@ -8,9 +8,6 @@ use quickcheck::{Arbitrary, Gen};
 /// The OpenPGP public key algorithms as defined in [Section 9.1 of
 /// RFC 4880], and [Section 5 of RFC 6637].
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// ```rust

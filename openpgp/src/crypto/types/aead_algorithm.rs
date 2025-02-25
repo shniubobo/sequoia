@@ -18,9 +18,6 @@ use quickcheck::{Arbitrary, Gen};
 ///
 ///   [`AEADAlgorithm::from`]: std::convert::From
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// Use `AEADAlgorithm` to set the preferred AEAD algorithms on a signature:

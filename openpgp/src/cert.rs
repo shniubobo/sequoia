@@ -2846,7 +2846,7 @@ impl Cert {
 
     /// Adds packets to the certificate with an explicit merge policy.
     ///
-    /// Like [`Cert::insert_packets2`], but also takes a function that
+    /// Like [`Cert::insert_packets`], but also takes a function that
     /// will be called on inserts and replacements that can be used to
     /// log changes to the certificate, and to influence how packets
     /// are merged.  The merge function takes two parameters, an
@@ -2881,7 +2881,7 @@ impl Cert {
     ///
     /// In the first example, we give an explicit merge function that
     /// just returns the new packet.  This policy prefers the new
-    /// packet.  This is the policy used by [`Cert::insert_packets2`].
+    /// packet.  This is the policy used by [`Cert::insert_packets`].
     ///
     /// ```
     /// use sequoia_openpgp as openpgp;

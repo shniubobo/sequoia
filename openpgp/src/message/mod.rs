@@ -45,9 +45,6 @@ use lalrpop_util::ParseError;
 use self::grammar::MessageParser;
 
 /// Errors that MessageValidator::check may return.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Debug, Clone)]
 pub (crate) enum MessageParserError {

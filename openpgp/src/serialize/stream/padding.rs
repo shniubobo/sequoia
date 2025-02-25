@@ -58,20 +58,12 @@ use crate::serialize::{
 ///
 /// # Compatibility
 ///
-/// This implementation uses the [DEFLATE] compression format.  The
-/// packet structure contains a flag signaling the end of the stream
-/// (see [Section 3.2.3 of RFC 1951]), and any data appended after
-/// that is not part of the stream.
+/// RFC9580 introduced a [padding packet] that will be emitted when
+/// composing an RFC9580 message.  Unfortunately, RFC4880 does not
+/// have a robust way to pad messages.  Therefore, when composing an
+/// RFC4880 message, the message will not be padded.
 ///
-/// [DEFLATE]: https://tools.ietf.org/html/rfc1951
-/// [Section 3.2.3 of RFC 1951]: https://tools.ietf.org/html/rfc1951#page-9
-///
-/// [Section 9.3 of RFC 4880] recommends that this algorithm should be
-/// implemented, therefore support across various implementations
-/// should be good.
-///
-/// [Section 9.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.3
-///
+///   [padding packet]: https://www.rfc-editor.org/rfc/rfc9580.html#name-padding-packet-type-id-21
 /// # Examples
 ///
 /// This example illustrates the use of `Padder` with the [Padmé]

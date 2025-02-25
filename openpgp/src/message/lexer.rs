@@ -8,9 +8,6 @@ pub(crate) type LexerItem<Tok, Loc, Error>
     = ::std::result::Result<(Loc, Tok, Loc), Error>;
 
 /// The components of an OpenPGP Message.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Token {

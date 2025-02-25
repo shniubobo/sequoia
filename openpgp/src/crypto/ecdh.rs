@@ -122,7 +122,7 @@ pub fn decrypt_unwrap(recipient: &Key<key::PublicParts,
                                       key::UnspecifiedRole>,
                       S: &Protected,
                       ciphertext: &mpi::Ciphertext,
-                      plaintext_len: Option<usize>)
+                      _plaintext_len: Option<usize>)
                       -> Result<SessionKey>
 {
     match (recipient.mpis(), ciphertext) {
@@ -138,15 +138,7 @@ pub fn decrypt_unwrap(recipient: &Key<key::PublicParts,
 
             // Compute m = AESKeyUnwrap( Z, C ) as per [RFC3394]
             let m = aes_key_unwrap(*sym, &Z, key)?;
-            let plaintext_len =
-                plaintext_len.ok_or_else(|| Error::InvalidOperation(
-                    "Need the plaintext length to decrypt this PKESK".into()))
-                .or_else(|_| -> Result<usize> {
-                    let cipher = SymmetricAlgorithm::from(m[0]);
-                    Ok(1 + cipher.key_size()? + 2)
-                })?;
-            let m = pkcs5_unpad(m, plaintext_len)?;
-
+            let m = pkcs5_unpad(m)?;
             Ok(m.into())
         },
 
@@ -207,20 +199,17 @@ fn pkcs5_pad(sk: Protected, target_len: usize) -> Result<Protected> {
 /// See [Section 8 of RFC 6637].
 ///
 ///   [Section 8 of RFC 6637]: https://tools.ietf.org/html/rfc6637#section-8
-fn pkcs5_unpad(sk: Protected, target_len: usize) -> Result<Protected> {
+fn pkcs5_unpad(sk: Protected) -> Result<Protected> {
     if sk.len() > 0xff {
         return Err(Error::InvalidArgument("message too large".into()).into());
     }
 
-    if sk.len() < target_len {
-        return Err(Error::InvalidArgument("message too small".into()).into());
-    }
-
     let mut buf: Vec<u8> = sk.expose_into_unprotected_vec();
     let mut good = true;
-    let missing = (buf.len() - target_len) as u8;
+    let padding = buf[buf.len() - 1];
+    let target_len = buf.len() - padding as usize;
     for &b in &buf[target_len..] {
-        good = b == missing && good;
+        good = b == padding && good;
     }
 
     if good {
@@ -432,12 +421,12 @@ mod tests {
     fn pkcs5_padding() {
         let v = pkcs5_pad(vec![0, 0, 0].into(), 8).unwrap();
         assert_eq!(&v, &Protected::from(&[0, 0, 0, 5, 5, 5, 5, 5][..]));
-        let v = pkcs5_unpad(v, 3).unwrap();
+        let v = pkcs5_unpad(v).unwrap();
         assert_eq!(&v, &Protected::from(&[0, 0, 0][..]));
 
         let v = pkcs5_pad(vec![].into(), 8).unwrap();
         assert_eq!(&v, &Protected::from(&[8, 8, 8, 8, 8, 8, 8, 8][..]));
-        let v = pkcs5_unpad(v, 0).unwrap();
+        let v = pkcs5_unpad(v).unwrap();
         assert_eq!(&v, &Protected::from(&[][..]));
     }
 

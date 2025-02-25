@@ -18,9 +18,6 @@ use quickcheck::{Arbitrary, Gen};
 ///
 ///   [`SymmetricAlgorithm::from`]: std::convert::From
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// Use `SymmetricAlgorithm` to set the preferred symmetric algorithms on a signature:

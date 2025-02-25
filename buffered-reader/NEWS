@@ -2,6 +2,10 @@
 #+TITLE: buffered-reader NEWS – history of user-visible changes
 #+STARTUP: content hidestars
 
+* Changes in 1.4.0
+** Notable fixes
+   - The signature of struct File on Windows has been aligned with the
+     struct File on other platforms.
 * Changes in 1.3.2
   - Maintenance release.
 * Changes in 1.3.1

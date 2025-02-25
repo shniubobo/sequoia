@@ -43,9 +43,6 @@ use crate::Result;
 ///   [`Fingerprint`]: crate::Fingerprint
 ///   [`KeyHandle`]: crate::KeyHandle
 ///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
-///
 /// # Examples
 ///
 /// ```rust

@@ -1,7 +1,7 @@
 [package]
 name = "buffered-reader"
 description = "A super-powered Reader"
-version = "1.3.2"
+version = "1.4.0"
 authors = [
     "Justus Winter <justus@sequoia-pgp.org>",
     "Kai Michaelis <kai@sequoia-pgp.org>",
@@ -14,6 +14,7 @@ readme = "README.md"
 license = "LGPL-2.0-or-later"
 edition = "2021"
 rust-version = "1.67"
+publish = false
 
 [badges]
 gitlab = { repository = "sequoia-pgp/sequoia" }

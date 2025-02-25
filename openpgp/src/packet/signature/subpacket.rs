@@ -132,10 +132,6 @@ lazy_static::lazy_static!{
 ///
 /// The `SubpacketTag` enum holds a [`Subpacket`]'s identifier, the
 /// so-called tag.
-///
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Debug)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1488,9 +1484,6 @@ impl NotationDataFlags {
 ///
 /// [`Issuer`]: SubpacketValue::Issuer
 /// [`KeyID`]: super::super::super::KeyID
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum SubpacketValue {

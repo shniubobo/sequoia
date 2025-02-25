@@ -209,6 +209,26 @@ fn frozen_time() -> std::time::SystemTime {
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Profiles select versions of the OpenPGP standard.
+///
+/// While this type implements [`Default`], please consider what a
+/// good default for your use case is.
+///
+/// If you are doing a greenfield implementation where you know that
+/// every client understands RFC9580, you can just explicitly pick
+/// that.
+///
+/// Otherwise, you have to consider the state of the ecosystem your
+/// client will interact with.  Maybe it is better to stick to
+/// generating RFC4880 certificates for the time being, while rolling
+/// out RFC9580 support.  Consider adding a configuration option or
+/// command line switch like `--profile`, but pick a sensible default,
+/// and remember to don't overwhelm your users.
+///
+/// For now, our default is RFC4880.  This is a safe default for every
+/// downstream consumer that has existing legacy deployments
+/// (including their own previous versions using a legacy version of
+/// Sequoia).  We will update this default once RFC9580 is more widely
+/// deployed.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Profile {
@@ -224,9 +244,6 @@ pub enum Profile {
 pub type Result<T> = ::std::result::Result<T, anyhow::Error>;
 
 /// Errors used in this crate.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
 pub enum Error {

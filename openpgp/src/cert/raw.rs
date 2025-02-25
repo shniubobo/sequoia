@@ -1051,9 +1051,6 @@ impl<'a> Iterator for RawCertParser<'a>
 }
 
 /// Errors used in this module.
-///
-/// Note: This enum cannot be exhaustively matched to allow future
-/// extensions.
 #[non_exhaustive]
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
