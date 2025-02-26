@@ -18,6 +18,7 @@ use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::path::Path;
+use std::fmt::Debug;
 use std::fs::File;
 use std::str;
 
@@ -34,6 +35,7 @@ use openpgp::cert::prelude::*;
 use openpgp::parse::{
     Parse,
     PacketParserResult, PacketParser,
+    buffered_reader::BufferedReader,
 };
 use openpgp::serialize::Serialize;
 use openpgp::serialize::stream::{
@@ -357,6 +359,16 @@ impl AutocryptHeaders {
     /// emails, then only the first mail is considered.
     pub fn from_reader<R: io::Read>(reader: R) -> Result<Self> {
         Self::from_lines(BufReader::new(reader).lines())
+    }
+
+    /// Parses an autocrypt header.
+    ///
+    /// `reader` should be all of a mail's headers.
+    pub fn from_buffered_reader<R, C>(mut reader: R) -> Result<Self>
+    where R: BufferedReader<C>,
+          C: Debug + Send + Sync
+    {
+        Self::from_bytes(reader.data_eof()?)
     }
 }
 
@@ -828,6 +840,7 @@ impl<'a> AutocryptSetupMessageParser<'a> {
 
 #[cfg(test)]
 mod test {
+    use sequoia_openpgp::parse::buffered_reader;
     use super::*;
 
     use openpgp::policy::StandardPolicy as P;
@@ -914,6 +927,40 @@ mod test {
         assert_eq!(ac, ac2);
     }
 
+    #[test]
+    fn parse_from_buffered_reader() {
+        // This test relies on 'from_bytes(...)' parser which, in case of a bug,
+        // may cause this test to fail as well.
+        let ac1_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/hpk.txt")[..]
+        )
+        .unwrap();
+        let ac2_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/vincent.txt")[..]
+        )
+        .unwrap();
+        let ac3_bytes = AutocryptHeaders::from_bytes(
+            &include_bytes!("../tests/data/patrick_unfolded.txt")[..]
+        )
+        .unwrap();
+
+        let ac1_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/hpk.txt").unwrap()
+        )
+        .unwrap();
+        let ac2_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/vincent.txt").unwrap()
+        )
+        .unwrap();
+        let ac3_br = AutocryptHeaders::from_buffered_reader(
+            buffered_reader::File::open("tests/data/patrick_unfolded.txt").unwrap()
+        )
+        .unwrap();
+
+        assert_eq!(ac1_bytes, ac1_br);
+        assert_eq!(ac2_bytes, ac2_br);
+        assert_eq!(ac3_bytes, ac3_br);
+    }
 
     #[test]
     fn decode_gossip() {
