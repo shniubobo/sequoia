@@ -114,7 +114,7 @@ impl SessionKey {
     /// let sk = SessionKey::new(cipher.key_size()?)?;
     ///
     /// let key: Key<key::SecretParts, key::UnspecifiedRole> =
-    ///     Key4::generate_ecc(false, Curve::Cv25519)?.into();
+    ///     Key6::generate_ecc(false, Curve::Cv25519)?.into();
     ///
     /// let pkesk: PKESK =
     ///     PKESK3::for_recipient(cipher, &sk, &key)?.into();

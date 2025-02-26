@@ -171,15 +171,6 @@ impl From<Fingerprint> for KeyID {
     }
 }
 
-impl std::borrow::Borrow<[u8]> for KeyID {
-    fn borrow(&self) -> &[u8] {
-        match self {
-            KeyID::Long(b) => &b[..],
-            KeyID::Invalid(b) => &b,
-        }
-    }
-}
-
 impl KeyID {
     /// Converts a `u64` to a `KeyID`.
     ///

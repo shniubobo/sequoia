@@ -888,7 +888,7 @@ mod test {
         use crate::types::{Curve, KeyFlags, SignatureType};
         use crate::packet::{
             signature, UserID, user_attribute::{UserAttribute, Subpacket},
-            key::Key4,
+            key::Key6,
         };
 
         let p = &P::new();
@@ -898,7 +898,7 @@ mod test {
             .unwrap().into_keypair().unwrap();
 
         let key: key::SecretSubkey =
-            Key4::generate_ecc(false, Curve::Cv25519).unwrap().into();
+            Key6::generate_ecc(false, Curve::Cv25519).unwrap().into();
         let key_binding = key.bind(
             &mut keypair, &cert,
             signature::SignatureBuilder::new(SignatureType::SubkeyBinding)

@@ -42,26 +42,21 @@
 //!
 //! # Key Creation
 //!
-//! Use [`Key4::generate_rsa`] or [`Key4::generate_ecc`] to create a
-//! new key.
+//! Use [`Key6::generate_x25519`], [`Key6::generate_ed25519`],
+//! [`Key6::generate_x448`], [`Key6::generate_ed448`],
+//! [`Key6::generate_ecc`], or [`Key6::generate_rsa`] to create a new
+//! key.
 //!
 //! Existing key material can be turned into an OpenPGP key using
-//! [`Key4::import_public_cv25519`], [`Key4::import_public_ed25519`],
-//! [`Key4::import_public_rsa`], [`Key4::import_secret_cv25519`],
-//! [`Key4::import_secret_ed25519`], and [`Key4::import_secret_rsa`].
+//! [`Key6::import_public_x25519`], [`Key6::import_public_ed25519`],
+//! [`Key6::import_public_x448`], [`Key6::import_public_ed448`],
+//! [`Key6::import_public_rsa`], [`Key6::import_secret_x25519`],
+//! [`Key6::import_secret_ed25519`], [`Key6::import_secret_x448`],
+//! [`Key6::import_secret_ed448`], and [`Key6::import_secret_rsa`].
 //!
 //! Whether you create a new key or import existing key material, you
 //! still need to create a binding signature, and, for signing keys, a
 //! back signature for the key to be usable.
-//!
-//! [`Key4::generate_rsa`]: Key4::generate_rsa()
-//! [`Key4::generate_ecc`]: Key4::generate_ecc()
-//! [`Key4::import_public_cv25519`]: Key4::import_public_cv25519()
-//! [`Key4::import_public_ed25519`]: Key4::import_public_ed25519()
-//! [`Key4::import_public_rsa`]: Key4::import_public_rsa()
-//! [`Key4::import_secret_cv25519`]: Key4::import_secret_cv25519()
-//! [`Key4::import_secret_ed25519`]: Key4::import_secret_ed25519()
-//! [`Key4::import_secret_rsa`]: Key4::import_secret_rsa()
 //!
 //! # In-Memory Protection of Secret Key Material
 //!
@@ -323,7 +318,7 @@ pub use v4::Key4;
 /// keys to facilitate working with achieved messages.)  As such, it
 /// doesn't provide a mechanism to generate keys or import existing
 /// key material.  Instead, use the format-specific functions (e.g.,
-/// [`Key4::generate_ecc`]) and then convert the result into a `Key`
+/// [`Key6::generate_ecc`]) and then convert the result into a `Key`
 /// packet, as the following example demonstrates.
 ///
 /// [the different key formats]: https://www.rfc-editor.org/rfc/rfc9580.html#name-public-key-packet-formats
@@ -337,7 +332,7 @@ pub use v4::Key4;
 ///
 /// # fn main() -> openpgp::Result<()> {
 /// let key: Key<key::SecretParts, key::PrimaryRole>
-///     = Key::from(Key4::generate_ecc(true, Curve::Ed25519)?);
+///     = Key::from(Key6::generate_ecc(true, Curve::Ed25519)?);
 /// # Ok(())
 /// # }
 /// ```

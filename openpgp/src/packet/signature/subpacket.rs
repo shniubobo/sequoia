@@ -3958,7 +3958,7 @@ impl signature::SignatureBuilder {
     /// # fn main() -> openpgp::Result<()> {
     /// #
     /// # let key: Key<key::SecretParts, key::PrimaryRole>
-    /// #     = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+    /// #     = Key6::generate_ecc(true, Curve::Ed25519)?.into();
     /// # let mut signer = key.into_keypair()?;
     /// # let msg = b"Hello, World";
     /// #
@@ -3996,7 +3996,7 @@ impl signature::SignatureBuilder {
     /// # fn main() -> openpgp::Result<()> {
     /// #
     /// # let key: Key<key::SecretParts, key::PrimaryRole>
-    /// #     = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+    /// #     = Key6::generate_ecc(true, Curve::Ed25519)?.into();
     /// # let mut signer = key.into_keypair()?;
     /// # let msg = b"Hello, World";
     /// #
@@ -4104,7 +4104,7 @@ impl signature::SignatureBuilder {
     /// # fn main() -> openpgp::Result<()> {
     /// #
     /// # let key: Key<key::SecretParts, key::PrimaryRole>
-    /// #     = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+    /// #     = Key6::generate_ecc(true, Curve::Ed25519)?.into();
     /// # let mut signer = key.into_keypair()?;
     /// # let msg = b"Hello, World";
     /// #
@@ -4142,7 +4142,7 @@ impl signature::SignatureBuilder {
     /// # fn main() -> openpgp::Result<()> {
     /// #
     /// # let key: Key<key::SecretParts, key::PrimaryRole>
-    /// #     = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+    /// #     = Key6::generate_ecc(true, Curve::Ed25519)?.into();
     /// # let mut signer = key.into_keypair()?;
     /// # let msg = b"Hello, World";
     /// #
@@ -6469,7 +6469,7 @@ impl signature::SignatureBuilder {
     ///
     /// // Generate a subkey and a binding signature.
     /// let subkey: Key<_, key::SubordinateRole>
-    ///     = Key4::generate_ecc(false, Curve::Cv25519)?
+    ///     = Key6::generate_ecc(false, Curve::Cv25519)?
     ///         .into();
     /// let builder = signature::SignatureBuilder::new(SignatureType::SubkeyBinding)
     ///     .set_key_flags(KeyFlags::empty().set_storage_encryption())?;
@@ -7354,7 +7354,7 @@ fn accessors() {
     let hash_algo = HashAlgorithm::SHA512;
     let mut sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);
     let mut key: crate::packet::key::SecretKey =
-        crate::packet::key::Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+        crate::packet::key::Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
     let mut keypair = key.clone().into_keypair().unwrap();
     let hash = hash_algo.context().unwrap().for_signature(key.version());
 
@@ -8222,7 +8222,7 @@ fn subpacket_test_2() {
 }
 
 #[test]
-fn issuer_default() -> Result<()> {
+fn issuer_default_v4() -> Result<()> {
     use crate::types::Curve;
 
     let hash_algo = HashAlgorithm::SHA512;
@@ -8251,6 +8251,50 @@ fn issuer_default() -> Result<()> {
     assert_eq!(sig_.issuers().collect::<Vec<_>>(),
                vec![ &fp.clone().into() ]);
     assert_eq!(sig_.issuer_fingerprints().count(), 0);
+
+    // issuer_fingerprint subpacket present, do not override
+    let mut sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);
+
+    sig = sig.set_issuer_fingerprint(fp.clone())?;
+    let sig_ = sig.clone().sign_hash(&mut keypair, hash.clone())?;
+
+    assert_eq!(sig_.issuer_fingerprints().collect::<Vec<_>>(),
+               vec![ &fp ]);
+    assert_eq!(sig_.issuers().count(), 0);
+    Ok(())
+}
+
+#[test]
+fn issuer_default_v6() -> Result<()> {
+    use crate::types::Curve;
+
+    let hash_algo = HashAlgorithm::SHA512;
+    let sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);
+    let key: crate::packet::key::SecretKey =
+        crate::packet::key::Key6::generate_ecc(true, Curve::Ed25519)?.into();
+    let mut keypair = key.into_keypair()?;
+    let hash = hash_algo.context()?.for_signature(keypair.public().version());
+
+    // no issuer or issuer_fingerprint present, use default
+    let sig_ = sig.sign_hash(&mut keypair, hash.clone())?;
+
+    assert_eq!(sig_.issuers().collect::<Vec<_>>(),
+               Vec::<&KeyID>::new());
+    assert_eq!(sig_.issuer_fingerprints().collect::<Vec<_>>(),
+               vec![ &keypair.public().fingerprint() ]);
+
+    let fp = Fingerprint::from_bytes(4, b"bbbbbbbbbbbbbbbbbbbb")?;
+
+    // issuer subpacket present, ignore, subpacket is not used with v6
+    let mut sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);
+
+    sig = sig.set_issuer(fp.clone().into())?;
+    let sig_ = sig.clone().sign_hash(&mut keypair, hash.clone())?;
+
+    assert_eq!(sig_.issuers().collect::<Vec<_>>(),
+               vec![ &fp.clone().into() ]);
+    assert_eq!(sig_.issuer_fingerprints().collect::<Vec<_>>(),
+               vec![ &keypair.public().fingerprint() ]);
 
     // issuer_fingerprint subpacket present, do not override
     let mut sig = signature::SignatureBuilder::new(crate::types::SignatureType::Binary);

@@ -1084,7 +1084,7 @@ impl SignatureBuilder {
     ///
     /// // Generate an encryption subkey.
     /// let mut subkey: Key<_, _> =
-    ///     Key4::generate_ecc(false, Curve::Cv25519)?.into();
+    ///     Key6::generate_ecc(false, Curve::Cv25519)?.into();
     /// // Derive a signer.
     /// let mut sk_signer = subkey.clone().into_keypair()?;
     ///
@@ -1222,7 +1222,7 @@ impl SignatureBuilder {
     ///
     /// // Generate a signing subkey.
     /// let mut subkey: Key<_, _> =
-    ///     Key4::generate_ecc(true, Curve::Ed25519)?.into();
+    ///     Key6::generate_ecc(true, Curve::Ed25519)?.into();
     /// // Derive a signer.
     /// let mut sk_signer = subkey.clone().into_keypair()?;
     ///
@@ -1693,7 +1693,7 @@ impl SignatureBuilder {
     /// # use openpgp::types::SignatureType;
     /// #
     /// # let key: Key<key::SecretParts, key::PrimaryRole>
-    /// #     = Key::from(Key4::generate_ecc(true, Curve::Ed25519)?);
+    /// #     = Key::from(Key6::generate_ecc(true, Curve::Ed25519)?);
     /// # let mut signer = key.into_keypair()?;
     /// let sig = SignatureBuilder::new(SignatureType::Binary)
     ///     .pre_sign(&mut signer)?; // Important for size calculation.
@@ -3793,7 +3793,7 @@ mod test {
     use crate::crypto;
     use crate::parse::Parse;
     use crate::packet::Key;
-    use crate::packet::key::Key4;
+    use crate::packet::key::{Key4, Key6};
     use crate::types::Curve;
     use crate::policy::StandardPolicy as P;
 
@@ -4067,7 +4067,7 @@ mod test {
             }
 
             let key: Key<key::SecretParts, key::PrimaryRole>
-                = Key4::generate_ecc(true, curve).unwrap().into();
+                = Key6::generate_ecc(true, curve).unwrap().into();
             let msg = b"Hello, World";
             let mut pair = key.into_keypair().unwrap();
             let sig = SignatureBuilder::new(SignatureType::Binary)
@@ -4170,7 +4170,7 @@ mod test {
         use crate::packet::signature::subpacket::*;
 
         let key : key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+            = Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
         let mut pair = key.into_keypair().unwrap();
         let msg = b"Hello, World";
         let mut hash = HashAlgorithm::SHA256.context().unwrap()
@@ -4219,7 +4219,7 @@ mod test {
     #[test]
     fn standalone_signature_roundtrip() {
         let key : key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+            = Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
         let mut pair = key.into_keypair().unwrap();
 
         let sig = SignatureBuilder::new(SignatureType::Standalone)
@@ -4256,7 +4256,7 @@ mod test {
     #[test]
     fn timestamp_signature_roundtrip() {
         let key : key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+            = Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
         let mut pair = key.into_keypair().unwrap();
 
         let sig = SignatureBuilder::new(SignatureType::Timestamp)
@@ -4478,7 +4478,7 @@ mod test {
         use crate::packet::signature::subpacket::*;
 
         let key: key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            = Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let mut pair = key.into_keypair()?;
         let msg = b"Hello, World";
         let mut hash = HashAlgorithm::SHA256.context()?

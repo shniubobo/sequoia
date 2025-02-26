@@ -20,6 +20,8 @@
    - KeyAmalgamationIter::key_handles2 renamed to key_handles
    - ValidKeyAmalgamationIter::key_handles2 renamed to key_handles
    - Cert::insert_packets2 renamed to insert_packets
+   - Fingerprint no longer implements Borrow<[u8]>
+   - KeyID no longer implements Borrow<[u8]>
 
 ** New functionality
    - ValidCert::key_handle

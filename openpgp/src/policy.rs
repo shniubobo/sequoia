@@ -2600,7 +2600,7 @@ mod test {
 
         let pk = cert.primary_key().key().parts_as_secret()?;
         let subkey: key::SecretSubkey
-            = key::Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            = key::Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let binding = signature::SignatureBuilder::new(SignatureType::SubkeyBinding)
             .set_key_flags(KeyFlags::empty().set_transport_encryption())?
             .sign_subkey_binding(&mut pk.clone().into_keypair()?,

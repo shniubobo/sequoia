@@ -54,7 +54,7 @@ impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     ///
     /// // Generate a subkey and a binding signature.
     /// let subkey: Key<_, key::SubordinateRole> =
-    ///     Key4::generate_ecc(false, Curve::Cv25519)?
+    ///     Key6::generate_ecc(false, Curve::Cv25519)?
     ///     .into();
     /// let builder = signature::SignatureBuilder::new(SignatureType::SubkeyBinding)
     ///     .set_key_flags(flags.clone())?;

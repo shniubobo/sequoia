@@ -111,16 +111,6 @@ impl std::str::FromStr for Fingerprint {
     }
 }
 
-impl std::borrow::Borrow<[u8]> for Fingerprint {
-    fn borrow(&self) -> &[u8] {
-        match self {
-            Fingerprint::V4(fp) => &fp[..],
-            Fingerprint::V6(fp) => &fp[..],
-            Fingerprint::Unknown { bytes, .. } => &bytes,
-        }
-    }
-}
-
 impl Fingerprint {
     /// Creates a `Fingerprint` from a byte slice in big endian
     /// representation.

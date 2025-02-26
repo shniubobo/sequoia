@@ -228,8 +228,8 @@ impl CipherSuite {
 
         match self {
             CipherSuite::Cv25519 => match (sign, encrypt) {
-                (true, false) => Key4::generate_ed25519(),
-                (false, true) => Key4::generate_x25519(),
+                (true, false) => Key6::generate_ed25519(),
+                (false, true) => Key6::generate_x25519(),
                 (true, true) =>
                     Err(Error::InvalidOperation(
                         "Can't use key for encryption and signing".into())
@@ -240,11 +240,11 @@ impl CipherSuite {
                         .into()),
             },
             CipherSuite::RSA2k =>
-                Key4::generate_rsa(2048),
+                Key6::generate_rsa(2048),
             CipherSuite::RSA3k =>
-                Key4::generate_rsa(3072),
+                Key6::generate_rsa(3072),
             CipherSuite::RSA4k =>
-                Key4::generate_rsa(4096),
+                Key6::generate_rsa(4096),
             CipherSuite::P256 | CipherSuite::P384 | CipherSuite::P521 => {
                 let curve = match self {
                     CipherSuite::Cv25519 if sign => Curve::Ed25519,
@@ -261,8 +261,8 @@ impl CipherSuite {
                 };
 
                 match (sign, encrypt) {
-                    (true, false) => Key4::generate_ecc(true, curve),
-                    (false, true) => Key4::generate_ecc(false, curve),
+                    (true, false) => Key6::generate_ecc(true, curve),
+                    (false, true) => Key6::generate_ecc(false, curve),
                     (true, true) =>
                         Err(Error::InvalidOperation(
                             "Can't use key for encryption and signing".into())
@@ -273,7 +273,7 @@ impl CipherSuite {
                             .into()),
                 }
             },
-        }.map(Key6::from_common)
+        }
     }
 }
 

@@ -5472,7 +5472,7 @@ mod test {
     #[test]
     fn key_revoked() {
         use crate::types::Features;
-        use crate::packet::key::Key4;
+        use crate::packet::key::Key6;
         use rand::{thread_rng, Rng, distributions::Open01};
 
         let p = &P::new();
@@ -5498,7 +5498,7 @@ mod test {
         let t4 = time::UNIX_EPOCH + time::Duration::new(1041375600, 0); // 2003-1-1
 
         let mut key: key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+            = Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
         key.set_creation_time(t1).unwrap();
         let mut pair = key.clone().into_keypair().unwrap();
         let (bind1, rev1, bind2, rev2) = {
@@ -6148,7 +6148,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         // even when there are signatures with the same time.
 
         use crate::types::Features;
-        use crate::packet::key::Key4;
+        use crate::packet::key::Key6;
 
         let p = &P::new();
 
@@ -6161,7 +6161,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         let t4 = time::UNIX_EPOCH + time::Duration::new(1041375600, 0); // 2003-1-1
 
         let mut key: key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519).unwrap().into();
+            = Key6::generate_ecc(true, Curve::Ed25519).unwrap().into();
         key.set_creation_time(t1).unwrap();
         let mut pair = key.clone().into_keypair().unwrap();
         let pk : key::PublicKey = key.clone().into();
@@ -6350,7 +6350,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         let p = crate::policy::StandardPolicy::new();
 
         let primary: Key<_, key::PrimaryRole> =
-            key::Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            key::Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let cert = Cert::try_from(vec![primary.into()])?;
 
         // We now add components without binding signatures.  They
@@ -6375,7 +6375,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         // Add a bare signing subkey.
         let signing_subkey: Key<_, key::SubordinateRole> =
-            key::Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            key::Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let _signing_subkey_pair = signing_subkey.clone().into_keypair()?;
         let cert = cert.insert_packets(signing_subkey)?.0;
         assert_eq!(cert.keys().subkeys().count(), 1);
@@ -6501,12 +6501,12 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     fn canonicalizing_keeps_secrets() -> Result<()> {
         let primary: Key<_, key::PrimaryRole> =
-            key::Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            key::Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let mut primary_pair = primary.clone().into_keypair()?;
         let cert = Cert::try_from(vec![primary.clone().into()])?;
 
         let subkey_sec: Key<_, key::SubordinateRole> =
-            key::Key4::generate_ecc(false, Curve::Cv25519)?.into();
+            key::Key6::generate_ecc(false, Curve::Cv25519)?.into();
         let subkey_pub = subkey_sec.clone().take_secret().0;
         let builder = signature::SignatureBuilder::new(SignatureType::SubkeyBinding)
             .set_key_flags(KeyFlags::empty()
@@ -6884,7 +6884,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     fn missing_backsig_is_bad() -> Result<()> {
         use crate::packet::{
-            key::Key4,
+            key::Key6,
             signature::{
                 SignatureBuilder,
                 subpacket::{Subpacket, SubpacketValue},
@@ -6902,7 +6902,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         if let Some(Packet::Signature(sig)) = pp.path_ref_mut(&[4]) {
             // Add a bogus but plausible embedded signature subpacket.
             let key: key::SecretKey
-                = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+                = Key6::generate_ecc(true, Curve::Ed25519)?.into();
             let mut pair = key.into_keypair()?;
 
             sig.unhashed_area_mut().replace(Subpacket::new(
@@ -6934,7 +6934,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     fn multiple_embedded_signatures() -> Result<()> {
         use crate::packet::{
-            key::Key4,
+            key::Key6,
             signature::{
                 SignatureBuilder,
                 subpacket::{Subpacket, SubpacketValue},
@@ -6949,7 +6949,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         // Add a bogus but plausible embedded signature subpacket with
         // this key.
         let key: key::SecretKey
-            = Key4::generate_ecc(true, Curve::Ed25519)?.into();
+            = Key6::generate_ecc(true, Curve::Ed25519)?.into();
         let mut pair = key.into_keypair()?;
 
         // Create a malicious cert to merge in.

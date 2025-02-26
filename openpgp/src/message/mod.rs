@@ -881,7 +881,7 @@ mod tests {
 
         let hash = crate::types::HashAlgorithm::SHA512;
         let key: key::SecretKey =
-            crate::packet::key::Key4::generate_ecc(true, crate::types::Curve::Ed25519)
+            crate::packet::key::Key6::generate_ecc(true, crate::types::Curve::Ed25519)
             .unwrap().into();
         let mut pair = key.clone().into_keypair().unwrap();
         let ctx =
@@ -995,7 +995,7 @@ mod tests {
 
         let hash = crate::types::HashAlgorithm::SHA512;
         let key: key::SecretKey =
-            crate::packet::key::Key4::generate_ecc(true, crate::types::Curve::Ed25519)
+            crate::packet::key::Key6::generate_ecc(true, crate::types::Curve::Ed25519)
             .unwrap().into();
         let mut pair = key.clone().into_keypair().unwrap();
         let ctx =
