@@ -1,10 +1,10 @@
 //! Padding for OpenPGP messages.
 //!
 //! To reduce the amount of information leaked via the message length,
-//! encrypted OpenPGP messages (see [Section 11.3 of RFC 4880]) should
+//! encrypted OpenPGP messages (see [Section 10.3 of RFC 9580]) should
 //! be padded.
 //!
-//!   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+//!   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 //!
 //! To pad a message using the streaming serialization interface, the
 //! [`Padder`] needs to be inserted into the writing stack between the

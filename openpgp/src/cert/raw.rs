@@ -211,8 +211,8 @@ impl<'a> crate::serialize::Marshal for RawPacket<'a> {
 /// it can extract the primary key's fingerprint.  Beyond that, the
 /// packets are not guaranteed to be valid.
 ///
-/// [Transferable Public Key grammar]: https://www.rfc-editor.org/rfc/rfc4880#section-11.1
-/// [Transferable Secret Key grammar]: https://www.rfc-editor.org/rfc/rfc4880#section-11.2
+/// [Transferable Public Key grammar]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1
+/// [Transferable Secret Key grammar]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.2
 ///
 /// This data structure exists to quickly split a large keyring, and
 /// only parse those certificates that appear to be relevant.
@@ -557,8 +557,8 @@ impl<'a> crate::serialize::Marshal for RawCert<'a> {
 /// performs a few basic checks.  See the documentation for
 /// [`RawCert`] for details.
 ///
-/// [Transferable Public Key grammar]: https://www.rfc-editor.org/rfc/rfc4880#section-11.1
-/// [Transferable Secret Key grammar]: https://www.rfc-editor.org/rfc/rfc4880#section-11.2
+/// [Transferable Public Key grammar]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1
+/// [Transferable Secret Key grammar]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.2
 ///
 /// Because a `RawCertParser` doesn't parse the contents of the
 /// packets, it is significantly faster than a [`CertParser`] when

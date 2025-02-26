@@ -1,12 +1,12 @@
 //! Streaming packet serialization.
 //!
 //! This interface provides a convenient way to create signed and/or
-//! encrypted OpenPGP messages (see [Section 11.3 of RFC 4880]) and is
+//! encrypted OpenPGP messages (see [Section 10.3 of RFC 9580]) and is
 //! the preferred interface to generate messages using Sequoia.  It
 //! takes advantage of OpenPGP's streaming nature to avoid unnecessary
 //! buffering.
 //!
-//!   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+//!   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 //!
 //! To use this interface, a sink implementing [`io::Write`] is
 //! wrapped by [`Message::new`] returning a streaming [`Message`].
@@ -44,10 +44,10 @@
 //! # Examples
 //!
 //! This example demonstrates how to create the simplest possible
-//! OpenPGP message (see [Section 11.3 of RFC 4880]) containing just a
-//! literal data packet (see [Section 5.9 of RFC 4880]):
+//! OpenPGP message (see [Section 10.3 of RFC 9580]) containing just a
+//! literal data packet (see [Section 5.9 of RFC 9580]):
 //!
-//!   [Section 5.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.9
+//!   [Section 5.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.9
 //!
 //! ```
 //! # fn main() -> sequoia_openpgp::Result<()> {
@@ -67,7 +67,7 @@
 //! ```
 //!
 //! This example demonstrates how to create the most common OpenPGP
-//! message structure (see [Section 11.3 of RFC 4880]).  The plaintext
+//! message structure (see [Section 10.3 of RFC 9580]).  The plaintext
 //! is first signed, then padded, encrypted, and finally ASCII armored.
 //!
 //! ```
@@ -343,14 +343,14 @@ impl<'a> From<&'a mut (dyn io::Write + Send + Sync)> for Message<'a> {
 
 /// Applies ASCII Armor to the message.
 ///
-/// ASCII armored data (see [Section 6 of RFC 4880]) is a OpenPGP data
+/// ASCII armored data (see [Section 6 of RFC 9580]) is a OpenPGP data
 /// stream that has been base64-encoded and decorated with a header,
 /// footer, and optional headers representing key-value pairs.  It can
 /// be safely transmitted over protocols that can only transmit
 /// printable characters, and can be handled by end users (e.g. copied
 /// and pasted).
 ///
-///   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
+///   [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
 pub struct Armorer<'a> {
     kind: armor::Kind,
     headers: Vec<(String, String)>,
@@ -460,10 +460,10 @@ impl<'a> Armorer<'a> {
     /// Adds a header to the armor block.
     ///
     /// There are a number of defined armor header keys (see [Section
-    /// 6 of RFC 4880]), but in practice, any key may be used, as
+    /// 6 of RFC 9580]), but in practice, any key may be used, as
     /// implementations should simply ignore unknown keys.
     ///
-    ///   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
+    ///   [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
     ///
     /// # Examples
     ///
@@ -686,13 +686,13 @@ impl<'a> Signer<'a> {
     /// create more than one signature, add more [`crypto::Signer`]s
     /// using [`Signer::add_signer`].  Properties of the signatures
     /// can be tweaked using the methods of this type.  Notably, to
-    /// generate a detached signature (see [Section 11.4 of RFC
-    /// 4880]), use [`Signer::detached`].  For even more control over
+    /// generate a detached signature (see [Section 10.4 of RFC
+    /// 9580]), use [`Signer::detached`].  For even more control over
     /// the generated signatures, use [`Signer::with_template`].
     ///
     ///   [`crypto::Signer`]: super::super::crypto::Signer
     ///   [`Signer::add_signer`]: Signer::add_signer()
-    ///   [Section 11.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.4
+    ///   [Section 10.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.4
     ///   [`Signer::detached`]: Signer::detached()
     ///   [`Signer::with_template`]: Signer::with_template()
     ///
@@ -852,12 +852,12 @@ impl<'a> Signer<'a> {
     /// Creates a signer for a detached signature.
     ///
     /// Changes the `Signer` to create a detached signature (see
-    /// [Section 11.4 of RFC 4880]).  Note that the literal data *must
+    /// [Section 10.4 of RFC 9580]).  Note that the literal data *must
     /// not* be wrapped using the [`LiteralWriter`].
     ///
     /// This overrides any prior call to [`Signer::cleartext`].
     ///
-    ///   [Section 11.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.4
+    ///   [Section 10.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.4
     ///   [`Signer::cleartext`]: Signer::cleartext()
     ///
     /// # Examples
@@ -930,7 +930,7 @@ impl<'a> Signer<'a> {
     /// Creates a signer for a cleartext signed message.
     ///
     /// Changes the `Signer` to create a cleartext signed message (see
-    /// [Section 7 of RFC 4880]).  Note that the literal data *must
+    /// [Section 7 of RFC 9580]).  Note that the literal data *must
     /// not* be wrapped using the [`LiteralWriter`].  This implies
     /// ASCII armored output, *do not* add an [`Armorer`] to the
     /// stack.
@@ -938,8 +938,8 @@ impl<'a> Signer<'a> {
     /// Note:
     ///
     /// - The cleartext signature framework does not hash trailing
-    ///   whitespace (in this case, space and tab, see [Section 7.1 of
-    ///   RFC 4880] for more information).  We align what we emit and
+    ///   whitespace (in this case, space and tab, see [Section 7.2 of
+    ///   RFC 9580] for more information).  We align what we emit and
     ///   what is being signed by trimming whitespace off of line
     ///   endings.
     ///
@@ -947,12 +947,12 @@ impl<'a> Signer<'a> {
     ///   the signed message if your message contains either a line
     ///   with trailing whitespace, or no final newline.  This is a
     ///   limitation of the Cleartext Signature Framework, which is
-    ///   not designed to be reversible (see [Section 7 of RFC 4880]).
+    ///   not designed to be reversible (see [Section 7 of RFC 9580]).
     ///
     /// This overrides any prior call to [`Signer::detached`].
     ///
-    ///   [Section 7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-7
-    ///   [Section 7.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-7.1
+    ///   [Section 7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-7
+    ///   [Section 7.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-7.2
     ///   [`Signer::detached`]: Signer::detached()
     ///
     /// # Examples
@@ -1265,14 +1265,14 @@ impl<'a> Signer<'a> {
     ///
     /// The most useful filter to push to the writer stack next is the
     /// [`LiteralWriter`].  Note, if you are creating a signed OpenPGP
-    /// message (see [Section 11.3 of RFC 4880]), literal data *must*
+    /// message (see [Section 10.3 of RFC 9580]), literal data *must*
     /// be wrapped using the [`LiteralWriter`].  On the other hand, if
-    /// you are creating a detached signature (see [Section 11.4 of
-    /// RFC 4880]), the literal data *must not* be wrapped using the
+    /// you are creating a detached signature (see [Section 10.4 of
+    /// RFC 9580]), the literal data *must not* be wrapped using the
     /// [`LiteralWriter`].
     ///
-    ///   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
-    ///   [Section 11.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.4
+    ///   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
+    ///   [Section 10.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.4
     ///
     /// # Examples
     ///
@@ -1627,10 +1627,10 @@ impl<'a> writer::Stackable<'a, Cookie> for Signer<'a> {
 ///
 /// Literal data, i.e. the payload or plaintext, must be wrapped in a
 /// literal data packet to be transported over OpenPGP (see [Section
-/// 5.9 of RFC 4880]).  The body will be written using partial length
+/// 5.9 of RFC 9580]).  The body will be written using partial length
 /// encoding, or, if the body is short, using full length encoding.
 ///
-///   [Section 5.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.9
+///   [Section 5.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.9
 ///
 /// # Note on metadata
 ///
@@ -2147,13 +2147,13 @@ impl<'a> writer::Stackable<'a, Cookie> for Compressor<'a> {
 ///
 /// OpenPGP messages are encrypted with the subkeys of recipients,
 /// identified by the keyid of said subkeys in the [`recipient`] field
-/// of [`PKESK`] packets (see [Section 5.1 of RFC 4880]).  The keyid
+/// of [`PKESK`] packets (see [Section 5.1 of RFC 9580]).  The keyid
 /// may be a wildcard (as returned by [`KeyID::wildcard()`]) to
 /// obscure the identity of the recipient.
 ///
 ///   [`recipient`]: crate::packet::PKESK#method.recipient
 ///   [`PKESK`]: crate::packet::PKESK
-///   [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
+///   [Section 5.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.1
 ///   [`KeyID::wildcard()`]: crate::KeyID::wildcard()
 ///
 /// Note that several subkeys in a certificate may be suitable

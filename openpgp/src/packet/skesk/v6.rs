@@ -2,9 +2,9 @@
 //!
 //! SKESK packets hold symmetrically encrypted session keys.  The
 //! session key is needed to decrypt the actual ciphertext.  See
-//! [Section 5.3 of RFC 4880] for details.
+//! [Section 5.3 of RFC 9580] for details.
 //!
-//! [Section 5.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.3
+//! [Section 5.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.3
 
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};

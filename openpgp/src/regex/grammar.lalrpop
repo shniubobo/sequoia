@@ -12,7 +12,7 @@ grammar<'input>(input: &'input str);
 // This is a straightforward translation of the regular expression
 // grammar from section 8 of RFC 4880.
 //
-// https://tools.ietf.org/html/rfc4880#section-8
+// https://www.rfc-editor.org/rfc/rfc9580.html#section-8
 pub(crate) Regex : Hir = {
     <l:LBranch> <r:RBranch*> => {
         let mut r = r;

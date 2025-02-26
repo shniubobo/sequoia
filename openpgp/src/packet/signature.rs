@@ -26,7 +26,7 @@
 //! that case, the fingerprint could not be used as a long-term,
 //! unique, and stable identifier.
 //!
-//! Signatures are described in [Section 5.2 of RFC 4880].
+//! Signatures are described in [Section 5.2 of RFC 9580].
 //!
 //! # Data Types
 //!
@@ -97,15 +97,15 @@
 //! consults the unhashed subpacket area for certain packets.  See
 //! [its documentation] for details.
 //!
-//! [Section 5.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2
+//! [Section 5.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
 //! [`Signature`]: super::Signature
 //! [version 3]: https://tools.ietf.org/html/rfc1991#section-5.2.2
-//! [version 4]: https://tools.ietf.org/html/rfc4880#section-5.2.3
+//! [version 4]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3
 //! [version 6]: https://www.rfc-editor.org/rfc/rfc9580.html#name-versions-4-and-6-signature-
-//! [notations]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+//! [notations]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
 //! [streaming `Signer`]: crate::serialize::stream::Signer
 //! [`PacketParser`]: crate::parse::PacketParser
-//! [hints]: https://tools.ietf.org/html/rfc4880#section-5.13
+//! [hints]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13
 //! [`Signature::normalize`]: super::Signature::normalize()
 //! [`SubpacketArea`]: subpacket::SubpacketArea
 //! [`SubpacketAreas`]: subpacket::SubpacketAreas
@@ -212,7 +212,7 @@ pub(crate) const SIG_BACKDATE_BY: u64 = 60;
 ///
 /// A `SignatureField` derefs to a [`SubpacketAreas`].
 ///
-/// [`Signature`]: https://tools.ietf.org/html/rfc4880#section-5.2
+/// [`Signature`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
 /// [`SubpacketAreas`]: subpacket::SubpacketAreas
 #[derive(Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SignatureFields {
@@ -345,7 +345,7 @@ impl SBVersion {
 /// template, which is often the case when updating self signatures,
 /// and binding signatures.
 ///
-/// According to [Section 5.2.3.4 of RFC 4880], `Signatures` must
+/// According to [Section 5.2.3.11 of RFC 9580], `Signatures` must
 /// include a [`Signature Creation Time`] subpacket.  Since this
 /// should usually be set to the current time, and is easy to forget
 /// to update, we remove any `Signature Creation Time` subpackets
@@ -368,8 +368,8 @@ impl SBVersion {
 /// explicitly set a signature creation time, or preserve the original
 /// one, or suppress the insertion of a timestamp.
 ///
-///   [Section 5.2.3.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
-///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+///   [Section 5.2.3.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
+///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
 ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
 ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
 ///   [`suppress_signature_creation_time`]: SignatureBuilder::suppress_signature_creation_time()
@@ -390,7 +390,7 @@ impl SBVersion {
 /// the [`set_issuer`] method and the [`set_issuer_fingerprint`]
 /// method, respectively).
 ///
-///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
 ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
 ///   [`Signer`]: super::super::crypto::Signer
 ///   [`set_issuer`]: SignatureBuilder::set_issuer()
@@ -548,7 +548,7 @@ impl SignatureBuilder {
     /// self-contained signature, which is only over the signature
     /// packet.
     ///
-    ///   [Standalone Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [Standalone Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`SignatureType::Standalone`]: crate::types::SignatureType::Standalone
     ///
     /// This function checks that the [signature type] (passed to
@@ -576,7 +576,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -587,7 +587,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -647,14 +647,14 @@ impl SignatureBuilder {
     /// area.
     ///
     ///
-    ///   [Standalone Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [Standalone Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`SignatureBuilder::sign_standalone`]: SignatureBuilder::sign_standalone()
-    ///   [Timestamp Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [Timestamp Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [timestamping services]: https://en.wikipedia.org/wiki/Trusted_timestamping
-    ///   [Signature Target subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    ///   [Signature Target subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     ///   [`SignatureBuilder::set_signature_target`]: SignatureBuilder::set_signature_target()
-    ///   [Embedded Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
+    ///   [Embedded Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
     ///   [`SignatureBuilder::set_embedded_signature`]: SignatureBuilder::set_embedded_signature()
     ///
     /// This function checks that the [signature type] (passed to
@@ -682,7 +682,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -693,7 +693,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -753,9 +753,9 @@ impl SignatureBuilder {
     /// Signature], which revokes the certificate.
     ///
     ///   [preferences]: crate::cert::Preferences
-    ///   [Direct Key Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
-    ///   [Preferred Symmetric Algorithms]: https://tools.ietf.org/html/rfc4880#section-5.2.3.7
-    ///   [Key Revocation Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [Direct Key Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    ///   [Preferred Symmetric Algorithms]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.14
+    ///   [Key Revocation Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// This function checks that the [signature type] (passed to
     /// [`SignatureBuilder::new`], set via
@@ -784,7 +784,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -795,7 +795,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -872,7 +872,7 @@ impl SignatureBuilder {
     /// ID` should be associated with the `Certificate`, i.e., that
     /// the binding is authentic.
     ///
-    ///   [User ID certification]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [User ID certification]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// OpenPGP has four types of `User ID` certifications.  They are
     /// intended to express the degree of the signer's conviction,
@@ -885,7 +885,7 @@ impl SignatureBuilder {
     /// This function is also used to create [Certification
     /// Revocations].
     ///
-    ///   [Certification Revocations]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [Certification Revocations]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// This function checks that the [signature type] (passed to
     /// [`SignatureBuilder::new`], set via
@@ -918,7 +918,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -929,7 +929,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -1012,7 +1012,7 @@ impl SignatureBuilder {
     ///
     /// This function is also used to create subkey revocations.
     ///
-    ///   [subkey binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [subkey binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`SignatureBuilder::sign_primary_key_binding`]: SignatureBuilder::sign_primary_key_binding()
     ///
     /// This function checks that the [signature type] (passed to
@@ -1042,7 +1042,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -1053,7 +1053,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -1127,9 +1127,9 @@ impl SignatureBuilder {
     /// Signature`] subpacket (set using
     /// [`SignatureBuilder::set_embedded_signature`]).
     ///
-    ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [primary key binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`SignatureBuilder::sign_subkey_binding`]: SignatureBuilder::sign_subkey_binding()
-    ///   [`Embedded Signature`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
+    ///   [`Embedded Signature`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
     ///   [`SignatureBuilder::set_embedded_signature`]: SignatureBuilder::set_embedded_signature()
     ///
     /// All subkeys that make signatures of any sort (signature
@@ -1182,7 +1182,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -1193,7 +1193,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -1267,7 +1267,7 @@ impl SignatureBuilder {
     /// that the User Attribute should be associated with the
     /// Certificate, i.e., that the binding is authentic.
     ///
-    ///   [User ID certification]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [User ID certification]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// OpenPGP has four types of User Attribute certifications.  They
     /// are intended to express the degree of the signer's conviction.
@@ -1307,7 +1307,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -1318,7 +1318,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -1411,7 +1411,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -1422,7 +1422,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     pub fn sign_hash(mut self, signer: &mut dyn Signer,
@@ -1480,7 +1480,7 @@ impl SignatureBuilder {
     /// subpacket area and set to the `signer`'s `KeyID` and
     /// `Fingerprint`, respectively.
     ///
-    ///   [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`SignatureBuilder::set_issuer`]: SignatureBuilder::set_issuer()
     ///   [`Issuer Fingerprint`]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///   [`SignatureBuilder::set_issuer_fingerprint`]: SignatureBuilder::set_issuer_fingerprint()
@@ -1491,7 +1491,7 @@ impl SignatureBuilder {
     /// the [`set_signature_creation_time`] method or the
     /// [`preserve_signature_creation_time`] method.
     ///
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///   [`set_signature_creation_time`]: SignatureBuilder::set_signature_creation_time()
     ///   [`preserve_signature_creation_time`]: SignatureBuilder::preserve_signature_creation_time()
     ///
@@ -1895,7 +1895,7 @@ impl From<Signature6> for SignatureBuilder {
 /// do version-specific operations.  But currently, there aren't any
 /// version-specific methods.
 ///
-///   [version 4]: https://tools.ietf.org/html/rfc4880#section-5.2
+///   [version 4]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
 ///   [`Signature`]: super::Signature
 #[derive(Clone)]
 pub struct Signature4 {
@@ -2114,8 +2114,8 @@ impl Signature4 {
     /// include any sensitive [`Revocation Key`] (designated revokers)
     /// subpackets.
     ///
-    ///   [`Exportable Certification`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.11
-    ///   [`Revocation Key`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    ///   [`Exportable Certification`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
+    ///   [`Revocation Key`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     pub fn exportable(&self) -> Result<()> {
         if ! self.exportable_certification().unwrap_or(true) {
             return Err(Error::InvalidOperation(
@@ -2151,12 +2151,16 @@ impl From<Signature3> for SignatureBuilder {
 /// do version-specific operations.  But currently, there aren't any
 /// version-specific methods.
 ///
-///   [version 3]: https://tools.ietf.org/html/rfc4880#section-5.2
+///   [version 3]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
 ///   [`Signature`]: super::Signature
 ///
-/// Note: Per RFC 4880, v3 signatures should not be generated, but
-/// they should be accepted.  As such, support for version 3
-/// signatures is limited to verifying them, but not generating them.
+/// Note: Per [Section 5.2 of RFC 9580], v3 signatures should not be
+/// generated, but they should be accepted.  As such, support for
+/// version 3 signatures is limited to verifying them, but not
+/// generating them.
+///
+/// [Section 5.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
+
 #[derive(Clone)]
 pub struct Signature3 {
     pub(crate) intern: Signature4,
@@ -2338,7 +2342,7 @@ impl crate::packet::Signature {
     /// authenticates the subpacket), it is typically stored in the
     /// unhashed subpacket area.
     ///
-    ///   [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [Issuer Fingerprint subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     ///
     /// This function returns all instances of the Issuer subpacket

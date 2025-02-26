@@ -35,7 +35,7 @@ use crate::cert::prelude::*;
 /// and the key used to sign the revocation certificate comes from
 /// `R`.
 ///
-/// [designated revoker]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+/// [designated revoker]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 ///
 /// # Examples
 ///
@@ -348,7 +348,7 @@ impl TryFrom<signature::SignatureBuilder> for CertRevocationBuilder {
 /// of `A`, even if that subkey is not bound to `A`.  Semantically,
 /// such a revocation certificate is currently meaningless.
 ///
-/// [designated revoker]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+/// [designated revoker]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 ///
 /// # Examples
 ///
@@ -664,7 +664,7 @@ impl TryFrom<signature::SignatureBuilder> for SubkeyRevocationBuilder {
 /// meaningless.
 ///
 /// [User ID]: crate::packet::UserID
-/// [designated revoker]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+/// [designated revoker]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 ///
 /// # Examples
 ///
@@ -987,7 +987,7 @@ impl TryFrom<signature::SignatureBuilder> for UserIDRevocationBuilder {
 /// meaningless.
 ///
 /// [User Attribute]: crate::packet::user_attribute
-/// [designated revoker]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+/// [designated revoker]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 ///
 /// # Examples
 ///

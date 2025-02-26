@@ -302,7 +302,7 @@ impl ConventionallyParsedUserID {
 /// Holds a UserID packet.
 ///
 /// The standard imposes no structure on UserIDs, but suggests to
-/// follow [RFC 2822].  See [Section 5.11 of RFC 4880] for details.
+/// follow [RFC 2822].  See [Section 5.11 of RFC 9580] for details.
 /// In practice though, implementations do not follow [RFC 2822], or
 /// do not even help their users in producing well-formed User IDs.
 /// Experience has shown that parsing User IDs using [RFC 2822] does
@@ -310,7 +310,7 @@ impl ConventionallyParsedUserID {
 /// what we call *Conventional User IDs*.
 ///
 ///   [RFC 2822]: https://tools.ietf.org/html/rfc2822
-///   [Section 5.11 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.11
+///   [Section 5.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.11
 ///
 /// Using this definition, we provide methods to extract the [name],
 /// [comment], [email address], or [URI] from `UserID` packets.
@@ -467,11 +467,11 @@ pub struct UserID {
     pub(crate) common: packet::Common,
     /// The user id.
     ///
-    /// According to [RFC 4880], the text is by convention UTF-8 encoded
+    /// According to [Section 5.11 of RFC 9580], the text is by convention UTF-8 encoded
     /// and in "mail name-addr" form, i.e., "Name (Comment)
     /// <email@example.com>".
     ///
-    ///   [RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.11
+    ///   [Section 5.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.11
     ///
     /// Use `UserID::default()` to get a UserID with a default settings.
     value: Cow<'static, [u8]>,

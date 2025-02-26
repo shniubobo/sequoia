@@ -3,7 +3,7 @@
 //! An OpenPGP message is a sequence of OpenPGP packets that
 //! corresponds to an optionally signed, optionally encrypted,
 //! optionally compressed literal data packet.  The exact format of an
-//! OpenPGP message is described in [Section 11.3 of RFC 4880].
+//! OpenPGP message is described in [Section 10.3 of RFC 9580].
 //!
 //! This module provides support for validating and working with
 //! OpenPGP messages.
@@ -19,7 +19,7 @@
 //! -----END PGP MESSAGE-----
 //! ```
 //!
-//! [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+//! [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 
 use std::convert::TryFrom;
 use std::fmt;
@@ -293,10 +293,10 @@ impl MessageValidator {
 ///
 /// An OpenPGP message is a structured sequence of OpenPGP packets.
 /// Basically, it's an optionally encrypted, optionally signed literal
-/// data packet.  The exact structure is defined in [Section 11.3 of RFC
-/// 4880].
+/// data packet.  The exact structure is defined in [Section 10.3 of RFC
+/// 9580].
 ///
-///   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+///   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 ///
 /// [ASCII Armored Messages] are wrapped in `-----BEGIN PGP MESSAGE-----` header
 /// and `-----END PGP MESSAGE-----` tail lines:
@@ -312,7 +312,7 @@ impl MessageValidator {
 /// -----END PGP MESSAGE-----
 /// ```
 ///
-/// [ASCII Armored Messages]: https://tools.ietf.org/html/rfc4880#section-6.6
+/// [ASCII Armored Messages]: https://www.rfc-editor.org/rfc/rfc9580.html#section-!
 ///
 /// # Examples
 ///
@@ -424,13 +424,13 @@ impl TryFrom<PacketPile> for Message {
     /// Converting a `PacketPile` to a `Message` doesn't change the
     /// packets; it asserts that the packet sequence is an optionally
     /// encrypted, optionally signed, optionally compressed literal
-    /// data packet.  The exact grammar is defined in [Section 11.3 of
-    /// RFC 4880].
+    /// data packet.  The exact grammar is defined in [Section 10.3 of
+    /// RFC 9580].
     ///
     /// Caveats: this function assumes that any still encrypted parts
     /// or still compressed parts are valid messages.
     ///
-    ///   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+    ///   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
     fn try_from(pile: PacketPile) -> Result<Self> {
         let mut v = MessageValidator::new();
         for (mut path, packet) in pile.descendants().paths() {

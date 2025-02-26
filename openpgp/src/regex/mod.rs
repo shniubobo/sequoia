@@ -3,8 +3,8 @@
 //! OpenPGP defines a [regular expression language].  It is used with
 //! [trust signatures] to scope the trust that they extend.
 //!
-//!   [regular expression language]: https://tools.ietf.org/html/rfc4880#section-8
-//!   [trust signatures]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+//!   [regular expression language]: https://www.rfc-editor.org/rfc/rfc9580.html#section-8
+//!   [trust signatures]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
 //!
 //! Compared with most regular expression languages, OpenPGP's is
 //! quite simple.  In particular, it only includes the following
@@ -54,12 +54,12 @@
 //! [Trust Signature] subpacket using, for instance, the
 //! [`SignatureBuilder::set_trust_signature`] method.
 //!
-//!   [type]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+//!   [type]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
 //!   [GenericCertification]: crate::types::SignatureType::GenericCertification
 //!   [PersonaCertification]: crate::types::SignatureType::PersonaCertification
 //!   [CasualCertification]: crate::types::SignatureType::CasualCertification
 //!   [PositiveCertification]: crate::types::SignatureType::PositiveCertification
-//!   [Trust Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+//!   [Trust Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
 //!   [`SignatureBuilder::set_trust_signature`]: crate::packet::signature::SignatureBuilder::set_trust_signature()
 //!
 //! To scope a trust signature, you add a [Regular Expression
@@ -70,7 +70,7 @@
 //! To extract any regular expressions, you can use
 //! [`SubpacketAreas::regular_expressions`].
 //!
-//!   [Regular Expression subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+//!   [Regular Expression subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
 //!   [`SignatureBuilder::set_regular_expression`]: crate::packet::signature::SignatureBuilder::set_regular_expression()
 //!   [`SignatureBuilder::add_regular_expression`]: crate::packet::signature::SignatureBuilder::add_regular_expression()
 //!   [`SubpacketAreas::regular_expressions`]: crate::packet::signature::subpacket::SubpacketAreas::regular_expressions()
@@ -355,7 +355,7 @@ fn generate_class(caret: bool, chars: impl Iterator<Item=char>) -> Hir
 /// strings.
 ///
 /// A `Regex` contains a regular expression compiled according to the
-/// rules defined in [Section 8 of RFC 4880] modulo two differences.
+/// rules defined in [Section 8 of RFC 9580] modulo two differences.
 /// First, the compiler only works on UTF-8 strings (not bytes).
 /// Second, ranges in character classes are between UTF-8 characters,
 /// not just ASCII characters.  Further, by default, strings that
@@ -363,8 +363,8 @@ fn generate_class(caret: bool, chars: impl Iterator<Item=char>) -> Hir
 /// characters) never match.  This behavior can be customized using
 /// [`Regex::disable_sanitizations`].
 ///
-///   [Section 8 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-8
-///   [trust signatures]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+///   [Section 8 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-8
+///   [trust signatures]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
 ///   [`Regex::disable_sanitizations`]: Regex::disable_sanitizations()
 ///
 /// Regular expressions are used to scope the trust that [trust
@@ -523,7 +523,7 @@ assert_send_and_sync!(RegexSet_);
 ///
 /// A `RegexSet` encapsulates a set of regular expressions.  The
 /// regular expressions are compiled according to the rules defined in
-/// [Section 8 of RFC 4880] modulo two differences.  First, the
+/// [Section 8 of RFC 9580] modulo two differences.  First, the
 /// compiler only works on UTF-8 strings (not bytes).  Second, ranges
 /// in character classes are between UTF-8 characters, not just ASCII
 /// characters.  Further, by default, strings that don't pass a sanity
@@ -531,7 +531,7 @@ assert_send_and_sync!(RegexSet_);
 /// match.  This behavior can be customized using
 /// [`RegexSet::disable_sanitizations`].
 ///
-///   [Section 8 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-8
+///   [Section 8 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-8
 ///   [`RegexSet::disable_sanitizations`]: RegexSet::disable_sanitizations()
 ///
 /// `RegexSet` implements the semantics of [regular expression]s used
@@ -542,8 +542,8 @@ assert_send_and_sync!(RegexSet_);
 ///   - Have no Regular Expression subpackets, and/or
 ///   - Include one or more Regular Expression subpackets that are invalid.
 ///
-///   [regular expressions]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
-///   [Trust Signatures]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+///   [regular expressions]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
+///   [Trust Signatures]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
 ///
 /// `RegexSet` compiles each regular expression individually.  If
 /// there are no regular expressions, the `RegexSet` matches
@@ -806,7 +806,7 @@ impl RegexSet {
     /// regular expressions from a [Trust Signature] and wraps them in a
     /// `RegexSet`.
     ///
-    ///   [Trust Signature]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    ///   [Trust Signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     ///
     /// If the signature is not a valid trust signature (its [type] is
     /// [GenericCertification], [PersonaCertification],
@@ -814,7 +814,7 @@ impl RegexSet {
     /// [Trust Signature] subpacket is present), this returns an
     /// error.
     ///
-    ///   [type]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [type]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [GenericCertification]: crate::types::SignatureType::GenericCertification
     ///   [PersonaCertification]: crate::types::SignatureType::PersonaCertification
     ///   [CasualCertification]: crate::types::SignatureType::CasualCertification

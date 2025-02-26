@@ -1,9 +1,9 @@
 //! Symmetrically Encrypted Integrity Protected data packets.
 //!
 //! An encrypted data packet is a container.  See [Section 5.13 of RFC
-//! 4880] for details.
+//! 9580] for details.
 //!
-//! [Section 5.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.13
+//! [Section 5.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13
 
 use crate::packet;
 use crate::Packet;
@@ -14,9 +14,9 @@ pub use v2::*;
 /// Holds an encrypted data packet.
 ///
 /// An encrypted data packet is a container.  See [Section 5.13 of RFC
-/// 4880] for details.
+/// 9580] for details.
 ///
-/// [Section 5.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.13
+/// [Section 5.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13
 ///
 /// # A note on equality
 ///

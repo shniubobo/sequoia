@@ -2249,9 +2249,9 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// This function considers both the binding signature and the
     /// direct key signature.  Information in the binding signature
     /// takes precedence over the direct key signature.  See [Section
-    /// 5.2.3.3 of RFC 4880].
+    /// 5.2.3.10 of RFC 9580].
     ///
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    ///   [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     ///
     /// For a definition of liveness, see the [`key_alive`] method.
     ///
@@ -2326,7 +2326,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// thereby creating confusion about the certificate that issued a
     /// signature.
     ///
-    ///   [primary key binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
+    ///   [primary key binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// Not all keys have primary key binding signatures.  First,
     /// primary keys don't have them, because they don't need them.
@@ -2515,7 +2515,7 @@ impl<'a, P> ValidSubordinateKeyAmalgamation<'a, P>
     /// Likewise, this function fails if `subkey_signer` is not `None`
     /// when updating the expiration of a non signing-capable subkey.
     ///
-    ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [primary key binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`Error::InvalidArgument`]: super::super::super::Error::InvalidArgument
     ///
     /// # Examples
@@ -2755,7 +2755,7 @@ impl<'a, P> ValidErasedKeyAmalgamation<'a, P>
     /// when updating the expiration of the primary key, or a non
     /// signing-capable subkey.
     ///
-    ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [primary key binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`Error::InvalidArgument`]: super::super::super::Error::InvalidArgument
     ///
     /// # Examples
@@ -2863,14 +2863,14 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// Returns the key's `Key Flags`.
     ///
     /// A Key's [`Key Flags`] holds information about the key.  As of
-    /// RFC 4880, this information is primarily concerned with the
+    /// RFC 9580, this information is primarily concerned with the
     /// key's capabilities (e.g., whether it may be used for signing).
     /// The other information that has been defined is: whether the
     /// key has been split using something like [SSS], and whether the
     /// primary key material is held by multiple parties.  In
     /// practice, the latter two flags are ignored.
     ///
-    /// As per [Section 5.2.3.3 of RFC 4880], when looking for the
+    /// As per [Section 5.2.3.10 of RFC 9580], when looking for the
     /// `Key Flags`, the key's binding signature is first consulted
     /// (in the case of the primary Key, this is the binding signature
     /// of the primary User ID).  If the `Key Flags` subpacket is not
@@ -2885,9 +2885,9 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// infer the key flags from the key's role and public key
     /// algorithm.
     ///
-    ///   [`Key Flags`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    ///   [`Key Flags`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     ///   [SSS]: https://de.wikipedia.org/wiki/Shamir%E2%80%99s_Secret_Sharing
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    ///   [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     ///
     /// # Examples
     ///
@@ -3010,7 +3010,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
 
     /// Returns whether the key is certification capable.
     ///
-    /// Note: [Section 12.1 of RFC 4880] says that the primary key is
+    /// Note: [Section 10.1 of RFC 9580] says that the primary key is
     /// certification capable independent of the `Key Flags`
     /// subpacket:
     ///
@@ -3052,7 +3052,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// # Ok(()) }
     /// ```
     ///
-    /// [Section 12.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    /// [Section 10.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     /// [`ValidKeyAmalgamation::key_flags`]: ValidKeyAmalgamation::key_flags()
     pub fn for_certification(&self) -> bool {
         self.has_any_key_flag(KeyFlags::empty().set_certification())
@@ -3228,7 +3228,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// This function considers both the binding signature and the
     /// direct key signature.  Information in the binding signature
     /// takes precedence over the direct key signature.  See [Section
-    /// 5.2.3.3 of RFC 4880].
+    /// 5.2.3.10 of RFC 9580].
     ///
     /// # Examples
     ///
@@ -3262,7 +3262,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// ```
     ///
     ///   [`ValidKeyAmalgamation::key_expiration_time`]: ValidKeyAmalgamation::key_expiration_time()
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    ///   [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     pub fn key_validity_period(&self) -> Option<std::time::Duration> {
         self.map(|s| s.key_validity_period())
     }
@@ -3278,7 +3278,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// This function considers both the binding signature and the
     /// direct key signature.  Information in the binding signature
     /// takes precedence over the direct key signature.  See [Section
-    /// 5.2.3.3 of RFC 4880].
+    /// 5.2.3.10 of RFC 9580].
     ///
     /// # Examples
     ///
@@ -3313,7 +3313,7 @@ impl<'a, P, R, R2> ValidKeyAmalgamation<'a, P, R, R2>
     /// ```
     ///
     ///   [`ValidKeyAmalgamation::key_validity_period`]: ValidKeyAmalgamation::key_validity_period()
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    ///   [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     pub fn key_expiration_time(&self) -> Option<time::SystemTime> {
         match self.key_validity_period() {
             Some(vp) if vp.as_secs() > 0 => Some(self.key().creation_time() + vp),

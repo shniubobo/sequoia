@@ -6,7 +6,7 @@ use std::{
 use quickcheck::{Arbitrary, Gen};
 
 /// The OpenPGP public key algorithms as defined in [Section 9.1 of
-/// RFC 4880], and [Section 5 of RFC 6637].
+/// RFC 9580].
 ///
 /// # Examples
 ///
@@ -24,8 +24,7 @@ use quickcheck::{Arbitrary, Gen};
 /// # Ok(()) }
 /// ```
 ///
-///   [Section 9.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.1
-///   [Section 5 of RFC 6637]: https://tools.ietf.org/html/rfc6637
+///   [Section 9.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.1
 #[non_exhaustive]
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub enum PublicKeyAlgorithm {

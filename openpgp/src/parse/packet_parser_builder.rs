@@ -16,10 +16,10 @@ use crate::packet;
 ///
 /// When parsing OpenPGP data streams, the [`PacketParser`] will by
 /// default automatically detect and remove any ASCII armor encoding
-/// (see [Section 6 of RFC 4880]).  This automatism can be disabled
+/// (see [Section 6 of RFC 9580]).  This automatism can be disabled
 /// and fine-tuned using [`PacketParserBuilder::dearmor`].
 ///
-///   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
+///   [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
 ///   [`PacketParserBuilder::dearmor`]: PacketParserBuilder::dearmor()
 #[derive(PartialEq)]
 #[non_exhaustive]

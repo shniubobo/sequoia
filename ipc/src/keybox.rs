@@ -5,7 +5,7 @@
 
 use anyhow::Context;
 
-use buffered_reader::BufferedReader;
+use openpgp::parse::buffered_reader::{self, BufferedReader};
 
 use openpgp::cert::Cert;
 use openpgp::parse::{Cookie, Parse};
@@ -25,6 +25,7 @@ use std::fmt::Display;
 /// records:
 ///
 /// ```rust
+/// # use sequoia_openpgp::parse::buffered_reader;
 /// # fn parse_keybox(reader: &mut dyn buffered_reader::BufferedReader<()>)
 /// #    -> sequoia_openpgp::Result<Vec<sequoia_openpgp::Cert>> {
 /// use sequoia_ipc::keybox::{Keybox, KeyboxRecord};

@@ -15,7 +15,7 @@ use crate::{
 /// A timestamp representable by OpenPGP.
 ///
 /// OpenPGP timestamps are represented as `u32` containing the number of seconds
-/// elapsed since midnight, 1 January 1970 UTC ([Section 3.5 of RFC 4880]).
+/// elapsed since midnight, 1 January 1970 UTC ([Section 3.5 of RFC 9580]).
 ///
 /// They cannot express dates further than 7th February 2106 or earlier than
 /// the [UNIX epoch]. Unlike Unix's `time_t`, OpenPGP's timestamp is unsigned so
@@ -58,7 +58,7 @@ use crate::{
 /// # Ok(()) }
 /// ```
 ///
-/// [Section 3.5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.5
+/// [Section 3.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.5
 /// [UNIX epoch]: https://en.wikipedia.org/wiki/Unix_time
 /// [`Timestamp::round_down`]: crate::types::Timestamp::round_down()
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

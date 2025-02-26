@@ -7,9 +7,9 @@ use crate::{Error, Result};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
-/// The symmetric-key algorithms as defined in [Section 9.2 of RFC 4880].
+/// The symmetric-key algorithms as defined in [Section 9.3 of RFC 9580].
 ///
-///   [Section 9.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.2
+///   [Section 9.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.3
 ///
 /// The values can be converted into and from their corresponding values of the serialized format.
 ///

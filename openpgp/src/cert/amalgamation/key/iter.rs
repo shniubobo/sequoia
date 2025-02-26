@@ -906,7 +906,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// `for_signing`, etc.) multiple times, the *union* of
     /// the values is used.
     ///
-    /// Note: [Section 12.1 of RFC 4880] says that the primary key is
+    /// Note: [Section 10.1 of RFC 9580] says that the primary key is
     /// certification capable independent of the `Key Flags`
     /// subpacket:
     ///
@@ -957,7 +957,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// # Ok(()) }
     /// ```
     ///
-    ///   [Section 12.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    ///   [Section 10.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     ///   [`ValidKeyAmalgamation::key_flags`]: ValidKeyAmalgamation::key_flags()
     pub fn key_flags<F>(mut self, flags: F) -> Self
         where F: Borrow<KeyFlags>
@@ -977,7 +977,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// `for_signing`, etc.) multiple times, the *union* of
     /// the values is used.
     ///
-    /// Note: [Section 12.1 of RFC 4880] says that the primary key is
+    /// Note: [Section 10.1 of RFC 9580] says that the primary key is
     /// certification capable independent of the `Key Flags`
     /// subpacket:
     ///
@@ -1026,7 +1026,7 @@ impl<'a, P, R> ValidKeyAmalgamationIter<'a, P, R>
     /// ```
     ///
     ///   [`ValidKeyAmalgamation::for_certification`]: ValidKeyAmalgamation::for_certification()
-    ///   [Section 12.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    ///   [Section 10.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     ///   [`ValidKeyAmalgamation::key_flags`]: ValidKeyAmalgamation::key_flags()
     pub fn for_certification(self) -> Self {
         self.key_flags(KeyFlags::empty().set_certification())

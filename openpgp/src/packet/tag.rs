@@ -7,9 +7,9 @@ use quickcheck::{Arbitrary, Gen};
 
 use crate::packet::Packet;
 
-/// The OpenPGP packet tags as defined in [Section 4.3 of RFC 4880].
+/// The OpenPGP packet tags as defined in [Section 5 of RFC 9580].
 ///
-///   [Section 4.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.3
+///   [Section 5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
 ///
 /// The values correspond to the serialized format.
 #[derive(Clone, Copy, Debug)]
@@ -280,19 +280,19 @@ impl Tag {
     ///
     /// [Certs] can start with `PublicKey`, [TSKs] with a `SecretKey`.
     ///
-    ///   [Certs]: https://tools.ietf.org/html/rfc4880#section-11.1
-    ///   [TSKs]: https://tools.ietf.org/html/rfc4880#section-11.2
+    ///   [Certs]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1
+    ///   [TSKs]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.2
     ///
     /// [Messages] start with a `OnePassSig`, `Signature` (old style
     /// non-one pass signatures), `PKESK`, `SKESK`, `CompressedData`,
     /// or `Literal`.
     ///
-    ///   [Messages]: https://tools.ietf.org/html/rfc4880#section-11.3
+    ///   [Messages]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
     ///
     /// Signatures can stand alone either as a [detached signature], a
     /// third-party certification, or a revocation certificate.
     ///
-    ///   [detached signature]: https://tools.ietf.org/html/rfc4880#section-11.3
+    ///   [detached signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
     pub fn valid_start_of_message(&self) -> bool {
         // Cert
         *self == Tag::PublicKey || *self == Tag::SecretKey

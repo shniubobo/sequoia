@@ -8,9 +8,9 @@ use crate::Packet;
 /// Holds an MDC packet.
 ///
 /// A modification detection code packet.  This packet appears after a
-/// SEIP packet.  See [Section 5.14 of RFC 4880] for details.
+/// SEIP packet.  See [Section 5.13.1 of RFC 9580] for details.
 ///
-/// [Section 5.14 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.14
+/// [Section 5.13.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13.1
 ///
 /// # A note on equality
 ///

@@ -1,10 +1,10 @@
 //! Streaming decryption and verification.
 //!
 //! This module provides convenient filters for decryption and
-//! verification of OpenPGP messages (see [Section 11.3 of RFC 4880]).
+//! verification of OpenPGP messages (see [Section 10.3 of RFC 9580]).
 //! It is the preferred interface to process OpenPGP messages:
 //!
-//!   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+//!   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 //!
 //!   - Use the [`Verifier`] to verify a signed message,
 //!   - [`DetachedVerifier`] to verify a detached signature,
@@ -25,8 +25,8 @@
 //!
 //! The [`VerificationHelper`] trait give certificates for the
 //! signature verification to the [`Verifier`] or [`Decryptor`], let
-//! you inspect the message structure (see [Section 11.3 of RFC
-//! 4880]), and implements the signature verification policy.
+//! you inspect the message structure (see [Section 10.3 of RFC
+//! 9580]), and implements the signature verification policy.
 //!
 //! The [`DecryptionHelper`] trait is concerned with producing the
 //! session key to decrypt a message, most commonly by decrypting one
@@ -428,14 +428,14 @@ impl<'a> VerificationErrorInternal<'a> {
 /// ```
 ///
 /// However, OpenPGP allows encryption, signing, and compression
-/// operations to be freely combined (see [Section 11.3 of RFC 4880]).
+/// operations to be freely combined (see [Section 10.3 of RFC 9580]).
 /// This is represented as a stack of [`MessageLayer`]s, where
 /// signatures of the same level (i.e. those over the same data:
 /// either directly over the literal data, or over other signatures
 /// and the literal data) are grouped into one layer.  See also
 /// [`Signature::level`].
 ///
-///   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+///   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 ///   [`Signature::level`]: crate::packet::Signature#method.level
 ///
 /// Consider the following structure.  This is a set of notarizing
@@ -517,12 +517,12 @@ impl<'a> IntoIterator for MessageStructure<'a> {
 ///
 /// A valid OpenPGP message contains one literal data packet with
 /// optional encryption, signing, and compression layers freely
-/// combined on top (see [Section 11.3 of RFC 4880]).  This enum
+/// combined on top (see [Section 10.3 of RFC 9580]).  This enum
 /// represents the layers.  The [`MessageStructure`] is communicated
 /// to the [`VerificationHelper::check`].  Iterating over the
 /// [`MessageStructure`] yields the individual message layers.
 ///
-///   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
+///   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 #[derive(Debug)]
 pub enum MessageLayer<'a> {
     /// Represents a compression container.
@@ -530,9 +530,9 @@ pub enum MessageLayer<'a> {
     /// Compression is usually transparent in OpenPGP, though it may
     /// sometimes be interesting for advanced users to indicate that
     /// the message was compressed, and how (see [Section 5.6 of RFC
-    /// 4880]).
+    /// 9580]).
     ///
-    ///   [Section 5.6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.6
+    ///   [Section 5.6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.6
     Compression {
         /// Compression algorithm used.
         algo: CompressionAlgorithm,
@@ -540,11 +540,11 @@ pub enum MessageLayer<'a> {
     /// Represents an encryption container.
     ///
     /// Indicates the fact that the message was encrypted (see
-    /// [Section 5.13 of RFC 4880]).  If you expect encrypted
+    /// [Section 5.13 of RFC 9580]).  If you expect encrypted
     /// messages, make sure that there is at least one encryption
     /// container present.
     ///
-    ///   [Section 5.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.13
+    ///   [Section 5.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13
     Encryption {
         /// Symmetric algorithm used.
         sym_algo: SymmetricAlgorithm,
@@ -554,14 +554,14 @@ pub enum MessageLayer<'a> {
     /// Represents a signature group.
     ///
     /// A signature group consists of all signatures with the same
-    /// level (see [Section 5.2 of RFC 4880]).  Each
+    /// level (see [Section 5.2 of RFC 9580]).  Each
     /// [`VerificationResult`] represents the result of a single
     /// signature verification.  In your [`VerificationHelper::check`]
     /// method, iterate over the verification results, see if it meets
     /// your policies' demands, and communicate it to the user, if
     /// applicable.
     ///
-    ///   [Section 5.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2
+    ///   [Section 5.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
     SignatureGroup {
         /// The results of the signature verifications.
         results: Vec<VerificationResult<'a>>,

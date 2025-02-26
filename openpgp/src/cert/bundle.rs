@@ -73,10 +73,10 @@
 //! [`UserAttribute`]: crate::packet::user_attribute
 //! [`Unknown`]: crate::packet::Unknown
 //! [`Tag`]: crate::packet::Tag
-//! [designated revoker]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+//! [designated revoker]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 //! [`ComponentAmalgamation`]: super::amalgamation
 //! [`KeyAmalgamation`]: super::amalgamation::key::KeyAmalgamation
-//! [complicated semantics]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+//! [complicated semantics]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
 
 use std::time;
 use std::cmp::{self, Ordering};

@@ -8,6 +8,9 @@ various related standards.
 OpenPGP is a standard by the IETF.  It was derived from the PGP
 software, which was created by Phil Zimmermann in 1991.
 
+[RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html
+[RFC 4880]: https://tools.ietf.org/html/rfc4880
+
 Sequoia consists of several crates, providing both a low-level and a
 high-level API for dealing with OpenPGP data.
 
@@ -24,43 +27,73 @@ OpenPGP should be used.  This doesn't mean that we don't have opinions
 about how OpenPGP should be used in a number of common scenarios (for
 instance, message validation).
 
+Mid-level API
+-------------
+
+Sequoia's mid-level API is implemented in various crates.  For
+historical reasons, some are maintained in this repository, and some
+are maintained outside of this repository.  These are the most
+important crates:
+
+  - [sequoia-cert-store](http://docs.rs/sequoia-cert-store): A store
+    for certificates.
+  - [sequoia-keystore](http://docs.rs/sequoia-keystore): A store for
+    secret keys.
+  - [sequoia-wot](http://docs.rs/sequoia-wot): An implementation of
+    the Web-of-Trust, a PKI engine.
+  - [sequoia-policy-config](http://docs.rs/sequoia-policy-config):
+    Loads cryptographic policies from files.
+  - [sequoia-net](./net): Network services for OpenPGP.
+  - [sequoia-ipc](./ipc): Low-level IPC services for Sequoia and
+    GnuPG.
+  - [sequoia-autocrypt](./autocrypt): Low-level Autocrypt support.
+
 High-level API
 --------------
 
-The high-level API can be found in the [sequoia](.) crate, which
-conveniently includes all the other crates.  The high-level API
-include a public key store, and network access routines.
+As of this writing, we still don't have a single, simple, easy to use
+interface for Sequoia.  This is something we want to work on in the
+near term.  The plan is to extract the functionality from `sq` and put
+it into a crate which will become the high-level interface.
 
-Please note that as of this writing the high-level API is very
-incomplete.
+We maintain a [SOP] implementation called [sequoia-sop].  SOP is a
+high level interface, but has a very narrow scope.
+
+[SOP]: https://datatracker.ietf.org/doc/draft-dkg-openpgp-stateless-cli/
+[sequoia-sop]: http://docs.rs/sequoia-sop
 
 Command line interface
 ----------------------
 
-Sequoia includes a simple frontend `sq`
-([sequoia-sq](https://gitlab.com/sequoia-pgp/sequoia-sq)) that can be
-used to experiment with Sequoia and OpenPGP. It is also an example of
-how to use various aspects of Sequoia.
+We maintain `sq`, a command line interface use OpenPGP conveniently
+from the command line.  See the [sq user documentation] for
+instructions, or browse the [manual pages].  `sq` is packaged for most
+Linux distributions and should be easy to install.
 
+[sq user documentation]: https://book.sequoia-pgp.org
+[manual pages]: https://sequoia-pgp.gitlab.io/sequoia-sq/man/
 
-Project status
-==============
-
-The low-level API is quite feature-complete and can be used encrypt,
-decrypt, sign, and verify messages.  It can create, inspect, and
-manipulate OpenPGP data on a very low-level.
-
-The high-level API is effectively non-existent, though there is some
-functionality related to key servers and key stores.
-
-The foreign function interface provides a C API for some of Sequoia's
-low- and high-level interfaces, but it is incomplete.
-
-There is a mostly feature-complete command-line verification tool for
-detached messages called ['sqv'].
+We also maintain a minimalist command-line verification tool for
+detached signatures called ['sqv'].
 
 ['sqv']: https://gitlab.com/sequoia-pgp/sequoia-sqv
+ The foreign function interface provides a C API for some of Sequoia's
+low- and high-level interfaces, but it is incomplete.
 
+Sequoia for GnuPG users
+-----------------------
+
+The Sequoia crates and `sq` provide good compatibility with existing
+GnuPG installations.  For example, `sq` will discover all certificates
+in GnuPG's keyrings, and can make of secret keys managed by
+`gpg-agent`, all without additional configuration.
+
+For anyone directly or indirectly using GnuPG who wants to migrate to
+Sequoia, there is a re-implementation and drop-in replacement of `gpg`
+and `gpgv` called the [Sequoia Chameleon] (or just `gpg-sq` and
+`gpgv-sq`).
+
+[Sequoia Chameleon]: https://gitlab.com/sequoia-pgp/sequoia-chameleon-gnupg
 
 LICENSE
 =======
@@ -98,7 +131,7 @@ Sequoia is currently supported on a variety of platforms.
 
 ### Cryptography
 
-By default it uses the Nettle cryptographic library (version 3.4.1 or
+By default it uses the Nettle cryptographic library (version 3.9.1 or
 up) but it can be used with different cryptographic backends. At the
 time of writing, it also supports the native Windows [Cryptographic
 API: Next Generation (CNG)].
@@ -134,7 +167,7 @@ the minor version of all crates.
 [Debian testing]: https://tracker.debian.org/pkg/rustc
 
 Building Sequoia requires a few libraries, notably the Nettle cryptographic library
-version 3.4.1 or up.  Please see below for OS-specific commands to install the
+version 3.9.1 or up.  Please see below for OS-specific commands to install the
 needed libraries:
 
 ### Debian
@@ -145,11 +178,11 @@ needed libraries:
 
 Notes:
 
-  - You need at least `rustc` version 1.60.  This is the version included in
-    Debian 12 (bookworm) at the time of writing.  You can use [rustup] if your
-    distribution only includes an older Rust version.
-  - You need at least Nettle 3.4.1.  Both the versions in Debian 10 (Buster)
-    and Debian 11 (Bullseye) are fine.
+  - You need at least `rustc` version 1.79.  The version of Rust
+    included in Debian 13 (trixie) is fine.  You can use [rustup] if
+    your distribution only includes an older Rust version.
+  - You need at least Nettle 3.9.1.  Debian 13 (trixie) and up is
+    fine.
   - `libssl-dev` is only required by the `sequoia-net` crate and
     crates depending on it (`sq`).
 

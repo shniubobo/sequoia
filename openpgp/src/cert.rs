@@ -60,8 +60,8 @@
 //! ## `Cert`
 //!
 //! The [`Cert`] data structure closely mirrors the transferable
-//! public key (`TPK`) data structure described in [Section 11.1] of
-//! RFC 4880: it contains the certificate's `Component`s and their
+//! public key (`TPK`) data structure described in [Section 10.1 of
+//! RFC 9580]: it contains the certificate's `Component`s and their
 //! associated signatures.
 //!
 //! ## `Component`s
@@ -108,7 +108,7 @@
 //! `ComponentBundle`, and that would create a self-referential data
 //! structure, which is currently not supported in Rust.
 //!
-//! [Section 11.1]: https://tools.ietf.org/html/rfc4880#section-11.1
+//! [Section 10.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1
 //! [`ComponentBundle`]: bundle::ComponentBundle
 //! [`ComponentAmalgamation`]: amalgamation::ComponentAmalgamation
 //! [`Parser` implementation]: struct.Cert.html#impl-Parse%3C%27a%2C%20Cert%3E
@@ -267,27 +267,31 @@ impl fmt::Display for Cert {
 /// instance, by its fingerprint, then the primary User ID's
 /// self signature is checked.  If the subpacket is also not there,
 /// then the direct key signature is checked.  This policy and its
-/// justification are described in [Section 5.2.3.3] of RFC 4880.
+/// justification are described in [Section 5.2.3.10 of RFC 9580].
 ///
 /// Note: User IDs may be stripped.  For instance, the [WKD] standard
 /// requires User IDs that are unrelated to the WKD's domain be
 /// stripped from the certificate prior to publication.  As such, any
 /// User ID may be considered the primary User ID.  Consequently, if
 /// any User ID includes a particular subpacket, then all User IDs
-/// should include it.  Furthermore, RFC 4880bis allows certificates
-/// [without any User ID packets].  To handle this case, certificates
-/// should also create a direct key signature with this information.
+/// should include it.  Furthermore, [Section 10.1.1 of RFC 9580]
+/// allows certificates without any User ID packets.  To handle this
+/// case, certificates should also create a direct key signature with
+/// this information.
 ///
-/// [Section 5.2.3.3]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+/// [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
+/// [Section 10.1.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1.1
 /// [WKD]: https://tools.ietf.org/html/draft-koch-openpgp-webkey-service-09#section-5
-/// [without any User ID packets]: https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-09#section-11.1
 ///
 /// # Algorithm Preferences
 ///
 /// Algorithms are ordered with the most preferred algorithm first.
-/// According to RFC 4880, if an algorithm is not listed, then the
+/// If an algorithm is not listed, then the
 /// implementation should assume that it is not supported by the
-/// certificate holder's software.
+/// certificate holder's software (see e.g. [Section 5.2.3.15 of RFC
+/// 9580]).
+///
+/// [Section 5.2.3.15 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.15
 ///
 /// # Examples
 ///
@@ -382,12 +386,12 @@ pub trait Preferences<'a>: seal::Sealed {
 /// A collection of components and their associated signatures.
 ///
 /// The `Cert` data structure mirrors the [TPK and TSK data
-/// structures] defined in RFC 4880.  Specifically, it contains
+/// structures] defined in RFC 9580.  Specifically, it contains
 /// components ([`Key`]s, [`UserID`]s, and [`UserAttribute`]s), their
 /// associated self signatures, self revocations, third-party
 /// signatures, and third-party revocations, as well as useful methods.
 ///
-/// [TPK and TSK data structures]: https://tools.ietf.org/html/rfc4880#section-11
+/// [TPK and TSK data structures]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10
 /// [`Key`]: crate::packet::Key
 /// [`UserID`]: crate::packet::UserID
 /// [`UserAttribute`]: crate::packet::user_attribute::UserAttribute
@@ -423,7 +427,7 @@ pub trait Preferences<'a>: seal::Sealed {
 /// valid signatures that only differ in their unhashed data.
 ///
 /// [their `Eq` implementation]: crate::packet::Signature#a-note-on-equality
-/// [the unhashed data]: https://tools.ietf.org/html/rfc4880#section-5.2.3
+/// [the unhashed data]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3
 ///
 /// Self signatures and self revocations are checked for validity by
 /// making sure that the signature is *mathematically* correct.  At
@@ -566,7 +570,7 @@ pub trait Preferences<'a>: seal::Sealed {
 /// # A note on equality
 ///
 /// We define equality on `Cert` as the equality of the serialized
-/// form as defined by RFC 4880.  That is, two certs are considered
+/// form as defined by RFC 9580.  That is, two certs are considered
 /// equal if and only if their serialized forms are equal, modulo the
 /// OpenPGP packet framing (see [`Packet`#a-note-on-equality]).
 ///
@@ -2699,7 +2703,7 @@ impl Cert {
     /// updated.  Alternatively, changed means that the serialized
     /// form has changed.
     ///
-    /// [Known packets that don't belong in a TPK or TSK]: https://tools.ietf.org/html/rfc4880#section-11
+    /// [Known packets that don't belong in a TPK or TSK]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10
     /// [unknown components]: Cert::unknowns()
     ///
     /// # Examples
@@ -3767,9 +3771,9 @@ impl<'a> ValidCert<'a> {
     /// reference time.
     ///
     /// Subpackets on direct key signatures apply to all components of
-    /// the certificate, cf. [Section 5.2.3.3 of RFC 4880].
+    /// the certificate, cf. [Section 5.2.3.10 of RFC 9580].
     ///
-    /// [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    /// [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     ///
     /// # Examples
     ///
@@ -4007,7 +4011,7 @@ impl<'a> ValidCert<'a> {
     /// (currently, we order the value of the User IDs
     /// lexographically, but you shouldn't rely on this).
     ///
-    /// [marked as being the primary User ID]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    /// [marked as being the primary User ID]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// # Examples
     ///

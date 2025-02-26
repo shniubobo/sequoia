@@ -145,13 +145,13 @@
 //! [`ComponentBundle`]: super::bundle
 //! [`Signature`]: crate::packet::signature
 //! [`Cert`]: super
-//! [is supposed to]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+//! [is supposed to]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
 //! [`std::iter::map`]: std::iter::Map
 //! [MD5 collisions]: https://en.wikipedia.org/wiki/MD5
 //! [`Policy`]: crate::policy::Policy
 //! [streaming verifier]: crate::parse::stream
 //! [Intended Recipients]: https://www.rfc-editor.org/rfc/rfc9580.html#intended-recipient-fingerprint
-//! [signature expirations]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+//! [signature expirations]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
 use std::time;
 use std::time::{
     Duration,
@@ -442,9 +442,9 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// reference time, if any.
     ///
     /// Subpackets on direct key signatures apply to all components of
-    /// the certificate, cf. [Section 5.2.3.3 of RFC 4880].
+    /// the certificate, cf. [Section 5.2.3.10 of RFC 9580].
     ///
-    /// [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    /// [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     ///
     /// # Examples
     ///
@@ -481,7 +481,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// This does *not* check whether the certificate has been
     /// revoked.  For that, use `Cert::revocation_status()`.
     ///
-    /// Note, as per [RFC 4880], a key is considered to be revoked at
+    /// Note, as per [Section 5.2.3.31 of RFC 9580], a key is considered to be revoked at
     /// some time if there were no soft revocations created as of that
     /// time, and no hard revocations:
     ///
@@ -489,7 +489,7 @@ pub trait ValidAmalgamation<'a, C: 'a>: seal::Sealed
     /// > created by that key are suspect.  However, if it was merely
     /// > superseded or retired, old signatures are still valid.
     ///
-    /// [RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+    /// [Section 5.2.3.31 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
     ///
     /// # Examples
     ///
@@ -597,9 +597,9 @@ pub trait ValidBindingSignature<'a, C: 'a>: ValidAmalgamation<'a, C> + seal::Sea
     /// Makes `f` consider both the binding signature and the direct
     /// key signature.  Information in the binding signature takes
     /// precedence over the direct key signature.  See also [Section
-    /// 5.2.3.3 of RFC 4880].
+    /// 5.2.3.10 of RFC 9580].
     ///
-    ///   [Section 5.2.3.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.3
+    ///   [Section 5.2.3.10 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.10
     fn map<F: Fn(&'a Signature) -> Option<T>, T>(&self, f: F) -> Option<T> {
         f(self.binding_signature())
             .or_else(|| self.direct_key_signature().ok().and_then(f))
@@ -864,7 +864,7 @@ impl<'a, C> ComponentAmalgamation<'a, C> {
     /// matches an [Issuer subpacket] or [Issuer Fingerprint
     /// subpacket] in the certification.
     ///
-    ///   [Issuer subpacket]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.5
+    ///   [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [Issuer Fingerprint subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#name-intended-recipient-fingerpr
     ///
     /// This function does not check that a certification is valid.

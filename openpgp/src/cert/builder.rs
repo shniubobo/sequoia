@@ -612,7 +612,7 @@ impl CertBuilder<'_> {
     /// creates include the [Exportable Certification] subpacket
     /// that is set to `false`.
     ///
-    /// [Exportable Certification]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.11
+    /// [Exportable Certification]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
     ///
     /// # Examples
     ///
@@ -721,7 +721,7 @@ impl CertBuilder<'_> {
     /// ID flag] set.
     ///
     /// [`CertBuilder::general_purpose`]: CertBuilder::general_purpose()
-    /// [primary User ID flag]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    /// [primary User ID flag]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// # Examples
     ///
@@ -796,7 +796,7 @@ impl CertBuilder<'_> {
     ///   [`PersonaCertification`]: crate::types::SignatureType::PersonaCertification
     ///   [`CasualCertification`]: crate::types::SignatureType::CasualCertification
     ///   [`PositiveCertification`]: crate::types::SignatureType::PositiveCertification
-    ///   [primary User ID flag]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    ///   [primary User ID flag]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// # Examples
     ///
@@ -865,7 +865,7 @@ impl CertBuilder<'_> {
     /// this interface or another interface, will have the [primary
     /// User ID flag] set.
     ///
-    /// [primary User ID flag]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    /// [primary User ID flag]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// # Examples
     ///
@@ -973,7 +973,7 @@ impl CertBuilder<'_> {
     ///   [`PersonaCertification`]: crate::types::SignatureType::PersonaCertification
     ///   [`CasualCertification`]: crate::types::SignatureType::CasualCertification
     ///   [`PositiveCertification`]: crate::types::SignatureType::PositiveCertification
-    ///   [primary User ID flag]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    ///   [primary User ID flag]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// # Examples
     ///

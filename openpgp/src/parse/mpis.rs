@@ -22,9 +22,9 @@ use crate::parse::{
 impl mpi::PublicKey {
     /// Parses a set of OpenPGP MPIs representing a public key.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub fn parse<R: Read + Send + Sync>(algo: PublicKeyAlgorithm, reader: R) -> Result<Self>
     {
         let bio = buffered_reader::Generic::with_cookie(
@@ -35,9 +35,9 @@ impl mpi::PublicKey {
 
     /// Parses a set of OpenPGP MPIs representing a public key.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub(crate) fn _parse(
         algo: PublicKeyAlgorithm,
         php: &mut PacketHeaderParser<'_>)
@@ -206,9 +206,9 @@ impl mpi::SecretKeyMaterial {
 
     /// Parses a set of OpenPGP MPIs representing a secret key.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     #[deprecated(
         since = "1.14.0",
         note = "Leaks secrets into the heap, use [`SecretKeyMaterial::from_bytes`]")]
@@ -222,9 +222,9 @@ impl mpi::SecretKeyMaterial {
 
     /// Parses a set of OpenPGP MPIs representing a secret key.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub fn from_bytes(algo: PublicKeyAlgorithm, buf: &[u8]) -> Result<Self> {
         let bio = buffered_reader::Memory::with_cookie(
             buf, Cookie::default());
@@ -234,9 +234,9 @@ impl mpi::SecretKeyMaterial {
 
     /// Parses a set of OpenPGP MPIs representing a secret key.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub(crate) fn _parse(
         algo: PublicKeyAlgorithm,
         php: &mut PacketHeaderParser<'_>,
@@ -406,9 +406,9 @@ impl mpi::Ciphertext {
     /// Parses a set of OpenPGP MPIs representing a ciphertext.
     ///
     /// Expects MPIs for a public key algorithm `algo`s ciphertext.
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub fn parse<R: Read + Send + Sync>(algo: PublicKeyAlgorithm, reader: R) -> Result<Self>
     {
         let bio = buffered_reader::Generic::with_cookie(
@@ -420,9 +420,9 @@ impl mpi::Ciphertext {
     /// Parses a set of OpenPGP MPIs representing a ciphertext.
     ///
     /// Expects MPIs for a public key algorithm `algo`s ciphertext.
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub(crate) fn _parse(
         algo: PublicKeyAlgorithm,
         php: &mut PacketHeaderParser<'_>)
@@ -504,9 +504,9 @@ impl mpi::Signature {
     /// Parses a set of OpenPGP MPIs representing a signature.
     ///
     /// Expects MPIs for a public key algorithm `algo`s signature.
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub fn parse<R: Read + Send + Sync>(algo: PublicKeyAlgorithm, reader: R) -> Result<Self>
     {
         let bio = buffered_reader::Generic::with_cookie(
@@ -518,9 +518,9 @@ impl mpi::Signature {
     /// Parses a set of OpenPGP MPIs representing a signature.
     ///
     /// Expects MPIs for a public key algorithm `algo`s signature.
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     pub(crate) fn _parse(
         algo: PublicKeyAlgorithm,
         php: &mut PacketHeaderParser<'_>)

@@ -2,10 +2,10 @@
 //!
 //! OpenPGP defines a binary representation suitable for storing and
 //! communicating OpenPGP data structures (see [Section 3 ff. of RFC
-//! 4880]).  Parsing is the process of interpreting the binary
+//! 9580]).  Parsing is the process of interpreting the binary
 //! representation.
 //!
-//!   [Section 3 ff. of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3
+//!   [Section 3 ff. of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3
 //!
 //! An OpenPGP stream represents a sequence of packets.  Some of the
 //! packets contain other packets.  These so-called containers include
@@ -118,11 +118,11 @@
 //! # ASCII armored data
 //!
 //! The [`PacketParser`] will by default automatically detect and
-//! remove any ASCII armor encoding (see [Section 6 of RFC 4880]).
+//! remove any ASCII armor encoding (see [Section 6 of RFC 9580]).
 //! This automatism can be disabled and fine-tuned using
 //! [`PacketParserBuilder::dearmor`].
 //!
-//!   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
+//!   [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
 //!   [`PacketParserBuilder::dearmor`]: PacketParserBuilder::dearmor()
 //!
 //! # Security Considerations
@@ -161,7 +161,7 @@
 //!  - Ciphertext integrity is provided by the [version 2 SEIP]
 //!    packet's use of authenticated encryption.
 //!
-//!  - In messages compatible with [RFC4880], ciphertext integrity is
+//!  - In messages compatible with [RFC 4880], ciphertext integrity is
 //!    provided by the [`version 1 SEIP`] packet's [`MDC`] mechanism,
 //!    but the integrity can only be checked after decrypting the whole
 //!    container.
@@ -172,7 +172,7 @@
 //!   [`Literal`]: crate::packet::Literal
 //!   [`Signature`]: crate::packet::Signature
 //!   [`version 2 SEIP`]: crate::packet::seip::SEIP2
-//!   [RFC4880]: https://datatracker.ietf.org/doc/html/rfc4880
+//!   [RFC 4880]: https://datatracker.ietf.org/doc/html/rfc4880
 //!   [`version 1 SEIP`]: crate::packet::seip::SEIP1
 //!   [`SEIP`]: crate::packet::SEIP
 //!   [`MDC`]: crate::packet::MDC
@@ -1256,9 +1256,9 @@ impl_parse_with_buffered_reader!(
 
 impl BodyLength {
     /// Decodes a new format body length as described in [Section
-    /// 4.2.2 of RFC 4880].
+    /// 4.2.1 of RFC 9580].
     ///
-    ///   [Section 4.2.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.2.2
+    ///   [Section 4.2.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.1
     pub(crate) fn parse_new_format<T: BufferedReader<C>, C: fmt::Debug + Send + Sync> (bio: &mut T)
         -> io::Result<BodyLength>
     {
@@ -1279,9 +1279,9 @@ impl BodyLength {
     }
 
     /// Decodes an old format body length as described in [Section
-    /// 4.2.1 of RFC 4880].
+    /// 4.2.2 of RFC 9580].
     ///
-    ///   [Section 4.2.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.2.1
+    ///   [Section 4.2.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.2
     pub(crate) fn parse_old_format<T: BufferedReader<C>, C: fmt::Debug + Send + Sync>
         (bio: &mut T, length_type: PacketLengthType)
          -> Result<BodyLength>
@@ -3714,9 +3714,9 @@ impl_parse_with_buffered_reader!(Padding);
 impl MPI {
     /// Parses an OpenPGP MPI.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     fn parse(name_len: &'static str,
              name: &'static str,
              php: &mut PacketHeaderParser<'_>) -> Result<Self> {
@@ -3828,9 +3828,9 @@ impl_parse_with_buffered_reader!(
 impl ProtectedMPI {
     /// Parses an OpenPGP MPI containing secrets.
     ///
-    /// See [Section 3.2 of RFC 4880] for details.
+    /// See [Section 3.2 of RFC 9580] for details.
     ///
-    ///   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
+    ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
     fn parse(name_len: &'static str,
              name: &'static str,
              php: &mut PacketHeaderParser<'_>) -> Result<Self> {
@@ -6167,9 +6167,9 @@ impl<'a> PacketParser<'a> {
     /// fails.  In combination with certain asymmetric algorithms
     /// (RSA), this may lead to compromise of secret key material or
     /// (partial) recovery of the message's plain text.  See [Section
-    /// 14 of RFC 4880].
+    /// 13 of RFC 9580].
     ///
-    ///   [Section 14 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-14
+    ///   [Section 13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-13
     ///
     /// DO NOT relay these errors in situations where an attacker can
     /// request decryption of messages in an automated fashion.  The

@@ -1,8 +1,8 @@
 //! User Attribute packets and subpackets.
 //!
-//! See [Section 5.12 of RFC 4880] for details.
+//! See [Section 5.12 of RFC 9580] for details.
 //!
-//!   [Section 5.12 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.12
+//!   [Section 5.12 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.12
 
 use std::fmt;
 
@@ -24,9 +24,9 @@ use crate::serialize::MarshalInto;
 
 /// Holds a UserAttribute packet.
 ///
-/// See [Section 5.12 of RFC 4880] for details.
+/// See [Section 5.12 of RFC 9580] for details.
 ///
-///   [Section 5.12 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.12
+///   [Section 5.12 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.12
 // IMPORTANT: If you add fields to this struct, you need to explicitly
 // IMPORTANT: implement PartialEq, Eq, and Hash.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -209,17 +209,17 @@ impl<'a> Iterator for SubpacketIterator<'a> {
 
 /// User Attribute subpackets.
 ///
-/// See [Section 5.12 of RFC 4880] for details.
+/// See [Section 5.12 of RFC 9580] for details.
 ///
-///   [Section 5.12 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.12
+///   [Section 5.12 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.12
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Subpacket {
     /// Image subpacket.
     ///
-    /// See [Section 5.12.1 of RFC 4880] for details.
+    /// See [Section 5.12.1 of RFC 9580] for details.
     ///
-    ///   [Section 5.12.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.12.1
+    ///   [Section 5.12.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.12.1
     Image(Image),
     /// Unknown subpacket.
     Unknown(u8, Box<[u8]>),
@@ -248,9 +248,9 @@ impl Arbitrary for Subpacket {
 
 /// Image subpacket.
 ///
-/// See [Section 5.12.1 of RFC 4880] for details.
+/// See [Section 5.12.1 of RFC 9580] for details.
 ///
-///   [Section 5.12.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.12.1
+///   [Section 5.12.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.12.1
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Image {

@@ -32,12 +32,12 @@
 //!
 //! [`Key`]: super::Key
 //! [version 3]: https://tools.ietf.org/html/rfc1991#section-6.6
-//! [version 4]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+//! [version 4]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
 //! [version 6]: https://www.rfc-editor.org/rfc/rfc9580.html#name-version-6-public-keys
-//! [public keys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.1
-//! [secret keys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.3
-//! [public subkeys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.2
-//! [secret subkeys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.4
+//! [public keys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.1
+//! [secret keys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.3
+//! [public subkeys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.2
+//! [secret subkeys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.5
 //! [`Key::decrypt_secret`]: super::Key::decrypt_secret()
 //!
 //! # Key Creation
@@ -106,9 +106,9 @@ pub use v4::Key4;
 
 /// Holds a public key, public subkey, private key or private subkey packet.
 ///
-/// The different `Key` packets are described in [Section 5.5 of RFC 4880].
+/// The different `Key` packets are described in [Section 5.5 of RFC 9580].
 ///
-///   [Section 5.5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.5
+///   [Section 5.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5
 ///
 /// # Key Variants
 ///
@@ -156,11 +156,11 @@ pub use v4::Key4;
 /// single, fixed type, the returned keys use the
 /// `key::UnspecifiedRole` marker.
 ///
-/// [public keys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.1
-/// [secret keys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.3
-/// [public subkeys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.2
-/// [secret subkeys]: https://tools.ietf.org/html/rfc4880#section-5.5.1.4
-/// [`Cert::keys`]: super::Cert::keys()
+/// [public keys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.1
+/// [secret keys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.3
+/// [public subkeys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.2
+/// [secret subkeys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.1.5
+/// [`Cert::keys`]: crate::Cert::keys
 ///
 /// ## Examples
 ///
@@ -223,7 +223,7 @@ pub use v4::Key4;
 ///
 /// It is also possible to use `From`.
 ///
-/// [`Signer`]: super::crypto::Signer
+/// [`Signer`]: crate::crypto::Signer
 /// [`Key::parts_as_secret`]: Key::parts_as_secret()
 /// [`Key::parts_into_public`]: Key::parts_into_public()
 /// [`Key::parts_as_public`]: Key::parts_as_public()
@@ -276,7 +276,7 @@ pub use v4::Key4;
 /// converted to a secret key.  This is necessary, for instance, when
 /// creating a [`Signer`]:
 ///
-/// [`Cert`]: super::Cert
+/// [`Cert`]: crate::Cert
 ///
 /// ```rust
 /// use std::time;
@@ -344,7 +344,7 @@ pub use v4::Key4;
 /// [`Key::decrypt_secret`] before using its secret key material
 /// (e.g., to decrypt a message, or to generate a signature).
 ///
-/// [password protect keys]: https://tools.ietf.org/html/rfc4880#section-3.7
+/// [password protect keys]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
 /// [`Key::decrypt_secret`]: Key::decrypt_secret()
 ///
 /// # A note on equality
@@ -545,8 +545,8 @@ impl<R: key::KeyRole> Key<key::SecretParts, R> {
     /// In OpenPGP, secret key material can be [protected with a
     /// password].  The password is usually hardened using a [KDF].
     ///
-    /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
-    /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
+    /// [protected with a password]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.3
+    /// [KDF]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
     ///
     /// This function takes ownership of the `Key`, decrypts the
     /// secret key material using the password, and returns a new key
@@ -606,8 +606,8 @@ impl<R: key::KeyRole> Key<key::SecretParts, R> {
     /// In OpenPGP, secret key material can be [protected with a
     /// password].  The password is usually hardened using a [KDF].
     ///
-    /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
-    /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
+    /// [protected with a password]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.3
+    /// [KDF]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
     ///
     /// This function takes ownership of the `Key`, encrypts the
     /// secret key material using the password, and returns a new key
@@ -951,9 +951,9 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
     /// Computes and returns the `Key`'s `Fingerprint` and returns it as
     /// a `KeyHandle`.
     ///
-    /// See [Section 12.2 of RFC 4880].
+    /// See [Section 5.5.4 of RFC 9580].
     ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    /// [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
     pub fn key_handle(&self) -> crate::KeyHandle {
         match self {
             Key::V4(k) => k.key_handle(),
@@ -963,9 +963,9 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
 
     /// Computes and returns the `Key`'s `Fingerprint`.
     ///
-    /// See [Section 12.2 of RFC 4880].
+    /// See [Section 5.5.4 of RFC 9580].
     ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    /// [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
     pub fn fingerprint(&self) -> crate::Fingerprint {
         match self {
             Key::V4(k) => k.fingerprint(),
@@ -975,9 +975,9 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
 
     /// Computes and returns the `Key`'s `Key ID`.
     ///
-    /// See [Section 12.2 of RFC 4880].
+    /// See [Section 5.5.4 of RFC 9580].
     ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    /// [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
     pub fn keyid(&self) -> crate::KeyID {
         match self {
             Key::V4(k) => k.keyid(),

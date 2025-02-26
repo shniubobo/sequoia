@@ -10,8 +10,8 @@
 //! now two families: the so-called old format, and new format
 //! encodings.
 //!
-//! [packet's type]: https://tools.ietf.org/html/rfc4880#section-4.3
-//! [packet's length]: https://tools.ietf.org/html/rfc4880#section-4.2.1
+//! [packet's type]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
+//! [packet's length]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.2
 
 use crate::{
     Error,
@@ -28,9 +28,9 @@ pub use self::ctb::{
 
 /// A packet's header.
 ///
-/// See [Section 4.2 of RFC 4880] for details.
+/// See [Section 4.2 of RFC 9580] for details.
 ///
-/// [Section 4.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.2
+/// [Section 4.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2
 #[derive(Clone, Debug)]
 pub struct Header {
     /// The packet's CTB.
@@ -71,7 +71,7 @@ impl Header {
     /// [`Tag::Reserved`]: super::Tag::Reserved
     /// [`Tag::Unknown`]: super::Tag::Unknown
     /// [`Tag::Private`]: super::Tag::Private
-    /// [length encoding]: https://tools.ietf.org/html/rfc4880#section-4.2.2.4
+    /// [length encoding]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.1.4
     /// [`PKESK`]: super::PKESK
     /// [`SKESK`]: super::SKESK
     // Note: To check the packet's content, use
@@ -95,7 +95,7 @@ impl Header {
         // Partial Body Lengths MUST NOT be used for any other packet
         // types.
         //
-        // https://tools.ietf.org/html/rfc4880#section-4.2.2.4
+        // https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.1.4
         if tag == Tag::Literal || tag == Tag::CompressedData
             || tag == Tag::SED || tag == Tag::SEIP
             || tag == Tag::AED
@@ -232,9 +232,9 @@ impl Header {
 /// the size of the packet is fully known (`Full`), the packet is
 /// chunked using OpenPGP's partial body encoding (`Partial`), or the
 /// packet extends to the end of the file (`Indeterminate`).  See
-/// [Section 4.2 of RFC 4880] for more details.
+/// [Section 4.2 of RFC 9580] for more details.
 ///
-///   [Section 4.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.2
+///   [Section 4.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2
 #[derive(Debug)]
 // We need PartialEq so that assert_eq! works.
 #[derive(PartialEq)]

@@ -1,8 +1,8 @@
 //! A version 3 one-pass signature packet.
 //!
-//! See [Section 5.4 of RFC 4880] for details.
+//! See [Section 5.4 of RFC 9580] for details.
 //!
-//!   [Section 5.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.4
+//!   [Section 5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.4
 
 use std::fmt;
 
@@ -27,7 +27,7 @@ use crate::SignatureType;
 /// enum, which is version agnostic.  An exception is when you need to
 /// do version-specific operations.
 ///
-/// [version 3 One-Pass Signature Packet]: https://tools.ietf.org/html/rfc4880#section-5.4
+/// [version 3 One-Pass Signature Packet]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.4
 /// [`OnePassSig`]: crate::packet::OnePassSig
 ///
 /// # A note on equality

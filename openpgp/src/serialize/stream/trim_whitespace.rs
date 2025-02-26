@@ -1,9 +1,9 @@
 //! Trims trailing whitespace.
 //!
 //! This filter is used to generate messages using the Cleartext
-//! Signature Framework (see [Section 7.1 of RFC 4880]).
+//! Signature Framework (see [Section 7.2 of RFC 9580]).
 //!
-//!   [Section 7.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-7.1
+//!   [Section 7.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-7.2
 
 use std::fmt;
 use std::io;

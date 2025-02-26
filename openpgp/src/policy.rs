@@ -10,7 +10,8 @@
 //! ignore signatures that rely on these algorithms even though [RFC
 //! 4880] says that "\[i\]mplementations MUST implement SHA-1."  When
 //! trying to decrypt old archives, however, users probably don't want
-//! to ignore keys using MD5, even though [RFC 4880] deprecates MD5.
+//! to ignore keys using MD5, even though [Section 9.5 of RFC 9580]
+//! deprecates MD5.
 //!
 //! Rather than not provide this mid-level functionality, the `Policy`
 //! trait allows callers to specify their preferred policy.  This can be
@@ -23,7 +24,7 @@
 //! to determine whether a given `Signature` is valid, it must always
 //! return the same value.
 //!
-//! [RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.4
+//! [Section 9.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.5
 //! [pure]: https://en.wikipedia.org/wiki/Pure_function
 use std::fmt;
 use std::time::{SystemTime, Duration};
@@ -291,8 +292,8 @@ pub trait Policy : fmt::Debug + Send + Sync {
 /// hash(public key || subkey || sig packet || 0x04 || sig packet len)
 /// ```
 ///
-///  [signature packet]: https://tools.ietf.org/html/rfc4880#section-5.2.3
-///  [the following is signed]: https://tools.ietf.org/html/rfc4880#section-5.2.4
+///  [signature packet]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3
+///  [the following is signed]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.4
 ///
 /// Since the signature packet is chosen by the victim's OpenPGP
 /// implementation, the attacker may be able to predict it, but they
@@ -310,7 +311,7 @@ pub trait Policy : fmt::Debug + Send + Sync {
 /// contains the signature packet's length, prevents hiding a
 /// signature in a signature.
 ///
-///   [signature type]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+///   [signature type]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
 ///
 /// Given this, if we know for a given signature type that an attacker
 /// cannot control any of the data that is signed, then that type of
@@ -408,7 +409,7 @@ pub trait Policy : fmt::Debug + Send + Sync {
 /// can dramatically increase the workfactor, which can extend the life
 /// of a hash algorithm whose collision resistance has been weakened.
 ///
-///   [UTF-8 encoded RFC 2822 mailbox]: https://tools.ietf.org/html/rfc4880#section-5.11
+///   [UTF-8 encoded RFC 2822 mailbox]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.11
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum HashAlgoSecurity {
     /// The signed data only requires second pre-image resistance.
@@ -1285,7 +1286,7 @@ impl<'a> StandardPolicy<'a> {
     /// in OpenPGP implementations is [excellent].  We chose 2017 as
     /// the cutoff year because [NIST deprecated 3DES] that year.
     ///
-    ///   ["MUST implement"]: https://tools.ietf.org/html/rfc4880#section-9.2
+    ///   ["MUST implement"]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.3
     ///   [excellent]: https://tests.sequoia-pgp.org/#Symmetric_Encryption_Algorithm_support
     ///   [NIST deprecated 3DES]: https://csrc.nist.gov/News/2017/Update-to-Current-Use-and-Deprecation-of-TDEA
     pub fn reject_symmetric_algo_at<C>(&mut self, s: SymmetricAlgorithm,

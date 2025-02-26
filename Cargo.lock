@@ -2745,7 +2745,6 @@ name = "sequoia-ipc"
 version = "0.35.1"
 dependencies = [
  "anyhow",
- "buffered-reader",
  "capnp-rpc",
  "ctor",
  "dirs",

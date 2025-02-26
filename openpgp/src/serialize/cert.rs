@@ -438,7 +438,7 @@ impl<'a> TSK<'a> {
     ///
     /// The default way is to simply emit public key packets when no
     /// secret key material is available.  While straight forward,
-    /// this may be in violation of [Section 11.2 of RFC 4880].
+    /// this may be in violation of [Section 10.2 of RFC 9580].
     ///
     /// The alternative is to emit a secret key packet with a
     /// placeholder secret key value.  GnuPG uses this variant with a
@@ -448,7 +448,7 @@ impl<'a> TSK<'a> {
     /// See [this test] for support in other implementations.
     ///
     ///   [`TSK::set_filter`]: TSK::set_filter()
-    ///   [Section 11.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.2
+    ///   [Section 10.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.2
     ///   [`S2K`]: super::crypto::S2K
     ///   [this test]: https://tests.sequoia-pgp.org/#Detached_primary_key
     ///

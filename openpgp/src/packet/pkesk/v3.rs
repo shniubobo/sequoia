@@ -1,9 +1,9 @@
 //! PublicKey-Encrypted Session Key packets.
 //!
 //! The session key is needed to decrypt the actual ciphertext.  See
-//! [Section 5.1 of RFC 4880] for details.
+//! [Section 5.1 of RFC 9580] for details.
 //!
-//!   [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
+//!   [Section 5.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.1
 
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
@@ -23,9 +23,9 @@ use crate::packet;
 /// Holds an asymmetrically encrypted session key.
 ///
 /// The session key is needed to decrypt the actual ciphertext.  See
-/// [Section 5.1 of RFC 4880] for details.
+/// [Section 5.1 of RFC 9580] for details.
 ///
-///   [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
+///   [Section 5.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.1
 // IMPORTANT: If you add fields to this struct, you need to explicitly
 // IMPORTANT: implement PartialEq, Eq, and Hash.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -127,10 +127,10 @@ impl PKESK3 {
     ///
     /// Returns `None` on errors.  This prevents leaking information
     /// to an attacker, which could lead to compromise of secret key
-    /// material with certain algorithms (RSA).  See [Section 14 of
-    /// RFC 4880].
+    /// material with certain algorithms (RSA).  See [Section 13 of
+    /// RFC 9580].
     ///
-    ///   [Section 14 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-14
+    ///   [Section 13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-13
     pub fn decrypt(&self, decryptor: &mut dyn Decryptor,
                    sym_algo_hint: Option<SymmetricAlgorithm>)
         -> Option<(SymmetricAlgorithm, SessionKey)>

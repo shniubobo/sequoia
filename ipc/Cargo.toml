@@ -28,7 +28,6 @@ maintenance = { status = "actively-developed" }
 sequoia-openpgp = { path = "../openpgp", default-features = false }
 
 anyhow = "1.0.18"
-buffered-reader = { path = "../buffered-reader", version = "1.0.0", default-features = false }
 capnp-rpc = "0.19"
 fs2 = "0.4.2"
 lalrpop-util = ">=0.17, <0.21"

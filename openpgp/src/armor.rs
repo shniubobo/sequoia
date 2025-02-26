@@ -1,9 +1,9 @@
 //! ASCII Armor.
 //!
 //! This module deals with ASCII Armored data (see [Section 6 of RFC
-//! 4880]).
+//! 9580]).
 //!
-//!   [Section 6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-6
+//!   [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
 //!
 //! # Scope
 //!
@@ -62,16 +62,17 @@ use crc::Crc;
 const TRACE: bool = false;
 
 /// The encoded output stream must be represented in lines of no more
-/// than 76 characters each (see [RFC 4880, section
-/// 6.3](https://tools.ietf.org/html/rfc4880#section-6.3) ).  GnuPG uses
-/// 64.
+/// than 76 characters each (see [Section 6 of RFC 9580]).  GnuPG
+/// uses 64.
+///
+/// [Section 6 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6
 pub(crate) const LINE_LENGTH: usize = 64;
 
 const LINE_ENDING: &str = "\n";
 
-/// Specifies the type of data (see [RFC 4880, section 6.2]).
+/// Specifies the type of data (see [Section 6.2 of RFC 9580]).
 ///
-/// [RFC 4880, section 6.2]: https://tools.ietf.org/html/rfc4880#section-6.2
+/// [Section 6.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6.2
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Kind {
@@ -125,9 +126,9 @@ enum Label {
     Signature,
     /// A message using the Cleartext Signature Framework.
     ///
-    /// See [Section 7 of RFC 4880].
+    /// See [Section 7 of RFC 9580].
     ///
-    ///   [Section 7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-7
+    ///   [Section 7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-7
     CleartextSignature,
     /// A generic file.  This is a GnuPG extension.
     File,
@@ -704,7 +705,7 @@ impl<'a> Reader<'a> {
     /// This mode of operation is CPU intense, particularly on large
     /// text files.
     ///
-    ///   [ASCII Armor]: https://tools.ietf.org/html/rfc4880#section-6.2
+    ///   [ASCII Armor]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6.2
     ///
     /// # Examples
     ///

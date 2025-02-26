@@ -206,7 +206,7 @@ impl KeyBuilder {
 /// like notations.  A subkey binding signature usually contains the
 /// following information:
 ///
-///   [subkey binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
+///   [subkey binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
 ///
 ///   - [Signature creation time](https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.4)
 ///
@@ -502,7 +502,7 @@ impl<'a> SubkeyBuilder<'a> {
     /// [`SubkeyBuilder::set_key_expiration_time`] or
     /// [`SubkeyBuilder::set_key_validity_period`].
     ///
-    ///   [Key Expiration Time subpacket]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.6
+    ///   [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     ///
     /// # Examples
     ///
@@ -608,7 +608,7 @@ impl<'a> SubkeyBuilder<'a> {
     /// calling [`SubkeyBuilder::set_key_expiration_time`] or
     /// [`SubkeyBuilder::set_key_validity_period`].
     ///
-    ///   [Key Expiration Time subpacket]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.3.6
+    ///   [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     pub fn set_signature_template<T>(mut self, template: T) -> Self
     where T: Into<SignatureBuilder>,
     {
@@ -760,8 +760,8 @@ impl<'a> SubkeyBuilder<'a> {
     /// unencrypted.  This method allows you to explicitly provide a
     /// signer for the primary key.
     ///
-    ///   [subkey binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
-    ///   [primary binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
+    ///   [subkey binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    ///   [primary binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     pub fn set_primary_key_signer<S>(mut self, signer: S) -> Self
     where S: Signer + Send + Sync + 'a,
     {
@@ -781,8 +781,8 @@ impl<'a> SubkeyBuilder<'a> {
     /// unencrypted.  This method allows you to explicitly provide a
     /// signer for the subkey.
     ///
-    ///   [subkey binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
-    ///   [primary binding signature]: https://datatracker.ietf.org/doc/html/rfc4880#section-5.2.1
+    ///   [subkey binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    ///   [primary binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     pub fn set_subkey_signer<S>(mut self, signer: S) -> Self
     where S: Signer + Send + Sync + 'a,
     {

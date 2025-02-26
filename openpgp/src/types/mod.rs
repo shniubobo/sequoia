@@ -74,9 +74,9 @@ pub use crate::crypto::HashAlgorithm;
 pub use crate::crypto::PublicKeyAlgorithm;
 pub use crate::crypto::SymmetricAlgorithm;
 
-/// The OpenPGP compression algorithms as defined in [Section 9.3 of RFC 4880].
+/// The OpenPGP compression algorithms as defined in [Section 9.4 of RFC 9580].
 ///
-///   [Section 9.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.3
+///   [Section 9.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.4
 ///
 /// # Examples
 ///
@@ -103,11 +103,11 @@ pub enum CompressionAlgorithm {
     Uncompressed,
     /// DEFLATE Compressed Data.
     ///
-    /// See [RFC 1951] for details.  [Section 9.3 of RFC 4880]
+    /// See [RFC 1951] for details.  [Section 9.4 of RFC 9580]
     /// recommends that this algorithm should be implemented.
     ///
     /// [RFC 1951]: https://tools.ietf.org/html/rfc1951
-    /// [Section 9.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.3
+    /// [Section 9.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.4
     Zip,
     /// ZLIB Compressed Data.
     ///
@@ -228,9 +228,9 @@ impl Arbitrary for CompressionAlgorithm {
     }
 }
 
-/// Signature type as defined in [Section 5.2.1 of RFC 4880].
+/// Signature type as defined in [Section 5.2.1 of RFC 9580].
 ///
-///   [Section 5.2.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+///   [Section 5.2.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
 ///
 /// # Examples
 ///
@@ -426,9 +426,9 @@ impl SignatureType {
 
 /// Describes the reason for a revocation.
 ///
-/// See the description of revocation subpackets [Section 5.2.3.23 of RFC 4880].
+/// See the description of revocation subpackets [Section 5.2.3.31 of RFC 9580].
 ///
-///   [Section 5.2.3.23 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+///   [Section 5.2.3.31 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
 ///
 /// # Examples
 ///
@@ -700,9 +700,9 @@ impl ReasonForRevocation {
 
 /// Describes the format of the body of a literal data packet.
 ///
-/// See the description of literal data packets [Section 5.9 of RFC 4880].
+/// See the description of literal data packets [Section 5.9 of RFC 9580].
 ///
-///   [Section 5.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.9
+///   [Section 5.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.9
 ///
 /// # Examples
 ///

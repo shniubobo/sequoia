@@ -1,6 +1,6 @@
-//! Computes the CRC-24, (see [RFC 4880, section 6.1]).
+//! Computes the CRC-24, (see [Section 6.1.1 of RFC 9580]).
 //!
-//! [RFC 4880, section 6.1]: https://tools.ietf.org/html/rfc4880#section-6.1
+//! [Section 6.1.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6.1.1
 
 const CRC24_INIT: u32 = 0xB704CE;
 const CRC24_POLY: u32 = 0x864CFB;
@@ -10,9 +10,9 @@ pub struct Crc {
     n: u32,
 }
 
-/// Computes the CRC-24, (see [RFC 4880, section 6.1]).
+/// Computes the CRC-24, (see [Section 6.1.1 of RFC 9580]).
 ///
-/// [RFC 4880, section 6.1]: https://tools.ietf.org/html/rfc4880#section-6.1
+/// [Section 6.1.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-6.1.1
 impl Crc {
     pub fn new() -> Self {
         Self { n: CRC24_INIT }

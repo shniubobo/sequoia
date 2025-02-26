@@ -13,9 +13,9 @@ use crate::{
 
 /// Designates a key as a valid third-party revoker.
 ///
-/// This is described in [Section 5.2.3.15 of RFC 4880].
+/// This is described in [Section 5.2.3.23 of RFC 9580].
 ///
-/// [Section 5.2.3.15 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+/// [Section 5.2.3.23 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
 ///
 /// Revocation keys can be retrieved using [`ValidAmalgamation::revocation_keys`]
 /// and set using [`CertBuilder::set_revocation_keys`].

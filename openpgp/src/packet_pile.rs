@@ -22,7 +22,7 @@ use crate::parse::Cookie;
 /// [`PacketParser`], [`PacketPileParser`], or
 /// [`PacketPile::from_file`] (or related routines).
 ///
-///   [packet]: https://tools.ietf.org/html/rfc4880#section-4
+///   [packet]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4
 ///   [`PacketParser`]: crate::parse::PacketParser
 ///   [`PacketPileParser`]: crate::parse::PacketPileParser
 ///

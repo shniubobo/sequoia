@@ -118,7 +118,7 @@
 //! Instead of trying to come up with a definition of equality that is
 //! reasonable for all situations, we use a conservative definition:
 //! two packets are considered equal if the serialized forms of their
-//! packet bodies as defined by RFC 4880 are equal.  That is, two
+//! packet bodies as defined by RFC 9580 are equal.  That is, two
 //! packets are considered equal if and only if their serialized forms
 //! are equal modulo the OpenPGP framing ([`CTB`] and [length style],
 //! potential [partial body encoding]).  This definition will avoid
@@ -129,26 +129,26 @@
 //! instance, [`Key::public_cmp`] compares just the public parts of
 //! two keys.
 //!
-//! [packet based]: https://tools.ietf.org/html/rfc4880#section-5
-//! [the grammar]: https://tools.ietf.org/html/rfc4880#section-11
-//! [v3]: https://tools.ietf.org/html/rfc4880#section-5.2.2
-//! [v4]: https://tools.ietf.org/html/rfc4880#section-5.2.3
+//! [packet based]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
+//! [the grammar]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10
+//! [v3]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
+//! [v4]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3
 //! [parsing a message]: crate::parse
 //! [creating a message]: crate::serialize::stream
 //! [`SignatureBuilder`]: signature::SignatureBuilder
-//! [`SED`]: https://tools.ietf.org/html/rfc4880#section-5.7
-//! [private extensions]: https://tools.ietf.org/html/rfc4880#section-4.3
+//! [`SED`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.7
+//! [private extensions]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
 //! [`Compressed Data`]: CompressedData
 //! [parses]: crate::parse
-//! [OpenPGP Message]: https://tools.ietf.org/html/rfc4880#section-11.3
+//! [OpenPGP Message]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
 //! [`Container::descendants`]: Container::descendants()
 //! [`Deref`]: std::ops::Deref
 //! [`SubpacketArea`]: signature::subpacket::SubpacketArea
 //! [`Eq`]: std::cmp::Eq
 //! [`Key`s]: Key
 //! [`CTB`]: header::CTB
-//! [length style]: https://tools.ietf.org/html/rfc4880#section-4.2
-//! [partial body encoding]: https://tools.ietf.org/html/rfc4880#section-4.2.2.4
+//! [length style]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2
+//! [partial body encoding]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.1.4
 //! [`Key::public_cmp`]: Key::public_cmp()
 use std::fmt;
 use std::hash::Hasher;
@@ -207,9 +207,9 @@ pub use self::padding::Padding;
 
 /// Enumeration of packet types.
 ///
-/// The different OpenPGP packets are detailed in [Section 5 of RFC 4880].
+/// The different OpenPGP packets are detailed in [Section 5 of RFC 9580].
 ///
-///   [Section 5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5
+///   [Section 5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
 ///
 /// The [`Unknown`] packet allows Sequoia to deal with packets that it
 /// doesn't understand.  It is basically a binary blob that includes
@@ -219,17 +219,17 @@ pub use self::padding::Padding;
 /// # A note on equality
 ///
 /// We define equality on `Packet` as the equality of the serialized
-/// form of their packet bodies as defined by RFC 4880.  That is, two
+/// form of their packet bodies as defined by RFC 9580.  That is, two
 /// packets are considered equal if and only if their serialized forms
 /// are equal, modulo the OpenPGP framing ([`CTB`] and [length style],
 /// potential [partial body encoding]).
 ///
 /// [`Unknown`]: crate::packet::Unknown
-/// [tag]: https://tools.ietf.org/html/rfc4880#section-4.3
+/// [tag]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
 /// [module-level documentation]: crate::packet#unknown-packets
 /// [`CTB`]: crate::packet::header::CTB
-/// [length style]: https://tools.ietf.org/html/rfc4880#section-4.2
-/// [partial body encoding]: https://tools.ietf.org/html/rfc4880#section-4.2.2.4
+/// [length style]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2
+/// [partial body encoding]: https://www.rfc-editor.org/rfc/rfc9580.html#section-4.2.1.4
 #[non_exhaustive]
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub enum Packet {
@@ -321,9 +321,9 @@ impl From<Packet> for Result<Packet> {
 impl Packet {
     /// Returns the `Packet's` corresponding OpenPGP tag.
     ///
-    /// Tags are explained in [Section 4.3 of RFC 4880].
+    /// Tags are explained in [Section 5 of RFC 9580].
     ///
-    ///   [Section 4.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.3
+    ///   [Section 5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
     pub fn tag(&self) -> Tag {
         match self {
             Packet::Unknown(ref packet) => packet.tag(),
@@ -902,9 +902,9 @@ fn packet_path_iter() {
 ///
 /// Signature packets are used to hold all kinds of signatures
 /// including certifications, and signatures over documents.  See
-/// [Section 5.2 of RFC 4880] for details.
+/// [Section 5.2 of RFC 9580] for details.
 ///
-///   [Section 5.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2
+///   [Section 5.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2
 ///
 /// When signing a document, a `Signature` packet is typically created
 /// indirectly by the [streaming `Signer`].  Similarly, a `Signature`
@@ -1053,14 +1053,14 @@ impl DerefMut for Signature {
 /// Holds a SEIP packet.
 ///
 /// A SEIP packet holds encrypted data.  The data contains additional
-/// OpenPGP packets.  See [Section 5.13 of RFC 4880] for details.
+/// OpenPGP packets.  See [Section 5.13 of RFC 9580] for details.
 ///
 /// A SEIP packet is not normally instantiated directly.  In most
 /// cases, you'll create one as a side effect of encrypting a message
 /// using the [streaming serializer], or parsing an encrypted message
 /// using the [`PacketParser`].
 ///
-/// [Section 5.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.13
+/// [Section 5.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13
 /// [streaming serializer]: crate::serialize::stream
 /// [`PacketParser`]: crate::parse::PacketParser
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]

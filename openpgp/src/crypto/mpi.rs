@@ -4,17 +4,16 @@
 //! [ciphertexts], and [signatures] are scalar numbers of arbitrary
 //! precision.  OpenPGP specifies that these are stored encoded as
 //! big-endian integers with leading zeros stripped (See [Section 3.2
-//! of RFC 4880]).  Multiprecision integers in OpenPGP are extended by
-//! [RFC 6637] to store curves and coordinates used in elliptic curve
-//! cryptography (ECC).
+//! of RFC 9580]).  Multiprecision integers in OpenPGP are extended by
+//! [Section 3.2.1 of RFC 9580] to store curves and coordinates used
+//! in elliptic curve cryptography (ECC).
 //!
 //!   [public keys]: PublicKey
 //!   [secret keys]: SecretKeyMaterial
 //!   [ciphertexts]: Ciphertext
 //!   [signatures]: Signature
-//!   [Section 3.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.2
-//!   [RFC 6637]: https://tools.ietf.org/html/rfc6637
-
+//!   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
+//!   [Section 3.2.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2.1
 use std::fmt;
 use std::cmp::Ordering;
 use std::io::Write;
@@ -1077,9 +1076,9 @@ impl Arbitrary for SecretKeyMaterial {
 /// Checksum method for secret key material.
 ///
 /// Secret key material may be protected by a checksum.  See [Section
-/// 5.5.3 of RFC 4880] for details.
+/// 5.5.3 of RFC 9580] for details.
 ///
-///   [Section 5.5.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.5.3
+///   [Section 5.5.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.3
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum SecretKeyChecksum {
     /// SHA1 over the decrypted secret key.

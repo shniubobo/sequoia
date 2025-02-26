@@ -2,9 +2,9 @@
 //!
 //! String-to-key (S2K) specifiers are used to convert password
 //! strings into symmetric-key encryption/decryption keys.  See
-//! [Section 3.7 of RFC 4880].
+//! [Section 3.7 of RFC 9580].
 //!
-//!   [Section 3.7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.7
+//!   [Section 3.7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
 
 use std::convert::TryInto;
 
@@ -23,11 +23,11 @@ use quickcheck::{Arbitrary, Gen};
 ///
 /// String-to-key (S2K) specifiers are used to convert password
 /// strings into symmetric-key encryption/decryption keys.  See
-/// [Section 3.7 of RFC 4880].  This is used to encrypt messages with
+/// [Section 3.7 of RFC 9580].  This is used to encrypt messages with
 /// a password (see [`SKESK`]), and to protect secret keys (see
 /// [`key::Encrypted`]).
 ///
-///   [Section 3.7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3.7
+///   [Section 3.7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
 ///   [`SKESK`]: crate::packet::SKESK
 ///   [`key::Encrypted`]: crate::packet::key::Encrypted
 #[non_exhaustive]

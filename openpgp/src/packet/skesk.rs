@@ -2,9 +2,9 @@
 //!
 //! SKESK packets hold symmetrically encrypted session keys.  The
 //! session key is needed to decrypt the actual ciphertext.  See
-//! [Section 5.3 of RFC 4880] for details.
+//! [Section 5.3 of RFC 9580] for details.
 //!
-//! [Section 5.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.3
+//! [Section 5.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.3
 
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
@@ -29,7 +29,7 @@ pub use v6::SKESK6;
 ///
 /// The session key is used to decrypt the actual ciphertext, which is
 /// typically stored in a [SEIP] packet.  See [Section 5.3 of RFC
-/// 4880] for details.
+/// 9580] for details.
 ///
 /// An SKESK packet is not normally instantiated directly.  In most
 /// cases, you'll create one as a side effect of encrypting a message
@@ -37,7 +37,7 @@ pub use v6::SKESK6;
 /// using the [`PacketParser`].
 ///
 /// [SEIP]: crate::packet::SEIP
-/// [Section 5.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.3
+/// [Section 5.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.3
 /// [streaming serializer]: crate::serialize::stream
 /// [`PacketParser`]: crate::parse::PacketParser
 #[non_exhaustive]

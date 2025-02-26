@@ -4,9 +4,9 @@
 //! called subpackets.  These subpackets are used to indicate when a
 //! signature was created, who created the signature, user &
 //! implementation preferences, etc.  The full details are in [Section
-//! 5.2.3.1 of RFC 4880].
+//! 5.2.3.7 of RFC 9580].
 //!
-//! [Section 5.2.3.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.1
+//! [Section 5.2.3.7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.7
 //!
 //! The standard assigns each subpacket a numeric id, and describes
 //! the format of its value.  One subpacket is called Notation Data
@@ -136,158 +136,158 @@ pub const CLOCK_SKEW_TOLERANCE: time::Duration
 pub enum SubpacketTag {
     /// The time the signature was made.
     ///
-    /// See [Section 5.2.3.4 of RFC 4880] for details.
+    /// See [Section 5.2.3.11 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///  [Section 5.2.3.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     SignatureCreationTime,
     /// The validity period of the signature.
     ///
     /// The validity is relative to the time stored in the signature's
     /// Signature Creation Time subpacket.
     ///
-    /// See [Section 5.2.3.10 of RFC 4880] for details.
+    /// See [Section 5.2.3.18 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.10 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    ///  [Section 5.2.3.18 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     SignatureExpirationTime,
     /// Whether a signature should be published.
     ///
-    /// See [Section 5.2.3.11 of RFC 4880] for details.
+    /// See [Section 5.2.3.19 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.11 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.11
+    ///  [Section 5.2.3.19 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
     ExportableCertification,
     /// Signer asserts that the key is not only valid but also trustworthy at
     /// the specified level.
     ///
-    /// See [Section 5.2.3.13 of RFC 4880] for details.
+    /// See [Section 5.2.3.21 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    ///  [Section 5.2.3.21 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     TrustSignature,
     /// Used in conjunction with Trust Signature packets (of level > 0) to
     /// limit the scope of trust that is extended.
     ///
-    /// See [Section 5.2.3.14 of RFC 4880] for details.
+    /// See [Section 5.2.3.22 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.14 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+    ///  [Section 5.2.3.22 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
     RegularExpression,
     /// Whether a signature can later be revoked.
     ///
-    /// See [Section 5.2.3.12 of RFC 4880] for details.
+    /// See [Section 5.2.3.20 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.12 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.12
+    ///  [Section 5.2.3.20 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.20
     Revocable,
     /// The validity period of the key.
     ///
     /// The validity period is relative to the key's (not the signature's) creation time.
     ///
-    /// See [Section 5.2.3.6 of RFC 4880] for details.
+    /// See [Section 5.2.3.13 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    ///  [Section 5.2.3.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     KeyExpirationTime,
     /// Deprecated
     PlaceholderForBackwardCompatibility,
     /// The Symmetric algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.7 of RFC 4880] for details.
+    /// See [Section 5.2.3.14 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.7
+    ///  [Section 5.2.3.14 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.14
     PreferredSymmetricAlgorithms,
     /// Authorizes the specified key to issue revocation signatures for this
     /// certificate.
     ///
-    /// See [Section 5.2.3.15 of RFC 4880] for details.
+    /// See [Section 5.2.3.23 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.15 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    ///  [Section 5.2.3.23 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     RevocationKey,
     /// The OpenPGP Key ID of the key issuing the signature.
     ///
-    /// See [Section 5.2.3.5 of RFC 4880] for details.
+    /// See [Section 5.2.3.12 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///  [Section 5.2.3.12 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     Issuer,
     /// A "notation" on the signature.
     ///
-    /// See [Section 5.2.3.16 of RFC 4880] for details.
+    /// See [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    ///  [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     NotationData,
     /// The Hash algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.8 of RFC 4880] for details.
+    /// See [Section 5.2.3.16 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.8 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.8
+    ///  [Section 5.2.3.16 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.16
     PreferredHashAlgorithms,
     /// The compression algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.9 of RFC 4880] for details.
+    /// See [Section 5.2.3.17 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.9
+    ///  [Section 5.2.3.17 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.17
     PreferredCompressionAlgorithms,
     /// A list of flags that indicate preferences that the certificate
     /// holder has about how the key is handled by a key server.
     ///
-    /// See [Section 5.2.3.17 of RFC 4880] for details.
+    /// See [Section 5.2.3.25 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.17 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.17
+    ///  [Section 5.2.3.25 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.25
     KeyServerPreferences,
     /// The URI of a key server where the certificate holder keeps
     /// their certificate up to date.
     ///
-    /// See [Section 5.2.3.18 of RFC 4880] for details.
+    /// See [Section 5.2.3.26 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.18 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.18
+    ///  [Section 5.2.3.26 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.26
     PreferredKeyServer,
     /// A flag in a User ID's self-signature that states whether this
     /// User ID is the primary User ID for this certificate.
     ///
-    /// See [Section 5.2.3.19 of RFC 4880] for details.
+    /// See [Section 5.2.3.27 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.19 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    ///  [Section 5.2.3.27 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     PrimaryUserID,
     /// The URI of a document that describes the policy under which
     /// the signature was issued.
     ///
-    /// See [Section 5.2.3.20 of RFC 4880] for details.
+    /// See [Section 5.2.3.28 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.20 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.20
+    ///  [Section 5.2.3.28 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.28
     PolicyURI,
     /// A list of flags that hold information about a key.
     ///
-    /// See [Section 5.2.3.21 of RFC 4880] for details.
+    /// See [Section 5.2.3.29 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.21 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    ///  [Section 5.2.3.29 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     KeyFlags,
     /// The User ID that is responsible for the signature.
     ///
-    /// See [Section 5.2.3.22 of RFC 4880] for details.
+    /// See [Section 5.2.3.30 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.22 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.22
+    ///  [Section 5.2.3.30 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.30
     SignersUserID,
     /// The reason for a revocation, used in key revocations and
     /// certification revocation signatures.
     ///
-    /// See [Section 5.2.3.23 of RFC 4880] for details.
+    /// See [Section 5.2.3.31 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.23 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+    ///  [Section 5.2.3.31 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
     ReasonForRevocation,
     /// The OpenPGP features a user's implementation supports.
     ///
-    /// See [Section 5.2.3.24 of RFC 4880] for details.
+    /// See [Section 5.2.3.32 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.24 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.24
+    ///  [Section 5.2.3.32 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.32
     Features,
     /// A signature to which this signature refers.
     ///
-    /// See [Section 5.2.3.25 of RFC 4880] for details.
+    /// See [Section 5.2.3.33 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.25 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    ///  [Section 5.2.3.33 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     SignatureTarget,
     /// A complete Signature packet body.
     ///
     /// This is used to store a backsig in a subkey binding signature.
     ///
-    /// See [Section 5.2.3.26 of RFC 4880] for details.
+    /// See [Section 5.2.3.34 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.26 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
+    ///  [Section 5.2.3.34 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
     EmbeddedSignature,
 
     /// The Fingerprint of the key that issued the signature.
@@ -560,8 +560,8 @@ mod tests {
 /// routes lookups appropriately.  As such, it is usually better to
 /// work with subpackets using that interface.
 ///
-/// [signature subpackets]: https://tools.ietf.org/html/rfc4880#section-5.2.3.1
-/// [`Issuer`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+/// [signature subpackets]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.7
+/// [`Issuer`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
 ///
 /// # Examples
 ///
@@ -792,16 +792,16 @@ impl SubpacketArea {
     /// A given subpacket may occur multiple times.  For some, like
     /// the [`Notation Data`] subpacket, this is reasonable.  For
     /// others, like the [`Signature Creation Time`] subpacket, this
-    /// results in an ambiguity.  [Section 5.2.4.1 of RFC 4880] says:
+    /// results in an ambiguity.  [Section 5.2.3.9 of RFC 9580] says:
     ///
     /// > a signature may contain multiple copies of a preference or
     /// > multiple expiration times.  In most cases, an implementation
     /// > SHOULD use the last subpacket in the signature, but MAY use
     /// > any conflict resolution scheme that makes more sense.
     ///
-    ///   [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
-    ///   [Section 5.2.4.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.4.1
+    ///   [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
+    ///   [Section 5.2.3.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.9
     ///
     /// This function implements the recommended strategy of returning
     /// the last subpacket.
@@ -851,16 +851,16 @@ impl SubpacketArea {
     /// A given subpacket may occur multiple times.  For some, like
     /// the [`Notation Data`] subpacket, this is reasonable.  For
     /// others, like the [`Signature Creation Time`] subpacket, this
-    /// results in an ambiguity.  [Section 5.2.4.1 of RFC 4880] says:
+    /// results in an ambiguity.  [Section 5.2.3.9 of RFC 9580] says:
     ///
     /// > a signature may contain multiple copies of a preference or
     /// > multiple expiration times.  In most cases, an implementation
     /// > SHOULD use the last subpacket in the signature, but MAY use
     /// > any conflict resolution scheme that makes more sense.
     ///
-    ///   [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
-    ///   [`Signature Creation Time`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
-    ///   [Section 5.2.4.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.4.1
+    ///   [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
+    ///   [`Signature Creation Time`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
+    ///   [Section 5.2.3.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.9
     ///
     /// This function implements the recommended strategy of returning
     /// the last subpacket.
@@ -915,7 +915,7 @@ impl SubpacketArea {
     /// reasonable.
     ///
     /// [`SubpacketArea::subpacket`]: Self::subpacket()
-    /// [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     ///
     /// # Examples
     ///
@@ -1167,7 +1167,7 @@ impl SubpacketArea {
     /// The [`SignatureBuilder`] sorts the subpacket areas just before
     /// creating the signature.
     ///
-    /// [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     /// [`SignatureBuilder`]: super::SignatureBuilder
     pub fn sort(&mut self) {
         self.cache_invalidate();
@@ -1187,7 +1187,7 @@ impl SubpacketArea {
 /// critical notations), even if they don't understand the notations
 /// themselves.
 ///
-///   [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+///   [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
 ///
 /// It is possible to control how Sequoia's higher-level functionality
 /// handles unknown, critical notations using a [`Policy`] object.
@@ -1204,9 +1204,9 @@ impl SubpacketArea {
 /// the user namespace have the form `name@example.org` and are
 /// managed by the owner of the domain.  Names in the IETF namespace
 /// may not contain an `@` and are managed by IANA.  See [Section
-/// 5.2.3.16 of RFC 4880] for details.
+/// 5.2.3.24 of RFC 9580] for details.
 ///
-///   [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+///   [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NotationData {
     flags: NotationDataFlags,
@@ -1494,31 +1494,31 @@ pub enum SubpacketValue {
 
     /// The time the signature was made.
     ///
-    /// See [Section 5.2.3.4 of RFC 4880] for details.
+    /// See [Section 5.2.3.11 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///  [Section 5.2.3.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     SignatureCreationTime(Timestamp),
     /// The validity period of the signature.
     ///
     /// The validity is relative to the time stored in the signature's
     /// Signature Creation Time subpacket.
     ///
-    /// See [Section 5.2.3.10 of RFC 4880] for details.
+    /// See [Section 5.2.3.18 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.10 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    ///  [Section 5.2.3.18 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     SignatureExpirationTime(Duration),
     /// Whether a signature should be published.
     ///
-    /// See [Section 5.2.3.11 of RFC 4880] for details.
+    /// See [Section 5.2.3.19 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.11 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.11
+    ///  [Section 5.2.3.19 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
     ExportableCertification(bool),
     /// Signer asserts that the key is not only valid but also trustworthy at
     /// the specified level.
     ///
-    /// See [Section 5.2.3.13 of RFC 4880] for details.
+    /// See [Section 5.2.3.21 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.13 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    ///  [Section 5.2.3.21 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     TrustSignature {
         /// Trust level, or depth.
         ///
@@ -1542,9 +1542,9 @@ pub enum SubpacketValue {
     /// Used in conjunction with Trust Signature packets (of level > 0) to
     /// limit the scope of trust that is extended.
     ///
-    /// See [Section 5.2.3.14 of RFC 4880] for details.
+    /// See [Section 5.2.3.22 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.14 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+    ///  [Section 5.2.3.22 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
     ///
     /// Note: The RFC requires that the serialized form includes a
     /// trailing NUL byte.  When Sequoia parses the regular expression
@@ -1554,101 +1554,101 @@ pub enum SubpacketValue {
     RegularExpression(Vec<u8>),
     /// Whether a signature can later be revoked.
     ///
-    /// See [Section 5.2.3.12 of RFC 4880] for details.
+    /// See [Section 5.2.3.20 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.12 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.12
+    ///  [Section 5.2.3.20 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.20
     Revocable(bool),
     /// The validity period of the key.
     ///
     /// The validity period is relative to the key's (not the signature's) creation time.
     ///
-    /// See [Section 5.2.3.6 of RFC 4880] for details.
+    /// See [Section 5.2.3.13 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.6 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    ///  [Section 5.2.3.13 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     KeyExpirationTime(Duration),
     /// The Symmetric algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.7 of RFC 4880] for details.
+    /// See [Section 5.2.3.14 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.7
+    ///  [Section 5.2.3.14 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.14
     PreferredSymmetricAlgorithms(Vec<SymmetricAlgorithm>),
     /// Authorizes the specified key to issue revocation signatures for this
     /// certificate.
     ///
-    /// See [Section 5.2.3.15 of RFC 4880] for details.
+    /// See [Section 5.2.3.23 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.15 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    ///  [Section 5.2.3.23 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     RevocationKey(RevocationKey),
     /// The OpenPGP Key ID of the key issuing the signature.
     ///
-    /// See [Section 5.2.3.5 of RFC 4880] for details.
+    /// See [Section 5.2.3.12 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///  [Section 5.2.3.12 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     Issuer(KeyID),
     /// A "notation" on the signature.
     ///
-    /// See [Section 5.2.3.16 of RFC 4880] for details.
+    /// See [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    ///  [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     NotationData(NotationData),
     /// The Hash algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.8 of RFC 4880] for details.
+    /// See [Section 5.2.3.16 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.8 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.8
+    ///  [Section 5.2.3.16 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.16
     PreferredHashAlgorithms(Vec<HashAlgorithm>),
     /// The compression algorithms that the certificate holder prefers.
     ///
-    /// See [Section 5.2.3.9 of RFC 4880] for details.
+    /// See [Section 5.2.3.17 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.9
+    ///  [Section 5.2.3.17 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.17
     PreferredCompressionAlgorithms(Vec<CompressionAlgorithm>),
     /// A list of flags that indicate preferences that the certificate
     /// holder has about how the key is handled by a key server.
     ///
-    /// See [Section 5.2.3.17 of RFC 4880] for details.
+    /// See [Section 5.2.3.25 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.17 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.17
+    ///  [Section 5.2.3.25 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.25
     KeyServerPreferences(KeyServerPreferences),
     /// The URI of a key server where the certificate holder keeps
     /// their certificate up to date.
     ///
-    /// See [Section 5.2.3.18 of RFC 4880] for details.
+    /// See [Section 5.2.3.26 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.18 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.18
+    ///  [Section 5.2.3.26 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.26
     PreferredKeyServer(Vec<u8>),
     /// A flag in a User ID's self-signature that states whether this
     /// User ID is the primary User ID for this certificate.
     ///
-    /// See [Section 5.2.3.19 of RFC 4880] for details.
+    /// See [Section 5.2.3.27 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.19 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    ///  [Section 5.2.3.27 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     PrimaryUserID(bool),
     /// The URI of a document that describes the policy under which
     /// the signature was issued.
     ///
-    /// See [Section 5.2.3.20 of RFC 4880] for details.
+    /// See [Section 5.2.3.28 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.20 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.20
+    ///  [Section 5.2.3.28 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.28
     PolicyURI(Vec<u8>),
     /// A list of flags that hold information about a key.
     ///
-    /// See [Section 5.2.3.21 of RFC 4880] for details.
+    /// See [Section 5.2.3.29 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.21 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    ///  [Section 5.2.3.29 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     KeyFlags(KeyFlags),
     /// The User ID that is responsible for the signature.
     ///
-    /// See [Section 5.2.3.22 of RFC 4880] for details.
+    /// See [Section 5.2.3.30 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.22 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.22
+    ///  [Section 5.2.3.30 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.30
     SignersUserID(Vec<u8>),
     /// The reason for a revocation, used in key revocations and
     /// certification revocation signatures.
     ///
-    /// See [Section 5.2.3.23 of RFC 4880] for details.
+    /// See [Section 5.2.3.31 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.23 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+    ///  [Section 5.2.3.31 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
     ReasonForRevocation {
         /// Machine-readable reason for revocation.
         code: ReasonForRevocation,
@@ -1658,15 +1658,15 @@ pub enum SubpacketValue {
     },
     /// The OpenPGP features a user's implementation supports.
     ///
-    /// See [Section 5.2.3.24 of RFC 4880] for details.
+    /// See [Section 5.2.3.32 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.24 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.24
+    ///  [Section 5.2.3.32 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.32
     Features(Features),
     /// A signature to which this signature refers.
     ///
-    /// See [Section 5.2.3.25 of RFC 4880] for details.
+    /// See [Section 5.2.3.33 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.25 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    ///  [Section 5.2.3.33 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     SignatureTarget {
         /// Public-key algorithm of the target signature.
         pk_algo: PublicKeyAlgorithm,
@@ -1679,9 +1679,9 @@ pub enum SubpacketValue {
     ///
     /// This is used to store a backsig in a subkey binding signature.
     ///
-    /// See [Section 5.2.3.26 of RFC 4880] for details.
+    /// See [Section 5.2.3.34 of RFC 9580] for details.
     ///
-    ///  [Section 5.2.3.26 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
+    ///  [Section 5.2.3.34 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
     EmbeddedSignature(Signature),
 
     /// The Fingerprint of the key that issued the signature.
@@ -1879,11 +1879,11 @@ impl SubpacketValue {
 /// the [`Notation Data`] subpacket ([`NotationData`]), is explicitly
 /// designed for adding arbitrary data to signatures.
 ///
-///   [`Notation Data`]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+///   [`Notation Data`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
 ///
-/// Subpackets are described in [Section 5.2.3.1 of RFC 4880].
+/// Subpackets are described in [Section 5.2.3.7 of RFC 9580].
 ///
-///   [Section 5.2.3.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.1
+///   [Section 5.2.3.7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.7
 pub struct Subpacket {
     /// The length.
     ///
@@ -2379,7 +2379,7 @@ impl SubpacketAreas {
     /// the signature's hashed area.  This doesn't mean that the time
     /// stamp is correct: the issuer can always forge it.
     ///
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -2410,7 +2410,7 @@ impl SubpacketAreas {
     /// signature's creation time, which is stored in the signature's
     /// [Signature Creation Time subpacket].
     ///
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///
     /// A [Signature Expiration Time subpacket] specifies when the
     /// signature expires.  This is different from the [Key Expiration
@@ -2427,8 +2427,8 @@ impl SubpacketAreas {
     /// OpenPGP implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SubpacketAreas::key_validity_period`]: SubpacketAreas::key_validity_period()
     ///
     /// There are several cases where having a signature expire is
@@ -2482,7 +2482,7 @@ impl SubpacketAreas {
     /// [`SubpacketAreas::signature_validity_period`] method returns
     /// the subpacket's raw value.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     /// [`SubpacketAreas::signature_validity_period`]: SubpacketAreas::signature_validity_period()
     ///
     /// The Signature Expiration Time subpacket is different from the
@@ -2499,7 +2499,7 @@ impl SubpacketAreas {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SubpacketAreas::key_validity_period`]: SubpacketAreas::key_validity_period()
     ///
     /// There are several cases where having a signature expire is
@@ -2550,7 +2550,7 @@ impl SubpacketAreas {
     /// for `time`.
     ///
     /// If `time` is `None`, and `clock_skew_tolerance` is `None`,
-    /// then this function uses [`struct@CLOCK_SKEW_TOLERANCE`] for the
+    /// then this function uses [`CLOCK_SKEW_TOLERANCE`] for the
     /// tolerance.  If `time` is not `None `and `clock_skew_tolerance`
     /// is `None`, it uses no tolerance.  The intuition here is that
     /// we only need a tolerance when checking if a signature is alive
@@ -2590,12 +2590,12 @@ impl SubpacketAreas {
     ///
     /// # Errors
     ///
-    /// [Section 5.2.3.4 of RFC 4880] states that a Signature Creation
+    /// [Section 5.2.3.11 of RFC 9580] states that a Signature Creation
     /// Time subpacket "MUST be present in the hashed area."
     /// Consequently, if such a packet does not exist, this function
     /// returns [`Error::MalformedPacket`].
     ///
-    ///  [Section 5.2.3.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    ///  [Section 5.2.3.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///  [`Error::MalformedPacket`]: super::super::super::Error::MalformedPacket
     ///
     /// # Examples
@@ -2691,7 +2691,7 @@ impl SubpacketAreas {
     /// key's (*not* the signature's) creation time, which is stored
     /// in the [Key].
     ///
-    /// [Key]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+    /// [Key]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
     ///
     /// A [Key Expiration Time subpacket] specifies when the
     /// associated key expires.  This is different from the [Signature
@@ -2708,8 +2708,8 @@ impl SubpacketAreas {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SubpacketAreas::signature_validity_period`]: Self::signature_validity_period()
     ///
     /// If the subpacket is not present in the hashed subpacket area,
@@ -2746,8 +2746,8 @@ impl SubpacketAreas {
     /// time, and the [`SubpacketAreas::key_validity_period`] method
     /// returns the subpacket's raw value.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
-    /// [Key]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
+    /// [Key]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
     /// [`SubpacketAreas::key_validity_period`]: Self::key_validity_period()
     ///
     /// The Key Expiration Time subpacket is different from the
@@ -2764,7 +2764,7 @@ impl SubpacketAreas {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     /// [`SubpacketAreas::signature_validity_period`]: Self::signature_validity_period()
     ///
     /// Because the absolute time is relative to the key's creation
@@ -2798,7 +2798,7 @@ impl SubpacketAreas {
     /// A [Key] is considered to be alive if `creation time -
     /// tolerance <= time` and `time < expiration time`.
     ///
-    /// [Key]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+    /// [Key]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
     ///
     /// This function does not check whether the signature is alive
     /// (cf. [`SubpacketAreas::signature_alive`]), or whether the key
@@ -2817,7 +2817,7 @@ impl SubpacketAreas {
     /// This function, however, has no way to check that the signature
     /// is actually a binding signature for the specified Key.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     ///
     /// # Examples
     ///
@@ -2869,7 +2869,7 @@ impl SubpacketAreas {
     /// certificate, signatures that have this subpacket present and
     /// set to false are not serialized.
     ///
-    /// [Exportable Certification subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.11
+    /// [Exportable Certification subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
     /// [`Serialize::export`]: https://docs.sequoia-pgp.org/sequoia_openpgp/serialize/trait.Serialize.html#method.export
     ///
     /// Normally, you'll want to use [`Signature4::exportable`] to
@@ -2878,7 +2878,7 @@ impl SubpacketAreas {
     /// [Revocation Key subpackets], which also shouldn't be exported.
     ///
     /// [`Signature4::exportable`]: super::Signature4::exportable()
-    /// [Revocation Key subpackets]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    /// [Revocation Key subpackets]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -2905,7 +2905,7 @@ impl SubpacketAreas {
     /// The [Trust Signature subpacket] indicates the degree to which
     /// a certificate holder is trusted to certify other keys.
     ///
-    /// [Trust Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    /// [Trust Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     ///
     /// A level of 0 means that the certificate holder is not trusted
     /// to certificate other keys, a level of 1 means that the
@@ -2951,8 +2951,8 @@ impl SubpacketAreas {
     /// company has a CA and you only want to trust them to certify
     /// their own employees.
     ///
-    /// [Trust Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
-    /// [Regular Expression subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+    /// [Trust Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
+    /// [Regular Expression subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
     /// [`SubpacketAreas::trust_signature`]: Self::trust_signature()
     ///
     /// Note: The serialized form includes a trailing `NUL` byte.
@@ -2979,9 +2979,9 @@ impl SubpacketAreas {
     /// [Signature Target subpacket] (accessed using the
     /// [`SubpacketAreas::signature_target`] method).
     ///
-    /// [Revocable subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.12
-    /// [Certification revocation signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
-    /// [Signature Target subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    /// [Revocable subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.20
+    /// [Certification revocation signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    /// [Signature Target subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     /// [`SubpacketAreas::signature_target`]: Self::signature_target()
     ///
     /// If the subpacket is not present in the hashed subpacket area,
@@ -3024,7 +3024,7 @@ impl SubpacketAreas {
     /// Due to the complexity of verifying such signatures, many
     /// OpenPGP implementations do not support this feature.
     ///
-    /// [Revocation Key subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    /// [Revocation Key subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     ///
     /// This returns all instance of the Revocation Key subpacket in
     /// the hashed subpacket area.
@@ -3048,7 +3048,7 @@ impl SubpacketAreas {
     /// signature authenticates the subpacket), it may be stored in the
     /// unhashed subpacket area.
     ///
-    ///   [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///
     /// This returns all instances of the Issuer subpacket in both the
     /// hashed subpacket area and the unhashed subpacket area.
@@ -3099,7 +3099,7 @@ impl SubpacketAreas {
     /// for OpenPGP extensions.  This is how the [Intended Recipient
     /// subpacket] started life.
     ///
-    /// [Notation Data subpackets]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Notation Data subpackets]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     /// [Intended Recipient subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#name-intended-recipient-fingerpr
     ///
     /// Notation names are structured, and are divided into two
@@ -3109,9 +3109,9 @@ impl SubpacketAreas {
     /// meaning of the notation `name@example.org`, for instance, is
     /// defined by whoever controls `example.org`.  Names in the IETF
     /// namespace do not contain an `@` and are managed by IANA.  See
-    /// [Section 5.2.3.16 of RFC 4880] for details.
+    /// [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    /// [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     ///
     /// This returns all instances of the Notation Data subpacket in
     /// the hashed subpacket area.
@@ -3138,7 +3138,7 @@ impl SubpacketAreas {
     /// for OpenPGP extensions.  This is how the [Intended Recipient
     /// subpacket] started life.
     ///
-    /// [Notation Data subpackets]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Notation Data subpackets]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     /// [Intended Recipient subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#name-intended-recipient-fingerpr
     ///
     /// Notation names are structured, and are divided into two
@@ -3148,9 +3148,9 @@ impl SubpacketAreas {
     /// meaning of the notation `name@example.org`, for instance, is
     /// defined by whoever controls `example.org`.  Names in the IETF
     /// namespace do not contain an `@` and are managed by IANA.  See
-    /// [Section 5.2.3.16 of RFC 4880] for details.
+    /// [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    /// [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     ///
     /// This returns the values of all instances of the Notation Data
     /// subpacket with the specified name in the hashed subpacket area.
@@ -3177,7 +3177,7 @@ impl SubpacketAreas {
     /// message for a recipient, the OpenPGP implementation should not
     /// use an algorithm that is not on this list.
     ///
-    /// [Preferred Symmetric Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.7
+    /// [Preferred Symmetric Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.14
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -3226,7 +3226,7 @@ impl SubpacketAreas {
     /// implementation should not use an algorithm that is not on this
     /// list.
     ///
-    /// [Preferred Hash Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.8
+    /// [Preferred Hash Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.16
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -3273,7 +3273,7 @@ impl SubpacketAreas {
     /// message for a recipient, the OpenPGP implementation should not
     /// use an algorithm that is not on the list.
     ///
-    /// [Preferred Compression Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.9
+    /// [Preferred Compression Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.17
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first for the
@@ -3391,7 +3391,7 @@ impl SubpacketAreas {
     /// The [Key Server Preferences subpacket] indicates to key
     /// servers how they should handle the certificate.
     ///
-    /// [Key Server Preferences subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.17
+    /// [Key Server Preferences subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.25
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first for the
@@ -3439,7 +3439,7 @@ impl SubpacketAreas {
     /// cautiously, because it can be used by a certificate holder to
     /// track communication partners.
     ///
-    /// [Preferred Key Server subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.18
+    /// [Preferred Key Server subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.26
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -3483,7 +3483,7 @@ impl SubpacketAreas {
     /// which contains information about the conditions under which
     /// the signature was made.
     ///
-    /// [Policy URI subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.20
+    /// [Policy URI subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.28
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -3530,7 +3530,7 @@ impl SubpacketAreas {
     /// [`ValidCert::primary_userid`] for an explanation of how
     /// Sequoia resolves this ambiguity.
     ///
-    /// [Primary User ID subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    /// [Primary User ID subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     /// [`ValidCert::primary_userid`]: crate::cert::ValidCert::primary_userid()
     ///
     /// If the subpacket is not present in the hashed subpacket area,
@@ -3566,7 +3566,7 @@ impl SubpacketAreas {
     /// packet, then the primary key should be assumed to be
     /// certification capable.
     ///
-    /// [Key Flags subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    /// [Key Flags subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -3595,7 +3595,7 @@ impl SubpacketAreas {
     /// not uncommon to use the same certificate in private as well as
     /// for a club.
     ///
-    /// [Signer's User ID subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.22
+    /// [Signer's User ID subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.30
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -3630,7 +3630,7 @@ impl SubpacketAreas {
     /// whereas in the latter case, past signatures can still be
     /// considered valid.
     ///
-    /// [Reason For Revocation subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+    /// [Reason For Revocation subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -3665,7 +3665,7 @@ impl SubpacketAreas {
     /// recipients support from contextual clues, e.g., their past
     /// behavior.
     ///
-    /// [Features subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.24
+    /// [Features subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.32
     /// [features]: crate::types::Features
     ///
     /// This subpacket is a type of preference.  When looking up a
@@ -3710,7 +3710,7 @@ impl SubpacketAreas {
     /// by timestamp signatures.  It contains a hash of the target
     /// signature.
     ///
-    ///   [Signature Target subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    ///   [Signature Target subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     ///
     /// If the subpacket is not present in the hashed subpacket area,
     /// this returns `None`.
@@ -3745,8 +3745,8 @@ impl SubpacketAreas {
     /// information is self-authenticating, it is usually stored in
     /// the unhashed subpacket area.
     ///
-    /// [Embedded Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
-    /// [Primary Key Binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    /// [Embedded Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
+    /// [Primary Key Binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// If the subpacket is not present in the hashed subpacket area
     /// or in the unhashed subpacket area, this returns `None`.
@@ -3778,8 +3778,8 @@ impl SubpacketAreas {
     /// information is self-authenticating, it is usually stored in
     /// the unhashed subpacket area.
     ///
-    /// [Embedded Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
-    /// [Primary Key Binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    /// [Embedded Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
+    /// [Primary Key Binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// If the subpacket is not present in the hashed subpacket area
     /// or in the unhashed subpacket area, this returns `None`.
@@ -4289,7 +4289,7 @@ impl signature::SignatureBuilder {
     /// this subpacket: those functions automatically set the
     /// signature creation time, if it has not been set explicitly.
     ///
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     /// [streaming `Signer`]: crate::serialize::stream::Signer
     ///
     /// # Examples
@@ -4349,7 +4349,7 @@ impl signature::SignatureBuilder {
     /// `Signature Creation Time` subpacket.
     ///
     /// [`Signature`]: super::Signature
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///
     /// This function returns an error if there is no cached
     /// `Signature Creation Time` subpacket.
@@ -4412,9 +4412,9 @@ impl signature::SignatureBuilder {
     /// subpacket] is added to the hashed area if one hasn't been
     /// added already.  This function suppresses that behavior.
     ///
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///
-    /// [Section 5.2.3.4 of RFC 4880] says that the `Signature
+    /// [Section 5.2.3.11 of RFC 9580] says that the `Signature
     /// Creation Time` subpacket must be present in the hashed area.
     /// This function clears any `Signature Creation Time` subpackets
     /// from both the hashed area and the unhashed area, and causes
@@ -4422,7 +4422,7 @@ impl signature::SignatureBuilder {
     /// `Signature Creation Time` subpacket.  This function should
     /// only be used for generating test data.
     ///
-    /// [Section 5.2.3.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Section 5.2.3.11 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     ///
     /// # Examples
     ///
@@ -4480,7 +4480,7 @@ impl signature::SignatureBuilder {
     /// [`SubpacketAreas::signature_validity_period`] method returns
     /// the subpacket's raw value.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     /// [`SubpacketAreas::signature_validity_period`]: SubpacketAreas::signature_validity_period()
     ///
     /// The Signature Expiration Time subpacket is different from the
@@ -4497,7 +4497,7 @@ impl signature::SignatureBuilder {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SubpacketAreas::key_validity_period`]: SubpacketAreas::key_validity_period()
     ///
     /// There are several cases where having a signature expire is
@@ -4549,7 +4549,7 @@ impl signature::SignatureBuilder {
     /// subpacket area.  This function first removes any Signature
     /// Expiration Time subpacket from the hashed subpacket area.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.10
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.18
     ///
     /// This function is called `set_signature_validity_period` and
     /// not `set_signature_expiration_time`, which would be more
@@ -4559,7 +4559,7 @@ impl signature::SignatureBuilder {
     /// signature's [Signature Creation Time subpacket] and set using
     /// [`SignatureBuilder::set_signature_creation_time`].
     ///
-    /// [Signature Creation Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.4
+    /// [Signature Creation Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.11
     /// [`SignatureBuilder::set_signature_creation_time`]: super::SignatureBuilder::set_signature_creation_time()
     ///
     /// A Signature Expiration Time subpacket specifies when the
@@ -4577,7 +4577,7 @@ impl signature::SignatureBuilder {
     /// OpenPGP implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SignatureBuilder::set_key_validity_period`]: super::SignatureBuilder::set_key_validity_period()
     ///
     /// There are several cases where having a signature expire is
@@ -4706,7 +4706,7 @@ impl signature::SignatureBuilder {
     /// subpacket area.  This function first removes any Exportable
     /// Certification subpacket from the hashed subpacket area.
     ///
-    /// [Exportable Certification subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.11
+    /// [Exportable Certification subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.19
     ///
     /// The Exportable Certification subpacket indicates whether the
     /// signature should be exported (e.g., published on a public key
@@ -4779,7 +4779,7 @@ impl signature::SignatureBuilder {
     /// area.  This function first removes any Trust Signature
     /// subpacket from the hashed subpacket area.
     ///
-    /// [Trust Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    /// [Trust Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     ///
     /// The Trust Signature subpacket indicates the degree to which a
     /// certificate holder is trusted to certify other keys.
@@ -4863,7 +4863,7 @@ impl signature::SignatureBuilder {
     /// area.  This function first removes any Regular Expression
     /// subpacket from the hashed subpacket area.
     ///
-    /// [Regular Expression subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+    /// [Regular Expression subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
     ///
     /// The Regular Expression subpacket is used in conjunction with a
     /// [Trust Signature subpacket], which is set using
@@ -4872,7 +4872,7 @@ impl signature::SignatureBuilder {
     /// company has a CA and you only want to trust them to certify
     /// their own employees.
     ///
-    /// [Trust Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    /// [Trust Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     /// [`SignatureBuilder::set_trust_signature`]: super::SignatureBuilder::set_trust_signature()
     ///
     /// GnuPG only supports [a limited form of regular expressions].
@@ -4959,7 +4959,7 @@ impl signature::SignatureBuilder {
     /// subpacket area.
     ///
     /// [`SignatureBuilder::set_regular_expression`]: super::SignatureBuilder::set_regular_expression()
-    /// [Regular Expression subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.14
+    /// [Regular Expression subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.22
     ///
     /// The Regular Expression subpacket is used in conjunction with a
     /// [Trust Signature subpacket], which is set using
@@ -4968,7 +4968,7 @@ impl signature::SignatureBuilder {
     /// company has a CA and you only want to trust them to certify
     /// their own employees.
     ///
-    /// [Trust Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.13
+    /// [Trust Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.21
     /// [`SignatureBuilder::set_trust_signature`]: super::SignatureBuilder::set_trust_signature()
     ///
     /// GnuPG only supports [a limited form of regular expressions].
@@ -5052,7 +5052,7 @@ impl signature::SignatureBuilder {
     /// This function first removes any Revocable subpacket from the
     /// hashed subpacket area.
     ///
-    /// [Revocable subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.12
+    /// [Revocable subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.20
     ///
     /// The Revocable subpacket indicates whether a certification may
     /// be later revoked by creating a [Certification revocation
@@ -5060,8 +5060,8 @@ impl signature::SignatureBuilder {
     /// [Signature Target subpacket] (set using the
     /// [`SignatureBuilder::set_signature_target`] method).
     ///
-    /// [Certification revocation signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
-    /// [Signature Target subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    /// [Certification revocation signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
+    /// [Signature Target subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     /// [`SignatureBuilder::set_signature_target`]: super::SignatureBuilder::set_signature_target()
     ///
     /// # Examples
@@ -5134,7 +5134,7 @@ impl signature::SignatureBuilder {
     ///
     /// If `None` is given, any expiration subpacket is removed.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     ///
     /// This function is called `set_key_validity_period` and not
     /// `set_key_expiration_time`, which would be more consistent with
@@ -5143,7 +5143,7 @@ impl signature::SignatureBuilder {
     /// key's (*not* the signature's) creation time, which is stored
     /// in the [Key].
     ///
-    /// [Key]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+    /// [Key]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
     ///
     /// There is a more convenient function
     /// [`SignatureBuilder::set_key_expiration_time`] that takes an
@@ -5166,7 +5166,7 @@ impl signature::SignatureBuilder {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SignatureBuilder::set_signature_validity_period`]: super::SignatureBuilder::set_signature_validity_period()
     ///
     /// # Examples
@@ -5244,7 +5244,7 @@ impl signature::SignatureBuilder {
     ///
     /// If `None` is given, any expiration subpacket is removed.
     ///
-    /// [Key Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Key Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     ///
     /// This function is called `set_key_expiration_time` similar to
     /// the subpacket's name, but it takes an absolute time, whereas
@@ -5252,7 +5252,7 @@ impl signature::SignatureBuilder {
     /// (*not* the signature's) creation time, which is stored in the
     /// [Key].
     ///
-    /// [Key]: https://tools.ietf.org/html/rfc4880#section-5.5.2
+    /// [Key]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.2
     ///
     /// This is a more convenient function than
     /// [`SignatureBuilder::set_key_validity_period`] that takes a
@@ -5275,7 +5275,7 @@ impl signature::SignatureBuilder {
     /// implementations will not fall back to an older binding
     /// signature.
     ///
-    /// [Signature Expiration Time subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.6
+    /// [Signature Expiration Time subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.13
     /// [`SignatureBuilder::set_signature_validity_period`]: super::SignatureBuilder::set_signature_validity_period()
     ///
     /// # Examples
@@ -5371,7 +5371,7 @@ impl signature::SignatureBuilder {
     /// message for a recipient, the OpenPGP implementation should not
     /// use an algorithm that is not on this list.
     ///
-    /// [Preferred Symmetric Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.7
+    /// [Preferred Symmetric Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.14
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -5447,7 +5447,7 @@ impl signature::SignatureBuilder {
     /// first removes any Revocation Key subpackets from the hashed
     /// subpacket area, and then adds new ones.
     ///
-    /// [Revocation Key subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    /// [Revocation Key subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     ///
     /// A Revocation Key subpacket indicates certificates (so-called
     /// designated revokers) that are allowed to revoke the signer's
@@ -5512,7 +5512,7 @@ impl signature::SignatureBuilder {
     /// this function does not first remove any Revocation Key
     /// subpackets from the hashed subpacket area.
     ///
-    /// [Revocation Key subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.15
+    /// [Revocation Key subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.23
     ///
     /// A Revocation Key subpacket indicates certificates (so-called
     /// designated revokers) that are allowed to revoke the signer's
@@ -5580,7 +5580,7 @@ impl signature::SignatureBuilder {
     /// existing Issuer subpackets from the hashed and unhashed
     /// subpacket area.
     ///
-    ///   [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`add_issuer`]: super::SignatureBuilder::add_issuer()
     ///
     /// The Issuer subpacket is used when processing a signature to
@@ -5670,7 +5670,7 @@ impl signature::SignatureBuilder {
     /// existing Issuer subpacket from neither the hashed nor the
     /// unhashed subpacket area.
     ///
-    ///   [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    ///   [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     ///   [`set_issuer`]: super::SignatureBuilder::set_issuer()
     ///
     /// The Issuer subpacket is used when processing a signature to
@@ -5759,7 +5759,7 @@ impl signature::SignatureBuilder {
     /// function first removes any existing Notation Data subpacket
     /// with the specified name from the hashed subpacket area.
     ///
-    /// [Notation Data subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Notation Data subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     /// [`SignatureBuilder::add_notation`]: super::SignatureBuilder::add_notation()
     ///
     /// Notations are key-value pairs.  They can be used by
@@ -5779,9 +5779,9 @@ impl signature::SignatureBuilder {
     /// meaning of the notation `name@example.org`, for instance, is
     /// defined by whoever controls `example.org`.  Names in the IETF
     /// namespace do not contain an `@` and are managed by IANA.  See
-    /// [Section 5.2.3.16 of RFC 4880] for details.
+    /// [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    /// [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     ///
     /// # Examples
     ///
@@ -5852,7 +5852,7 @@ impl signature::SignatureBuilder {
     /// subpacket with the specified name from the hashed subpacket
     /// area.
     ///
-    /// [Notation Data subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Notation Data subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     /// [`SignatureBuilder::set_notation`]: super::SignatureBuilder::set_notation()
     ///
     /// Notations are key-value pairs.  They can be used by
@@ -5872,9 +5872,9 @@ impl signature::SignatureBuilder {
     /// meaning of the notation `name@example.org`, for instance, is
     /// defined by whoever controls `example.org`.  Names in the IETF
     /// namespace do not contain an `@` and are managed by IANA.  See
-    /// [Section 5.2.3.16 of RFC 4880] for details.
+    /// [Section 5.2.3.24 of RFC 9580] for details.
     ///
-    /// [Section 5.2.3.16 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.16
+    /// [Section 5.2.3.24 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.24
     ///
     /// # Examples
     ///
@@ -5949,7 +5949,7 @@ impl signature::SignatureBuilder {
     /// implementation should not use an algorithm that is not on this
     /// list.
     ///
-    /// [Preferred Hash Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.8
+    /// [Preferred Hash Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.16
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -6029,7 +6029,7 @@ impl signature::SignatureBuilder {
     /// message for a recipient, the OpenPGP implementation should not
     /// use an algorithm that is not on the list.
     ///
-    /// [Preferred Compression Algorithms subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.9
+    /// [Preferred Compression Algorithms subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.17
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -6108,7 +6108,7 @@ impl signature::SignatureBuilder {
     /// The Key Server Preferences subpacket indicates to key servers
     /// how they should handle the certificate.
     ///
-    /// [Key Server Preferences subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.17
+    /// [Key Server Preferences subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.25
     ///
     /// This subpacket is a type of preference.  When looking up a
     /// preference, an OpenPGP implementation should first look for
@@ -6180,7 +6180,7 @@ impl signature::SignatureBuilder {
     /// subpacket area.  This function first removes any Preferred Key
     /// Server subpacket from the hashed subpacket area.
     ///
-    /// [Preferred Key Server subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.18
+    /// [Preferred Key Server subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.26
     ///
     /// The Preferred Key Server subpacket contains a link to a key
     /// server where the certificate holder plans to publish updates
@@ -6260,7 +6260,7 @@ impl signature::SignatureBuilder {
     /// area.  This function first removes any Primary User ID
     /// subpacket from the hashed subpacket area.
     ///
-    /// [Primary User ID subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.19
+    /// [Primary User ID subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.27
     ///
     /// The Primary User ID subpacket indicates whether the associated
     /// User ID or User Attribute should be considered the primary
@@ -6343,7 +6343,7 @@ impl signature::SignatureBuilder {
     /// This function first removes any Policy URI subpacket from the
     /// hashed subpacket area.
     ///
-    /// [Policy URI subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.20
+    /// [Policy URI subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.28
     ///
     /// The Policy URI subpacket contains a link to a policy document,
     /// which contains information about the conditions under which
@@ -6424,7 +6424,7 @@ impl signature::SignatureBuilder {
     /// This function first removes any Key Flags subpacket from the
     /// hashed subpacket area.
     ///
-    /// [Key Flags subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+    /// [Key Flags subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
     ///
     /// The Key Flags subpacket describes a key's capabilities
     /// (certification capable, signing capable, etc.).  In the case
@@ -6495,7 +6495,7 @@ impl signature::SignatureBuilder {
     /// area.  This function first removes any Signer's User ID
     /// subpacket from the hashed subpacket area.
     ///
-    /// [Signer's User ID subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.22
+    /// [Signer's User ID subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.30
     ///
     /// The Signer's User ID subpacket indicates, which User ID made
     /// the signature.  This is useful when a key has multiple User
@@ -6556,7 +6556,7 @@ impl signature::SignatureBuilder {
     /// Revocation subpacket from the hashed subpacket
     /// area.
     ///
-    /// [Reason For Revocation subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.23
+    /// [Reason For Revocation subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.31
     ///
     /// The Reason For Revocation subpacket indicates why a key, User
     /// ID, or User Attribute is being revoked.  It includes both a
@@ -6642,7 +6642,7 @@ impl signature::SignatureBuilder {
     /// recipients support from contextual clues, e.g., their past
     /// behavior.
     ///
-    /// [Feature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.24
+    /// [Feature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.32
     /// [features]: crate::types::Features
     ///
     /// This subpacket is a type of preference.  When looking up a
@@ -6732,7 +6732,7 @@ impl signature::SignatureBuilder {
     /// by timestamp signatures.  It contains a hash of the target
     /// signature.
     ///
-    ///   [Signature Target subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.25
+    ///   [Signature Target subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.33
     pub fn set_signature_target<D>(mut self,
                                    pk_algo: PublicKeyAlgorithm,
                                    hash_algo: HashAlgorithm,
@@ -6758,7 +6758,7 @@ impl signature::SignatureBuilder {
     /// Signature subpacket from both the hashed and the unhashed
     /// subpacket area.
     ///
-    /// [Embedded Signature subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.26
+    /// [Embedded Signature subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.34
     ///
     /// The Embedded Signature subpacket is normally used to hold a
     /// [Primary Key Binding signature], which binds a
@@ -6767,7 +6767,7 @@ impl signature::SignatureBuilder {
     /// information is self-authenticating, it is usually stored in the
     /// unhashed subpacket area.
     ///
-    /// [Primary Key Binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    /// [Primary Key Binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///
     /// # Examples
     ///
@@ -6853,7 +6853,7 @@ impl signature::SignatureBuilder {
     /// set explicitly.
     ///
     /// [streaming `Signer`]: crate::serialize::stream::Signer
-    /// [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    /// [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     /// [`SignatureBuilder::set_issuer`]: super::SignatureBuilder::set_issuer()
     ///
     /// # Examples
@@ -6945,7 +6945,7 @@ impl signature::SignatureBuilder {
     /// set explicitly.
     ///
     /// [streaming `Signer`]: crate::serialize::stream::Signer
-    /// [Issuer subpacket]: https://tools.ietf.org/html/rfc4880#section-5.2.3.5
+    /// [Issuer subpacket]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.12
     /// [`SignatureBuilder::set_issuer`]: super::SignatureBuilder::set_issuer()
     ///
     /// # Examples

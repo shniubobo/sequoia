@@ -403,8 +403,8 @@ impl CertValidator {
 /// goal is to provide some future compatibility.
 ///
 /// [`Packet`]: crate::packet::Packet
-/// [`TPK`]: https://tools.ietf.org/html/rfc4880#section-11.1
-/// [`TSK`]: https://tools.ietf.org/html/rfc4880#section-11.2
+/// [`TPK`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.1
+/// [`TSK`]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.2
 /// [`Public Key`]: super::Packet::PublicKey
 /// [`Secret Key`]: super::Packet::SecretKey
 /// [`Literal Data`]: super::Packet::Literal

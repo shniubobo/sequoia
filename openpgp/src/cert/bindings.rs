@@ -22,7 +22,7 @@ impl<P: key::KeyParts> Key<P, key::SubordinateRole> {
     /// current algorithm requirements.  Otherwise, you can create one
     /// using [`SignatureBuilder::sign_primary_key_binding`].
     ///
-    ///   [primary key binding signature]: https://tools.ietf.org/html/rfc4880#section-5.2.1
+    ///   [primary key binding signature]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.1
     ///   [`SignatureBuilder::sign_primary_key_binding`]: signature::SignatureBuilder::sign_primary_key_binding()
     ///
     /// This function adds a creation time subpacket, an issuer

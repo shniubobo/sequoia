@@ -13,12 +13,12 @@ use crate::Result;
 ///
 /// A `Fingerprint` uniquely identifies a public key.
 ///
-/// Currently, Sequoia supports *version 4* fingerprints and Key IDs
-/// only.  *Version 3* fingerprints and Key IDs were deprecated by
-/// [RFC 4880] in 2007.
+/// Currently, Sequoia supports *version 6* fingerprints and Key IDs,
+/// and *version 4* fingerprints and Key IDs.  *Version 3*
+/// fingerprints and Key IDs were deprecated by [RFC 4880] in 2007.
 ///
-/// Essentially, a *v4* fingerprint is a SHA-1 hash over the key's
-/// public key packet.  For details, see [Section 12.2 of RFC 4880].
+/// Essentially, a fingerprint is a hash over the key's public key
+/// packet.  For details, see [Section 5.5.4 of RFC 9580].
 ///
 /// Fingerprints are used, for example, to reference the issuing key
 /// of a signature in its [`IssuerFingerprint`] subpacket.  As a
@@ -28,7 +28,7 @@ use crate::Result;
 /// See also [`KeyID`] and [`KeyHandle`].
 ///
 ///   [RFC 4880]: https://tools.ietf.org/html/rfc4880
-///   [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+///   [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
 ///   [`IssuerFingerprint`]: crate::packet::signature::subpacket::SubpacketValue::IssuerFingerprint
 ///   [birthday attack]: https://nullprogram.com/blog/2019/07/22/
 ///   [`KeyID`]: crate::KeyID
@@ -50,13 +50,13 @@ use crate::Result;
 #[non_exhaustive]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub enum Fingerprint {
-    /// A 20 byte SHA-1 hash of the public key packet as defined in the RFC.
-    V4([u8;20]),
-
-    /// A v6 OpenPGP fingerprint.
+    /// Fingerprint of v6 certificates and keys.
     V6([u8; 32]),
 
-    /// A fingerprint of unknown version or shape.
+    /// Fingerprint of v4 certificates and keys.
+    V4([u8; 20]),
+
+    /// Fingerprint of unknown version or shape.
     Unknown {
         /// Version of the fingerprint, if known.
         version: Option<u8>,

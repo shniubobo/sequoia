@@ -11,22 +11,24 @@ use crate::Result;
 
 /// A short identifier for certificates and keys.
 ///
-/// A `KeyID` identifies a public key.  It is used, for example, to
-/// reference the issuing key of a signature in its [`Issuer`]
-/// subpacket.
+/// A `KeyID` identifies a public key.  It was used in [RFC 4880]: for
+/// example to reference the issuing key of a signature in its
+/// [`Issuer`] subpacket.  You should prefer [`Fingerprint`] over
+/// [`KeyID`] in data structures, interfaces, and wire formats, unless
+/// space is of the utmost concern.
 ///
-/// Currently, Sequoia supports *version 4* fingerprints and Key IDs
-/// only.  *Version 3* fingerprints and Key IDs were deprecated by
-/// [RFC 4880] in 2007.
+/// Currently, Sequoia supports *version 6* fingerprints and Key IDs,
+/// and *version 4* fingerprints and Key IDs.  *Version 3*
+/// fingerprints and Key IDs were deprecated by [RFC 4880] in 2007.
 ///
-/// A *v4* `KeyID` is defined as a fragment (the lower 8 bytes) of the
-/// key's fingerprint, which in turn is essentially a SHA-1 hash of
-/// the public key packet.  As a general rule of thumb, you should
-/// prefer the fingerprint as it is possible to create keys with a
-/// colliding KeyID using a [birthday attack].
+/// *Version 6* and *version 4* [`KeyID`]s are a truncated version of
+/// the key's fingerprint, which in turn is hash of the public key
+/// packet.  As a general rule of thumb, you should prefer the
+/// fingerprint as it is possible to create keys with a colliding
+/// KeyID using a [birthday attack].
 ///
 /// For more details about how a `KeyID` is generated, see [Section
-/// 12.2 of RFC 4880].
+/// 5.5.4 of RFC 9580].
 ///
 /// In previous versions of OpenPGP, the Key ID used to be called
 /// "long Key ID", as there even was a "short Key ID". At only 4 bytes
@@ -37,7 +39,7 @@ use crate::Result;
 /// See also [`Fingerprint`] and [`KeyHandle`].
 ///
 ///   [RFC 4880]: https://tools.ietf.org/html/rfc4880
-///   [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+///   [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
 ///   [birthday attack]: https://nullprogram.com/blog/2019/07/22/
 ///   [`Issuer`]: crate::packet::signature::subpacket::SubpacketValue::Issuer
 ///   [`Fingerprint`]: crate::Fingerprint
@@ -259,9 +261,9 @@ impl KeyID {
 
     /// Creates a wildcard `KeyID`.
     ///
-    /// Refer to [Section 5.1 of RFC 4880] for details.
+    /// Refer to [Section 5.1 of RFC 9580] for details.
     ///
-    ///   [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
+    ///   [Section 5.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.1
     ///
     /// # Examples
     ///
@@ -277,9 +279,9 @@ impl KeyID {
 
     /// Returns `true` if this is the wildcard `KeyID`.
     ///
-    /// Refer to [Section 5.1 of RFC 4880] for details.
+    /// Refer to [Section 5.1 of RFC 9580] for details.
     ///
-    ///   [Section 5.1 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.1
+    ///   [Section 5.1 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.1
     ///
     /// # Examples
     ///

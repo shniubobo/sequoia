@@ -2,10 +2,10 @@
 //!
 //! OpenPGP defines a binary representation suitable for storing and
 //! communicating OpenPGP data structures (see [Section 3 ff. of RFC
-//! 4880]).  Serialization is the process of creating the binary
+//! 9580]).  Serialization is the process of creating the binary
 //! representation.
 //!
-//!   [Section 3 ff. of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-3
+//!   [Section 3 ff. of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3
 //!
 //! There are two interfaces to serialize OpenPGP data.  Which one is
 //! applicable depends on whether or not the packet structure is
@@ -21,17 +21,17 @@
 //! # Streaming serialization
 //!
 //! The [streaming serialization interface] is the preferred way to
-//! create OpenPGP messages (see [Section 11.3 of RFC 4880]).  It is
+//! create OpenPGP messages (see [Section 10.3 of RFC 9580]).  It is
 //! ergonomic, yet flexible enough to accommodate most use cases.  It
 //! requires little buffering, minimizing the memory footprint of the
 //! operation.
 //!
 //! This example demonstrates how to create the simplest possible
-//! OpenPGP message (see [Section 11.3 of RFC 4880]) containing just a
-//! literal data packet (see [Section 5.9 of RFC 4880]):
+//! OpenPGP message (see [Section 10.3 of RFC 9580]) containing just a
+//! literal data packet (see [Section 5.9 of RFC 9580]):
 //!
-//!   [Section 11.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-11.3
-//!   [Section 5.9 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.9
+//!   [Section 10.3 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-10.3
+//!   [Section 5.9 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.9
 //!
 //! ```
 //! # fn main() -> sequoia_openpgp::Result<()> {
@@ -77,7 +77,7 @@
 //!   [`Signature`]: crate::packet::Signature
 //!
 //! This example demonstrates how to serialize a literal data packet
-//! (see [Section 5.9 of RFC 4880]):
+//! (see [Section 5.9 of RFC 9580]):
 //!
 //! ```
 //! # fn main() -> sequoia_openpgp::Result<()> {
@@ -3379,9 +3379,9 @@ enum PacketRef<'a> {
 impl<'a> PacketRef<'a> {
     /// Returns the `PacketRef's` corresponding OpenPGP tag.
     ///
-    /// Tags are explained in [Section 4.3 of RFC 4880].
+    /// Tags are explained in [Section 5 of RFC 9580].
     ///
-    ///   [Section 4.3 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-4.3
+    ///   [Section 5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5
     fn tag(&self) -> packet::Tag {
         match self {
             PacketRef::Unknown(packet) => packet.tag(),

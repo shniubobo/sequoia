@@ -8,9 +8,9 @@ use crate::types::Bitfield;
 
 /// Describes how a key may be used, and stores additional information.
 ///
-/// Key flags are described in [Section 5.2.3.21 of RFC 4880].
+/// Key flags are described in [Section 5.2.3.29 of RFC 9580].
 ///
-/// [Section 5.2.3.21 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.21
+/// [Section 5.2.3.29 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.29
 ///
 /// # A note on equality
 ///

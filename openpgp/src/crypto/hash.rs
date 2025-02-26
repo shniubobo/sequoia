@@ -713,7 +713,7 @@ impl Signature4 {
         // packet (this excludes the message content, and this
         // trailer).
         //
-        // See https://tools.ietf.org/html/rfc4880#section-5.2.4
+        // See https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.4
         let mut trailer = [0u8; 6];
 
         trailer[0] = 4;
@@ -777,7 +777,7 @@ impl Signature6 {
         // packet (this excludes the message content, and this
         // trailer) modulo 2**32.
         //
-        // See https://tools.ietf.org/html/rfc4880#section-5.2.4
+        // See https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.4
         let mut trailer = [0u8; 6];
 
         trailer[0] = 6;

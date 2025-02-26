@@ -15,21 +15,20 @@ use crate::{
 /// This is needed because signatures can reference their issuer
 /// either by `Fingerprint` or by `KeyID`.
 ///
-/// Currently, Sequoia supports *version 4* fingerprints and Key ID
-/// only.  *Version 3* fingerprints and Key ID were deprecated by [RFC
-/// 4880] in 2007.
+/// Currently, Sequoia supports *version 6* fingerprints and Key IDs,
+/// and *version 4* fingerprints and Key IDs.  *Version 3*
+/// fingerprints and Key IDs were deprecated by [RFC 4880] in 2007.
 ///
-/// A *v4* fingerprint is, essentially, a 20-byte SHA-1 hash over the
-/// key's public key packet.  A *v4* Key ID is defined as the
-/// fingerprint's lower 8 bytes.
-///
-/// For the exact definition, see [Section 12.2 of RFC 4880].
+/// Essentially, a fingerprint is a hash over the key's public key
+/// packet.  *Version 6* and *version 4* [`KeyID`]s are a truncated
+/// version of the key's fingerprint. For details, see [Section 5.5.4
+/// of RFC 9580].
 ///
 /// Both fingerprint and Key ID are used to identify a key, e.g., the
 /// issuer of a signature.
 ///
 ///   [RFC 4880]: https://tools.ietf.org/html/rfc4880
-///   [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+///   [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
 ///
 /// # A Note on Equality
 ///

@@ -48,10 +48,10 @@ use crate::policy::HashAlgoSecurity;
 /// Normally, you won't directly use `Key6`, but [`Key`], which is a
 /// relatively thin wrapper around `Key6`.
 ///
-/// See [Section 5.5 of RFC 4880] and [the documentation for `Key`]
+/// See [Section 5.5 of RFC 9580] and [the documentation for `Key`]
 /// for more details.
 ///
-/// [Section 5.5 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.5
+/// [Section 5.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5
 /// [the documentation for `Key`]: super::Key
 /// [`Key`]: super::Key
 #[derive(PartialEq, Eq, Hash)]
@@ -264,9 +264,9 @@ where
     /// Computes and returns the `Key`'s `Fingerprint` and returns it as
     /// a `KeyHandle`.
     ///
-    /// See [Section 12.2 of RFC 4880].
+    /// See [Section 5.5.4 of RFC 9580].
     ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    /// [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
     pub fn key_handle(&self) -> KeyHandle {
         self.fingerprint().into()
     }
@@ -304,9 +304,9 @@ where
 
     /// Computes and returns the `Key`'s `Key ID`.
     ///
-    /// See [Section 12.2 of RFC 4880].
+    /// See [Section 5.5.4 of RFC 9580].
     ///
-    /// [Section 12.2 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-12.2
+    /// [Section 5.5.4 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.4
     pub fn keyid(&self) -> KeyID {
         self.fingerprint().into()
     }
@@ -673,8 +673,8 @@ where R: KeyRole,
     /// This function returns an error if the secret key material is
     /// not encrypted or the password is incorrect.
     ///
-    /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
-    /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
+    /// [protected with a password]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.3
+    /// [KDF]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
     /// [`Key::decrypt_secret`]: super::Key::decrypt_secret()
     pub fn decrypt_secret(self, password: &Password) -> Result<Self> {
         let (key, mut secret) = self.take_secret();
@@ -696,8 +696,8 @@ where R: KeyRole,
     /// This returns an error if the secret key material is already
     /// encrypted.
     ///
-    /// [protected with a password]: https://tools.ietf.org/html/rfc4880#section-5.5.3
-    /// [KDF]: https://tools.ietf.org/html/rfc4880#section-3.7
+    /// [protected with a password]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.5.3
+    /// [KDF]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.7
     /// [`Key::encrypt_secret`]: super::Key::encrypt_secret()
     pub fn encrypt_secret(self, password: &Password)
                           -> Result<Key6<SecretParts, R>>

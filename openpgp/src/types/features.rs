@@ -7,10 +7,10 @@ use crate::types::Bitfield;
 
 /// Describes the features supported by an OpenPGP implementation.
 ///
-/// The feature flags are defined in [Section 5.2.3.24 of RFC 4880],
+/// The feature flags are defined in [Section 5.2.3.32 of RFC 9580],
 /// and [Section 5.2.3.32 of draft-ietf-openpgp-crypto-refresh].
 ///
-/// [Section 5.2.3.24 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-5.2.3.24
+/// [Section 5.2.3.32 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.3.32
 /// [Section 5.2.3.32 of draft-ietf-openpgp-crypto-refresh]: https://www.ietf.org/archive/id/draft-ietf-openpgp-crypto-refresh-10.html#features-subpacket
 ///
 /// The feature flags are set by the user's OpenPGP implementation to

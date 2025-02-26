@@ -221,12 +221,12 @@ impl KeyPair {
                 // The signature has the length of the modulus.
                 let mut sig = vec![0u8; n.value().len()];
 
-                // As described in [Section 5.2.2 and 5.2.3 of RFC 4880],
+                // As described in [Section 5.2.2 and 5.2.3 of RFC 9580],
                 // to verify the signature, we need to encode the
                 // signature data in a PKCS1-v1.5 packet.
                 //
-                //   [Section 5.2.2 and 5.2.3 of RFC 4880]:
-                //   https://tools.ietf.org/html/rfc4880#section-5.2.2
+                //   [Section 5.2.2 and 5.2.3 of RFC 9580]:
+                //   https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
                 rsa::sign_digest_pkcs1(&public, &secret, digest,
                                        hash_algo.oid()?,
                                        &mut rng, &mut sig)?;
@@ -398,12 +398,12 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
             (PublicKey::RSA { e, n }, Signature::RSA { s }) => {
                 let key = rsa::PublicKey::new(n.value(), e.value())?;
 
-                // As described in [Section 5.2.2 and 5.2.3 of RFC 4880],
+                // As described in [Section 5.2.2 and 5.2.3 of RFC 9580],
                 // to verify the signature, we need to encode the
                 // signature data in a PKCS1-v1.5 packet.
                 //
-                //   [Section 5.2.2 and 5.2.3 of RFC 4880]:
-                //   https://tools.ietf.org/html/rfc4880#section-5.2.2
+                //   [Section 5.2.2 and 5.2.3 of RFC 9580]:
+                //   https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
                 rsa::verify_digest_pkcs1(&key, digest, hash_algo.oid()?,
                                          s.value())?
             },

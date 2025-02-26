@@ -206,12 +206,12 @@ impl KeyPair {
                         }
                     )?;
 
-                    // As described in [Section 5.2.2 and 5.2.3 of RFC 4880],
+                    // As described in [Section 5.2.2 and 5.2.3 of RFC 9580],
                     // to verify the signature, we need to encode the
                     // signature data in a PKCS1-v1.5 packet.
                     //
-                    //   [Section 5.2.2 and 5.2.3 of RFC 4880]:
-                    //   https://tools.ietf.org/html/rfc4880#section-5.2.2
+                    //   [Section 5.2.2 and 5.2.3 of RFC 9580]:
+                    //   https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
                     let hash = hash_algo.try_into()?;
                     let padding = SignaturePadding::pkcs1(hash);
                     let sig = key.sign(digest, Some(padding))?;
@@ -563,12 +563,12 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                     }
                 )?;
 
-                // As described in [Section 5.2.2 and 5.2.3 of RFC 4880],
+                // As described in [Section 5.2.2 and 5.2.3 of RFC 9580],
                 // to verify the signature, we need to encode the
                 // signature data in a PKCS1-v1.5 packet.
                 //
-                //   [Section 5.2.2 and 5.2.3 of RFC 4880]:
-                //   https://tools.ietf.org/html/rfc4880#section-5.2.2
+                //   [Section 5.2.2 and 5.2.3 of RFC 9580]:
+                //   https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
                 let hash = hash_algo.try_into()?;
                 let padding = SignaturePadding::pkcs1(hash);
 

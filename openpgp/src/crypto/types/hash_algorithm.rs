@@ -7,7 +7,7 @@ use crate::{Error, Result};
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
-/// The OpenPGP hash algorithms as defined in [Section 9.4 of RFC 4880].
+/// The OpenPGP hash algorithms as defined in [Section 9.5 of RFC 9580].
 ///
 /// # Examples
 ///
@@ -24,7 +24,7 @@ use quickcheck::{Arbitrary, Gen};
 /// # Ok(()) }
 /// ```
 ///
-/// [Section 9.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.4
+/// [Section 9.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.5
 #[non_exhaustive]
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug, PartialOrd, Ord)]
 pub enum HashAlgorithm {
@@ -161,12 +161,12 @@ impl fmt::Display for HashAlgorithm {
 impl HashAlgorithm {
     /// Returns the text name of this algorithm.
     ///
-    /// [Section 9.4 of RFC 4880] defines a textual representation of
+    /// [Section 9.5 of RFC 9580] defines a textual representation of
     /// hash algorithms.  This is used in cleartext signed messages
-    /// (see [Section 7 of RFC 4880]).
+    /// (see [Section 7 of RFC 9580]).
     ///
-    ///   [Section 9.4 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-9.4
-    ///   [Section 7 of RFC 4880]: https://tools.ietf.org/html/rfc4880#section-7
+    ///   [Section 9.5 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-9.5
+    ///   [Section 7 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-7
     ///
     /// # Examples
     ///

@@ -9,7 +9,7 @@ use std::cmp;
 use std::io::Write;
 use std::rc::Rc;
 
-use buffered_reader::{self, BufferedReader};
+use openpgp::parse::buffered_reader::{self, BufferedReader};
 use lalrpop_util::{lalrpop_mod, ParseError};
 use sequoia_openpgp as openpgp;
 use openpgp::parse::Cookie;
