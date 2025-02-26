@@ -10,7 +10,7 @@ use openpgp::parse::stream::{
 use openpgp::parse::Parse;
 use openpgp::policy::StandardPolicy;
 use openpgp::types::SymmetricAlgorithm;
-use openpgp::{Fingerprint, KeyHandle, Result};
+use openpgp::{KeyHandle, Result};
 
 use std::io::Write;
 
@@ -31,15 +31,13 @@ impl VerificationHelper for PasswordHelper {
 }
 
 impl DecryptionHelper for PasswordHelper {
-    fn decrypt<D>(
+    fn decrypt(
         &mut self,
         _pkesks: &[PKESK],
         skesks: &[SKESK],
         _sym_algo: Option<SymmetricAlgorithm>,
-        mut decrypt: D,
-    ) -> Result<Option<Fingerprint>>
-    where
-        D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool,
+        decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool,
+    ) -> Result<Option<Cert>>
     {
         // Finally, try to decrypt using the SKESKs.
         for skesk in skesks {
@@ -127,15 +125,13 @@ impl VerificationHelper for CertHelper<'_> {
 }
 
 impl DecryptionHelper for CertHelper<'_> {
-    fn decrypt<D>(
+    fn decrypt(
         &mut self,
         pkesks: &[PKESK],
         _skesks: &[SKESK],
         sym_algo: Option<SymmetricAlgorithm>,
-        mut decrypt: D,
-    ) -> Result<Option<Fingerprint>>
-    where
-        D: FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool,
+        decrypt: &mut dyn FnMut(Option<SymmetricAlgorithm>, &SessionKey) -> bool,
+    ) -> Result<Option<Cert>>
     {
         let p = &StandardPolicy::new();
 
@@ -172,7 +168,7 @@ impl DecryptionHelper for CertHelper<'_> {
             .map(|(_, key)| key.fingerprint());
 
         match successful_key {
-            Some(key) => Ok(Some(key)),
+            Some(_) => Ok(self.recipient.cloned()),
             None => Err(anyhow::anyhow!("Wrong cert!")),
         }
     }

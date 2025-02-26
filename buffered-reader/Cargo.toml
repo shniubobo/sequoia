@@ -13,7 +13,7 @@ repository = "https://gitlab.com/sequoia-pgp/sequoia"
 readme = "README.md"
 license = "LGPL-2.0-or-later"
 edition = "2021"
-rust-version = "1.67"
+rust-version = "1.79"
 publish = false
 
 [badges]
@@ -23,7 +23,6 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 bzip2 = { version = ">= 0.4, < 0.6", optional = true }
 flate2 = { version = "1.0.1", optional = true }
-lazy_static = "1.4"
 libc = "0.2.66"
 
 [lib]

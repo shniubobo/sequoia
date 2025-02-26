@@ -60,8 +60,10 @@ impl ConventionallyParsedUserID {
     }
 
     fn parse(userid: String) -> Result<Self> {
-        lazy_static::lazy_static!{
-            static ref USER_ID_PARSER: Regex = {
+        fn user_id_parser() -> &'static Regex {
+            use std::sync::OnceLock;
+            static USER_ID_PARSER: OnceLock<Regex> = OnceLock::new();
+            USER_ID_PARSER.get_or_init(|| {
                 // Whitespace.
                 let ws_bare = " ";
                 let ws = format!("[{}]", ws_bare);
@@ -216,12 +218,12 @@ impl ConventionallyParsedUserID {
                               bare_name);
 
                 Regex::new(&pgp_uid_convention).unwrap()
-            };
+            })
         }
 
         // The regex is anchored at the start and at the end so we
         // have either 0 or 1 matches.
-        if let Some(cap) = USER_ID_PARSER.captures_iter(&userid).next() {
+        if let Some(cap) = user_id_parser().captures_iter(&userid).next() {
             let to_range = |m: regex::Match| (m.start(), m.end());
 
             // We need to figure out which branch matched.  Match on a

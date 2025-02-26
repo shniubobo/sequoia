@@ -279,7 +279,6 @@ version = "1.4.0"
 dependencies = [
  "bzip2",
  "flate2",
- "lazy_static",
  "libc",
 ]
 
@@ -2753,7 +2752,6 @@ dependencies = [
  "fs2",
  "lalrpop",
  "lalrpop-util",
- "lazy_static",
  "libc",
  "memsec",
  "quickcheck",
@@ -2830,7 +2828,6 @@ dependencies = [
  "idna",
  "lalrpop",
  "lalrpop-util",
- "lazy_static",
  "libc",
  "md-5",
  "memsec",

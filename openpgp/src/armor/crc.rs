@@ -26,33 +26,34 @@ impl Crc {
     /// table look-up." Communications of the ACM 31.8 (1988):
     /// 1008-1013.
     pub fn update(&mut self, buf: &[u8]) -> &Self {
-        lazy_static::lazy_static! {
-            static ref TABLE: Vec<u32> = {
-                let mut t = vec![0u32; 256];
+        use std::sync::OnceLock;
 
-                let mut crc = 0x80_0000; // 24 bit polynomial
-                let mut i = 1;
-                loop {
-                    if crc & 0x80_0000 > 0 {
-                        crc = (crc << 1) ^ CRC24_POLY;
-                    } else {
-                        crc <<= 1;
-                    }
-                    for j in 0..i {
-                        t[i + j] = crc ^ t[j];
-                    }
-                    i <<= 1;
-                    if i == 256 {
-                        break;
-                    }
+        static TABLE: OnceLock<Vec<u32>> = OnceLock::new();
+        let table = TABLE.get_or_init(|| {
+            let mut t = vec![0u32; 256];
+
+            let mut crc = 0x80_0000; // 24 bit polynomial
+            let mut i = 1;
+            loop {
+                if crc & 0x80_0000 > 0 {
+                    crc = (crc << 1) ^ CRC24_POLY;
+                } else {
+                    crc <<= 1;
                 }
-                t
-            };
-        }
+                for j in 0..i {
+                    t[i + j] = crc ^ t[j];
+                }
+                i <<= 1;
+                if i == 256 {
+                    break;
+                }
+            }
+            t
+        });
 
         for octet in buf {
             self.n = (self.n << 8)
-                ^ TABLE[(*octet ^ ((self.n >> 16) as u8)) as usize];
+                ^ table[(*octet ^ ((self.n >> 16) as u8)) as usize];
         }
 
         self

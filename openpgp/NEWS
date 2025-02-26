@@ -5,6 +5,9 @@
 
 
 * Changes in 2.0.0.alpha.2
+** Notable changes
+   - Our MSRV is now 1.79.
+
 ** API changes
    - ValidKeyAmalgamation::into_key_amalgamation removed
    - serialize::stream::Recipient::new now takes a KeyHandle
@@ -22,6 +25,8 @@
    - Cert::insert_packets2 renamed to insert_packets
    - Fingerprint no longer implements Borrow<[u8]>
    - KeyID no longer implements Borrow<[u8]>
+   - packet::signature::subpacket::CLOCK_SKEW_TOLERANCE is now simply
+     a std::time::Duration
 
 ** New functionality
    - ValidCert::key_handle

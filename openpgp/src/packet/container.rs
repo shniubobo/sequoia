@@ -292,13 +292,9 @@ impl Container {
 
     /// Returns the hash for the empty body.
     fn empty_body_digest() -> u64 {
-        lazy_static::lazy_static!{
-            static ref DIGEST: u64 = {
-                Container::make_body_hash().digest()
-            };
-        }
-
-        *DIGEST
+        use std::sync::OnceLock;
+        static DIGEST: OnceLock<u64> = OnceLock::new();
+        *DIGEST.get_or_init(|| Container::make_body_hash().digest())
     }
 
     /// Creates a hash context for hashing the body.

@@ -3,6 +3,9 @@
 #+STARTUP: content hidestars
 
 * Changes in 1.4.0
+** Notable changes
+   - Our MSRV is now 1.79.
+
 ** Notable fixes
    - The signature of struct File on Windows has been aligned with the
      struct File on other platforms.

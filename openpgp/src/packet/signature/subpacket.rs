@@ -94,39 +94,36 @@ use crate::types::{
     Timestamp,
 };
 
-lazy_static::lazy_static!{
-    /// The default amount of tolerance to use when comparing
-    /// some timestamps.
-    ///
-    /// Used by `Subpacket::signature_alive`.
-    ///
-    /// When determining whether a timestamp generated on another
-    /// machine is valid *now*, we need to account for clock skew.
-    /// (Note: you don't normally need to consider clock skew when
-    /// evaluating a signature's validity at some time in the past.)
-    ///
-    /// We tolerate half an hour of skew based on the following
-    /// anecdote: In 2019, a developer using Sequoia in a Windows VM
-    /// running inside Virtual Box on Mac OS X reported that he
-    /// typically observed a few minutes of clock skew and
-    /// occasionally saw over 20 minutes of clock skew.
-    ///
-    /// Note: when new messages override older messages, and their
-    /// signatures are evaluated at some arbitrary point in time, an
-    /// application may not see a consistent state if it uses a
-    /// tolerance.  Consider an application that has two messages and
-    /// wants to get the current message at time te:
-    ///
-    ///   - t0: message 0
-    ///   - te: "get current message"
-    ///   - t1: message 1
-    ///
-    /// If te is close to t1, then t1 may be considered valid, which
-    /// is probably not what you want.
-    pub static ref CLOCK_SKEW_TOLERANCE: time::Duration
+/// The default amount of tolerance to use when comparing
+/// some timestamps.
+///
+/// Used by `Subpacket::signature_alive`.
+///
+/// When determining whether a timestamp generated on another
+/// machine is valid *now*, we need to account for clock skew.
+/// (Note: you don't normally need to consider clock skew when
+/// evaluating a signature's validity at some time in the past.)
+///
+/// We tolerate half an hour of skew based on the following
+/// anecdote: In 2019, a developer using Sequoia in a Windows VM
+/// running inside Virtual Box on Mac OS X reported that he
+/// typically observed a few minutes of clock skew and
+/// occasionally saw over 20 minutes of clock skew.
+///
+/// Note: when new messages override older messages, and their
+/// signatures are evaluated at some arbitrary point in time, an
+/// application may not see a consistent state if it uses a
+/// tolerance.  Consider an application that has two messages and
+/// wants to get the current message at time te:
+///
+///   - t0: message 0
+///   - te: "get current message"
+///   - t1: message 1
+///
+/// If te is close to t1, then t1 may be considered valid, which
+/// is probably not what you want.
+pub const CLOCK_SKEW_TOLERANCE: time::Duration
         = time::Duration::new(30 * 60, 0);
-
-}
 
 /// The subpacket types.
 ///
@@ -2659,7 +2656,7 @@ impl SubpacketAreas {
             = match (time.into(), clock_skew_tolerance.into()) {
                 (None, None) =>
                     (crate::now(),
-                     *CLOCK_SKEW_TOLERANCE),
+                     CLOCK_SKEW_TOLERANCE),
                 (None, Some(tolerance)) =>
                     (crate::now(),
                      tolerance),

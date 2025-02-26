@@ -54,7 +54,7 @@ pub trait Signer {
     /// be used. Provide an explicit implementation only when a smaller subset
     /// of hashing algorithms is valid for this `Signer` implementation.
     fn acceptable_hashes(&self) -> &[HashAlgorithm] {
-        &crate::crypto::hash::DEFAULT_HASHES_SORTED
+        crate::crypto::hash::default_hashes_sorted()
     }
 
     /// Creates a signature over the `digest` produced by `hash_algo`.

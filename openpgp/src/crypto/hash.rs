@@ -29,7 +29,10 @@
 //! # Ok(()) }
 //! ```
 
-use std::convert::TryFrom;
+use std::{
+    convert::TryFrom,
+    sync::OnceLock,
+};
 
 use dyn_clone::DynClone;
 
@@ -109,11 +112,13 @@ const ASN1_OID_SHA3_512: &[u8] = &[
     0x04, 0x02, 0x0a, 0x05, 0x00, 0x04, 0x40
 ];
 
-lazy_static::lazy_static! {
-    /// List of hashes that the signer may produce.
-    /// This list is ordered by the preference so that the most preferred
-    /// hash algorithm is first.
-    pub(crate) static ref DEFAULT_HASHES: Vec<HashAlgorithm> = vec![
+/// List of hashes that the signer may produce.
+///
+/// This list is ordered by the preference so that the most preferred
+/// hash algorithm is first.
+pub(crate) fn default_hashes() -> &'static [HashAlgorithm] {
+    static DEFAULT_HASHES: OnceLock<Vec<HashAlgorithm>> = OnceLock::new();
+    DEFAULT_HASHES.get_or_init(|| vec![
         HashAlgorithm::default(),
         HashAlgorithm::SHA512,
         HashAlgorithm::SHA384,
@@ -122,13 +127,19 @@ lazy_static::lazy_static! {
         HashAlgorithm::SHA1,
         HashAlgorithm::RipeMD,
         HashAlgorithm::MD5,
-    ];
+    ])
+}
 
-    pub(crate) static ref DEFAULT_HASHES_SORTED: Vec<HashAlgorithm> = {
-        let mut hashes = DEFAULT_HASHES.clone();
+/// List of hashes that the signer may produce.
+///
+/// This list is sorted.
+pub(crate) fn default_hashes_sorted() -> &'static [HashAlgorithm] {
+    static DEFAULT_HASHES: OnceLock<Vec<HashAlgorithm>> = OnceLock::new();
+    DEFAULT_HASHES.get_or_init(|| {
+        let mut hashes = default_hashes().to_vec();
         hashes.sort();
         hashes
-    };
+    })
 }
 
 /// Hasher capable of calculating a digest for the input byte stream.

@@ -891,8 +891,13 @@ impl<'a> Reader<'a> {
         // The range of the first 6 bits of a message is limited.
         // Save cpu cycles by only considering base64 data that starts
         // with one of those characters.
-        lazy_static::lazy_static!{
-            static ref START_CHARS_VERY_TOLERANT: Vec<u8> = {
+        fn start_chars_very_tolerant() -> &'static [u8] {
+            use std::sync::OnceLock;
+
+            static START_CHARS_VERY_TOLERANT: OnceLock<Vec<u8>>
+                = OnceLock::new();
+
+            START_CHARS_VERY_TOLERANT.get_or_init(|| {
                 let mut valid_start = Vec::new();
                 for &tag in &[ Tag::PKESK, Tag::SKESK,
                               Tag::OnePassSig, Tag::Signature,
@@ -929,9 +934,16 @@ impl<'a> Reader<'a> {
                 valid_start.sort_unstable();
                 valid_start.dedup();
                 valid_start
-            };
+            })
+        }
 
-            static ref START_CHARS_TOLERANT: Vec<u8> = {
+        fn start_chars_tolerant() -> &'static [u8] {
+            use std::sync::OnceLock;
+
+            static START_CHARS_TOLERANT: OnceLock<Vec<u8>>
+                = OnceLock::new();
+
+            START_CHARS_TOLERANT.get_or_init(|| {
                 let mut valid_start = Vec::new();
                 // Add all first bytes of Unicode characters from the
                 // "Dash Punctuation" category.
@@ -947,16 +959,16 @@ impl<'a> Reader<'a> {
                 valid_start.sort_unstable();
                 valid_start.dedup();
                 valid_start
-            };
+            })
         }
 
         // Look for the Armor Header Line, skipping any garbage in the
         // process.
         let mut found_blob = false;
         let start_chars = if self.mode != ReaderMode::VeryTolerant {
-            &START_CHARS_TOLERANT[..]
+            start_chars_tolerant()
         } else {
-            &START_CHARS_VERY_TOLERANT[..]
+            start_chars_very_tolerant()
         };
 
         let mut lines = 0;

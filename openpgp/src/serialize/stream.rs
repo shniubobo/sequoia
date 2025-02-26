@@ -834,8 +834,7 @@ impl<'a> Signer<'a> {
             inner: Some(inner),
             signers: Default::default(),
             acceptable_hash_algos:
-            crate::crypto::hash::DEFAULT_HASHES.iter()
-                .cloned().collect(),
+            crate::crypto::hash::default_hashes().to_vec(),
             intended_recipients: Vec::new(),
             mode: SignatureMode::Inline,
             template: template.into(),

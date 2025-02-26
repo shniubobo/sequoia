@@ -279,12 +279,15 @@ pub use self::file_generic::File;
 #[cfg(unix)]
 pub use self::file_unix::File;
 
-// The default buffer size.
-//
-// This is configurable by the SEQUOIA_BUFFERED_READER_BUFFER
-// environment variable.
-lazy_static::lazy_static! {
-    static ref DEFAULT_BUF_SIZE_: usize = {
+/// The default buffer size.
+///
+/// This is configurable by the SEQUOIA_BUFFERED_READER_BUFFER
+/// environment variable.
+fn default_buf_size() -> usize {
+    use std::sync::OnceLock;
+
+    static DEFAULT_BUF_SIZE: OnceLock<usize> = OnceLock::new();
+    *DEFAULT_BUF_SIZE.get_or_init(|| {
         use std::env::var_os;
         use std::str::FromStr;
 
@@ -309,10 +312,7 @@ lazy_static::lazy_static! {
         } else {
             default
         }
-    };
-}
-fn default_buf_size() -> usize {
-    *DEFAULT_BUF_SIZE_
+    })
 }
 
 // On debug builds, Vec<u8>::truncate is very, very slow.  For

@@ -338,8 +338,16 @@ mod has_access_to_prekey {
     use crate::crypto::{aead, SessionKey};
     use super::*;
 
-    lazy_static::lazy_static! {
-        static ref PREKEY: Result<Box<[Box<[u8]>]>> = {
+    /// Returns the pre-key.
+    ///
+    /// Access to this function is restricted to this module and its
+    /// descendants.
+    fn prekey() -> Result<&'static Box<[Box<[u8]>]>> {
+        use std::sync::OnceLock;
+
+        static PREKEY: OnceLock<Result<Box<[Box<[u8]>]>>>
+            = OnceLock::new();
+        PREKEY.get_or_init(|| -> Result<Box<[Box<[u8]>]>> {
             let mut pages = Vec::new();
             for _ in 0..ENCRYPTED_MEMORY_PREKEY_PAGES {
                 let mut page = vec![0; ENCRYPTED_MEMORY_PAGE_SIZE];
@@ -347,7 +355,7 @@ mod has_access_to_prekey {
                 pages.push(page.into());
             }
             Ok(pages.into())
-        };
+        }).as_ref().map_err(|e| anyhow::anyhow!("{}", e))
     }
 
     // Algorithms used for the memory encryption.
@@ -366,7 +374,7 @@ mod has_access_to_prekey {
                 .expect("Mandatory algorithm unsupported")
                 .for_digest();
             ctx.update(salt);
-            PREKEY.as_ref().map_err(|e| anyhow::anyhow!("{}", e))?
+            prekey()?
                 .iter().for_each(|page| ctx.update(page));
             let mut sk: SessionKey = Protected::new(256/8).into();
             let _ = ctx.digest(&mut sk);
