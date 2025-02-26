@@ -37,6 +37,7 @@ use openpgp::parse::{
     PacketParserResult, PacketParser,
     buffered_reader::BufferedReader,
 };
+use buffered_reader::BufferedReader;
 use openpgp::serialize::Serialize;
 use openpgp::serialize::stream::{
     Message, LiteralWriter, Encryptor,
