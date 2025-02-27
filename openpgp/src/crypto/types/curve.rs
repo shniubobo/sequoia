@@ -268,29 +268,6 @@ impl Curve {
         }
     }
 
-    /// Returns the length of a coordinate in bits.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use sequoia_openpgp as openpgp;
-    /// use openpgp::types::Curve;
-    ///
-    /// assert!(if let Ok(256) = Curve::NistP256.len() { true } else { false });
-    /// assert!(if let Ok(384) = Curve::NistP384.len() { true } else { false });
-    /// assert!(if let Ok(256) = Curve::Ed25519.len() { true } else { false });
-    /// assert!(if let Err(_) = Curve::Unknown(Box::new([0x2B, 0x11])).len() { true } else { false });
-    /// ```
-    ///
-    /// # Errors
-    ///
-    /// Returns `Error::UnsupportedEllipticCurve` if the curve is not
-    /// supported.
-    #[deprecated(note = "Use bits()", since = "1.17.0")]
-    pub fn len(&self) -> Result<usize> {
-        self.bits()
-    }
-
     /// Returns whether this algorithm is supported.
     ///
     /// # Examples

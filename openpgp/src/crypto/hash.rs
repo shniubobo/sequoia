@@ -275,7 +275,6 @@ impl HashAlgorithm {
     /// [`HashAlgorithm::is_supported`].
     ///
     ///   [`HashAlgorithm::is_supported`]: HashAlgorithm::is_supported()
-    //#[deprecated]
     pub fn context(self) -> Result<Builder> {
         // Create contexts only for known hashes.
         self.digest_size()?;

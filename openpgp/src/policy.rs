@@ -706,7 +706,7 @@ a_cutoff_list!(SubpacketTagCutoffList, SubpacketTag, 40,
                    REJECT,                 // 31. SignatureTarget.
                    ACCEPT,                 // 32. EmbeddedSignature.
                    ACCEPT,                 // 33. IssuerFingerprint.
-                   REJECT,                 // 34. PreferredAEADAlgorithms.
+                   REJECT,                 // 34. Reserved (PreferredAEADAlgorithms).
                    ACCEPT,                 // 35. IntendedRecipient.
                    REJECT,                 // 36. Reserved.
                    ACCEPT,                 // 37. ApprovedCertifications.
@@ -1445,37 +1445,6 @@ impl<'a> StandardPolicy<'a> {
         -> Option<SystemTime>
     {
         self.packet_tags.cutoff(tag, version).map(|t| t.into())
-    }
-
-    /// Returns the cutoff time for the specified packet tag.
-    ///
-    /// This function returns the maximum cutoff for all versions of
-    /// the packet.  That is, if one version has a cutoff of `t1`, and
-    /// another version has a cutoff of `t2`, this returns `max(t1,
-    /// t2)`.  These semantics answer the question: "Up to which point
-    /// can we use this packet?"
-    #[deprecated(note = "Since 1.11.  Use `packet_tag_version_cutoff`.")]
-    pub fn packet_tag_cutoff(&self, tag: Tag) -> Option<SystemTime> {
-        // Versioned policy.
-        self.packet_tags.versioned_cutoffs
-            .iter()
-            .filter_map(|(t, _v, cutoff)| {
-                if t == &tag {
-                    Some(cutoff)
-                } else {
-                    None
-                }
-            })
-            // Unversioned policy or default, if nont.
-            .chain(
-                std::iter::once(
-                    self.packet_tags.unversioned_cutoffs.get(
-                        u8::from(tag) as usize)
-                        .unwrap_or(&cutofflist::DEFAULT_POLICY)))
-            // Prefer None.
-            .max_by(|a, b| a.is_none().cmp(&b.is_none()).then(a.cmp(b)))
-            .expect("have one")
-            .map(Into::into)
     }
 }
 
@@ -3176,38 +3145,5 @@ mod test {
         );
 
         Ok(())
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn packet_tag_cutoff() {
-        // The semantics of packet_tag_cutoff are: max of all
-        // versioned cutoffs and the unversioned cutoff.
-
-        let p = &mut StandardPolicy::new();
-        p.reject_all_packet_tags();
-
-        assert_eq!(p.packet_tag_cutoff(Tag::Signature),
-                   REJECT.map(Into::into));
-
-        p.reject_packet_tag_version_at(Tag::Signature, 5,
-                                       Timestamp::Y2007M2);
-        assert_eq!(p.packet_tag_cutoff(Tag::Signature),
-                   Some(Timestamp::Y2007M2.into()));
-
-        p.reject_packet_tag_version_at(Tag::Signature, 3,
-                                       Timestamp::Y2005M2);
-        assert_eq!(p.packet_tag_cutoff(Tag::Signature),
-                   Some(Timestamp::Y2007M2.into()));
-
-        p.reject_packet_tag_version_at(Tag::Signature, 6,
-                                       ACCEPT.map(Into::into));
-        assert_eq!(p.packet_tag_cutoff(Tag::Signature),
-                   ACCEPT.map(Into::into));
-
-        p.reject_packet_tag_version_at(Tag::Signature, 6,
-                                       Timestamp::Y2005M2);
-        assert_eq!(p.packet_tag_cutoff(Tag::Signature),
-                   Some(Timestamp::Y2007M2.into()));
     }
 }

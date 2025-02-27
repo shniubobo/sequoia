@@ -1552,10 +1552,6 @@ impl Marshal for SubpacketValue {
                 _ => return Err(Error::InvalidArgument(
                     "Unknown kind of fingerprint".into()).into()),
             }
-            PreferredAEADAlgorithms(ref p) =>
-                for a in p {
-                    o.write_all(&[(*a).into()])?;
-                },
             IntendedRecipient(ref fp) => match fp {
                 Fingerprint::V4(_) => {
                     o.write_all(&[4])?;
@@ -1616,7 +1612,6 @@ impl MarshalInto for SubpacketValue {
             EmbeddedSignature(sig) => sig.serialized_len(),
             IssuerFingerprint(ref fp) =>
                 1 + (fp as &dyn MarshalInto).serialized_len(),
-            PreferredAEADAlgorithms(ref p) => p.len(),
             IntendedRecipient(ref fp) =>
                 1 + (fp as &dyn MarshalInto).serialized_len(),
             ApprovedCertifications(digests) =>

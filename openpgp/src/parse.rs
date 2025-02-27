@@ -1962,10 +1962,6 @@ impl Subpacket {
                 SubpacketValue::IssuerFingerprint(
                     Fingerprint::from_bytes(version, &bytes)?)
             },
-            SubpacketTag::PreferredAEADAlgorithms =>
-                SubpacketValue::PreferredAEADAlgorithms(
-                    php.parse_bytes("pref aead algos", len)?
-                        .iter().map(|o| (*o).into()).collect()),
             SubpacketTag::IntendedRecipient => {
                 if len == 0 {
                     return Err(Error::MalformedPacket(
@@ -2029,6 +2025,7 @@ impl Subpacket {
 
             SubpacketTag::Reserved(_)
                 | SubpacketTag::PlaceholderForBackwardCompatibility
+                | SubpacketTag::PreferredAEADAlgorithms
                 | SubpacketTag::Private(_)
                 | SubpacketTag::Unknown(_) =>
                 SubpacketValue::Unknown {
@@ -4784,15 +4781,6 @@ impl <'a> PacketParser<'a> {
     /// ```
     pub fn processed(&self) -> bool {
         self.processed
-    }
-
-    /// Returns whether the packet's contents are encrypted.
-    ///
-    /// This function has been obsoleted by the negation of
-    /// [`PacketParser::processed`].
-    #[deprecated(since = "1.10.0", note = "Use !processed()")]
-    pub fn encrypted(&self) -> bool {
-        !self.processed()
     }
 
     /// Returns the path of the last packet.

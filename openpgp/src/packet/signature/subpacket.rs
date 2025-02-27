@@ -297,11 +297,7 @@ pub enum SubpacketTag {
     ///  [Section 5.2.3.35 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     IssuerFingerprint,
 
-    /// The AEAD algorithms that the certificate holder prefers (deprecated).
-    ///
-    /// See [Section 5.2.3.8 of draft-ietf-openpgp-rfc4880bis-09] for details.
-    ///
-    ///  [Section 5.2.3.8 of draft-ietf-openpgp-rfc4880bis-09]: https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-09.html#section-5.2.3.8
+    /// Reserved (was: AEAD algorithms that the certificate holder prefers).
     #[deprecated(note = "Use PreferredAEADCiphersuites instead")]
     PreferredAEADAlgorithms,
 
@@ -1692,14 +1688,6 @@ pub enum SubpacketValue {
     ///  [Section 5.2.3.35 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#name-issuer-fingerprint
     IssuerFingerprint(Fingerprint),
 
-    /// The AEAD algorithms that the certificate holder prefers (deprecated).
-    ///
-    /// See [Section 5.2.3.8 of draft-ietf-openpgp-rfc4880bis-09] for details.
-    ///
-    ///  [Section 5.2.3.8 of draft-ietf-openpgp-rfc4880bis-09]: https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-09.html#section-5.2.3.8
-    #[deprecated(note = "Use PreferredAEADCiphersuites instead")]
-    PreferredAEADAlgorithms(Vec<AEADAlgorithm>),
-
     /// Who the signed message was intended for.
     ///
     /// See [Section 5.2.3.36 of RFC 9580] for details.
@@ -1786,7 +1774,10 @@ impl ArbitraryBounded for SubpacketValue {
                 22 => EmbeddedSignature(
                     ArbitraryBounded::arbitrary_bounded(g, depth - 1)),
                 23 => IssuerFingerprint(Arbitrary::arbitrary(g)),
-                24 => PreferredAEADAlgorithms(Arbitrary::arbitrary(g)),
+                24 => Unknown {
+                    tag: SubpacketTag::PreferredAEADAlgorithms,
+                    body: Arbitrary::arbitrary(g),
+                },
                 25 => IntendedRecipient(Arbitrary::arbitrary(g)),
                 26 => PreferredAEADCiphersuites(Arbitrary::arbitrary(g)),
                 _ => unreachable!(),
@@ -1833,8 +1824,6 @@ impl SubpacketValue {
             SignatureTarget { .. } => SubpacketTag::SignatureTarget,
             EmbeddedSignature(_) => SubpacketTag::EmbeddedSignature,
             IssuerFingerprint(_) => SubpacketTag::IssuerFingerprint,
-            PreferredAEADAlgorithms(_) =>
-                SubpacketTag::PreferredAEADAlgorithms,
             IntendedRecipient(_) => SubpacketTag::IntendedRecipient,
             ApprovedCertifications(_) => SubpacketTag::ApprovedCertifications,
             PreferredAEADCiphersuites(_) =>
@@ -3357,26 +3346,6 @@ impl SubpacketAreas {
             if let SubpacketValue::PreferredAEADCiphersuites(v)
                 = &sb.value
             {
-                Some(v)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    /// Returns the value of the Preferred AEAD Algorithms subpacket.
-    #[deprecated(note = "Use preferred_aead_ciphersuites instead")]
-    pub fn preferred_aead_algorithms(&self)
-                                     -> Option<&[AEADAlgorithm]> {
-        // array of one-octet values
-        #[allow(deprecated)]
-        if let Some(sb)
-                = self.subpacket(
-                    SubpacketTag::PreferredAEADAlgorithms) {
-            if let SubpacketValue::PreferredAEADAlgorithms(v)
-                    = &sb.value {
                 Some(v)
             } else {
                 None
@@ -7104,20 +7073,6 @@ impl signature::SignatureBuilder {
     {
         self.hashed_area.replace(Subpacket::new(
             SubpacketValue::PreferredAEADCiphersuites(preferences),
-            false)?)?;
-
-        Ok(self)
-    }
-
-    /// Sets the Preferred AEAD Algorithms subpacket.
-    #[deprecated(note = "Use set_preferred_aead_ciphersuites instead")]
-    pub fn set_preferred_aead_algorithms(mut self,
-                                         preferences: Vec<AEADAlgorithm>)
-        -> Result<Self>
-    {
-        #[allow(deprecated)]
-        self.hashed_area.replace(Subpacket::new(
-            SubpacketValue::PreferredAEADAlgorithms(preferences),
             false)?)?;
 
         Ok(self)

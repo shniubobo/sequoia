@@ -25,14 +25,14 @@ use quickcheck::{Arbitrary, Gen};
 /// ```rust
 /// use sequoia_openpgp as openpgp;
 /// use openpgp::packet::signature::SignatureBuilder;
-/// use openpgp::types::{Features, HashAlgorithm, AEADAlgorithm, SignatureType};
+/// use openpgp::types::{AEADAlgorithm, Features, SignatureType, SymmetricAlgorithm};
 ///
 /// # fn main() -> openpgp::Result<()> {
 /// let features = Features::empty().set_seipdv2();
 /// let mut builder = SignatureBuilder::new(SignatureType::DirectKey)
 ///     .set_features(features)?
-///     .set_preferred_aead_algorithms(vec![
-///         AEADAlgorithm::EAX,
+///     .set_preferred_aead_ciphersuites(vec![
+///         (SymmetricAlgorithm::Camellia128, AEADAlgorithm::EAX),
 ///     ])?;
 /// # Ok(()) }
 #[non_exhaustive]

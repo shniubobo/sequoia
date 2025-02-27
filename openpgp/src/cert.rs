@@ -361,13 +361,6 @@ pub trait Preferences<'a>: seal::Sealed {
         &self)
         -> Option<&'a [(SymmetricAlgorithm, AEADAlgorithm)]>;
 
-    /// Returns the supported AEAD algorithms ordered by preference.
-    ///
-    /// The algorithms are ordered according to the certificate holder's
-    /// preference.
-    #[deprecated]
-    fn preferred_aead_algorithms(&self) -> Option<&'a [AEADAlgorithm]>;
-
     /// Returns the certificate holder's keyserver preferences.
     fn key_server_preferences(&self) -> Option<KeyServerPreferences>;
 
@@ -4378,7 +4371,6 @@ impl<'a> Preferences<'a> for ValidCert<'a>
     impl_pref!(preferred_hash_algorithms, &'a [HashAlgorithm]);
     impl_pref!(preferred_compression_algorithms, &'a [CompressionAlgorithm]);
     impl_pref!(preferred_aead_ciphersuites, &'a [(SymmetricAlgorithm, AEADAlgorithm)]);
-    impl_pref!(preferred_aead_algorithms, &'a [AEADAlgorithm]);
     impl_pref!(key_server_preferences, KeyServerPreferences);
     impl_pref!(preferred_key_server, &'a [u8]);
     impl_pref!(policy_uri, &'a [u8]);

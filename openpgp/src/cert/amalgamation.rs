@@ -2994,11 +2994,6 @@ where
         self.map(|s| s.preferred_aead_ciphersuites())
     }
 
-    fn preferred_aead_algorithms(&self) -> Option<&'a [AEADAlgorithm]> {
-        #[allow(deprecated)]
-        self.map(|s| s.preferred_aead_algorithms())
-    }
-
     fn key_server_preferences(&self) -> Option<KeyServerPreferences> {
         self.map(|s| s.key_server_preferences())
     }

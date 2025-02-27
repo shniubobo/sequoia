@@ -255,12 +255,6 @@ impl Features {
         self.get(FEATURE_FLAG_SEIPDV1)
     }
 
-    /// Returns whether the MDC feature flag is set.
-    #[deprecated(note = "Use supports_seipdv1.")]
-    pub fn supports_mdc(&self) -> bool {
-        self.supports_seipdv1()
-    }
-
     /// Sets the SEIPDv1 feature flag.
     ///
     /// # Examples
@@ -279,12 +273,6 @@ impl Features {
     /// ```
     pub fn set_seipdv1(self) -> Self {
         self.set(FEATURE_FLAG_SEIPDV1)
-    }
-
-    /// Sets the MDC feature flag.
-    #[deprecated(note = "Use set_seipdv1.")]
-    pub fn set_mdc(self) -> Self {
-        self.set_seipdv1()
     }
 
     /// Clears the SEIPDv1 feature flag.
@@ -306,12 +294,6 @@ impl Features {
     /// ```
     pub fn clear_seipdv1(self) -> Self {
         self.clear(FEATURE_FLAG_SEIPDV1)
-    }
-
-    /// Clears the MDC feature flag.
-    #[deprecated(note = "Use clear_seipdv1.")]
-    pub fn clear_mdc(self) -> Self {
-        self.clear_seipdv1()
     }
 
     /// Returns whether the SEIPDv2 feature flag is set.
