@@ -76,7 +76,7 @@ pub struct Key4<P, R>
     /// Optional secret part of the key.
     pub(crate) secret: Option<SecretKeyMaterial>,
 
-    pub(crate) fingerprint: once_cell::sync::OnceCell<Fingerprint>,
+    pub(crate) fingerprint: std::sync::OnceLock<Fingerprint>,
 
     /// The key role tracked at run time.
     role: KeyRoleRT,

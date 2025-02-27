@@ -610,7 +610,7 @@ pub struct SubpacketArea {
     // more than 2**15 subpackets. This means that we need at most 15
     // bits.  Thus, instead of using an `Option<u16>`, which requires
     // 32 bits, we use an unused value to mean not present.
-    parsed: once_cell::sync::OnceCell<Vec<u16>>,
+    parsed: std::sync::OnceLock<Vec<u16>>,
 }
 assert_send_and_sync!(SubpacketArea);
 
@@ -698,7 +698,7 @@ impl SubpacketArea {
     pub fn new(packets: Vec<Subpacket>) -> Result<SubpacketArea> {
         let area = SubpacketArea {
             packets,
-            parsed: once_cell::sync::OnceCell::new(),
+            parsed: std::sync::OnceLock::new(),
         };
         Ok(area)
     }
@@ -732,7 +732,7 @@ impl SubpacketArea {
 
     /// Invalidates the cache.
     fn cache_invalidate(&mut self) {
-        self.parsed = once_cell::sync::OnceCell::new();
+        self.parsed = std::sync::OnceLock::new();
     }
 
     /// Iterates over the subpackets.

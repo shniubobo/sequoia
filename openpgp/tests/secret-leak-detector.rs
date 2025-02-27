@@ -110,9 +110,9 @@ use std::{
     io::{self, Write},
     path::{Path, PathBuf},
     process::Command,
+    sync::OnceLock,
 };
 use anyhow::Result;
-use once_cell::sync::OnceCell;
 
 /// Locates the detector program.
 ///
@@ -124,7 +124,7 @@ use once_cell::sync::OnceCell;
 /// integration test, then the examples are not implicitly built
 /// before running this test.
 fn locate_detector() -> Option<&'static Path> {
-    static NOFREE: OnceCell<Option<PathBuf>> = OnceCell::new();
+    static NOFREE: OnceLock<Option<PathBuf>> = OnceLock::new();
     Some(NOFREE.get_or_init(|| -> Option<PathBuf> {
         let mut p = PathBuf::from(env::var_os("OUT_DIR")?);
         loop {

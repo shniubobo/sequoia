@@ -17,9 +17,11 @@ debug = true
 opt-level = 2
 [profile.dev.package.aes-gcm]
 opt-level = 2
-[profile.dev.package.block-padding]
+[profile.dev.package.argon2]
 opt-level = 2
-[profile.dev.package.blake2b_simd]
+[profile.dev.package.blake2]
+opt-level = 2
+[profile.dev.package.block-padding]
 opt-level = 2
 [profile.dev.package.blowfish]
 opt-level = 2
@@ -66,8 +68,6 @@ opt-level = 2
 [profile.dev.package.ripemd]
 opt-level = 2
 [profile.dev.package.rsa]
-opt-level = 2
-[profile.dev.package.rust-argon2]
 opt-level = 2
 [profile.dev.package.sha2]
 opt-level = 2

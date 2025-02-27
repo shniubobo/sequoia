@@ -3,11 +3,11 @@ use std::fmt;
 use std::str;
 use std::hash::{Hash, Hasher};
 use std::cmp::Ordering;
+use std::sync::OnceLock;
 
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
-use once_cell::sync::OnceCell;
 use regex::Regex;
 
 use crate::Result;
@@ -33,7 +33,7 @@ impl ConventionallyParsedUserID {
     pub fn new<S>(userid: S) -> Result<Self>
         where S: Into<String>
     {
-        Self::parse(userid.into())
+        Ok(Self::parse(userid.into())?)
     }
 
     /// Returns the User ID's name component, if any.
@@ -59,7 +59,7 @@ impl ConventionallyParsedUserID {
         self.uri.map(|(s, e)| &self.userid[s..e])
     }
 
-    fn parse(userid: String) -> Result<Self> {
+    fn parse(userid: String) -> std::result::Result<Self, Error> {
         fn user_id_parser() -> &'static Regex {
             use std::sync::OnceLock;
             static USER_ID_PARSER: OnceLock<Regex> = OnceLock::new();
@@ -476,9 +476,9 @@ pub struct UserID {
     /// Use `UserID::default()` to get a UserID with a default settings.
     value: Cow<'static, [u8]>,
 
-    hash_algo_security: OnceCell<HashAlgoSecurity>,
+    hash_algo_security: OnceLock<HashAlgoSecurity>,
 
-    parsed: OnceCell<ConventionallyParsedUserID>,
+    parsed: OnceLock<std::result::Result<ConventionallyParsedUserID, Error>>,
 }
 assert_send_and_sync!(UserID);
 
@@ -499,9 +499,9 @@ impl UserID {
     pub const fn from_static_bytes(u: &'static [u8]) -> Self {
         UserID {
             common: packet::Common::new(),
-            hash_algo_security: OnceCell::new(),
+            hash_algo_security: OnceLock::new(),
             value: Cow::Borrowed(u),
-            parsed: OnceCell::new(),
+            parsed: OnceLock::new(),
         }
     }
 }
@@ -599,9 +599,9 @@ impl Clone for UserID {
             hash_algo_security: self.hash_algo_security.clone(),
             value: self.value.clone(),
             parsed: if let Some(p) = self.parsed.get() {
-                OnceCell::with_value(p.clone())
+                p.clone().into()
             } else {
-                OnceCell::new()
+                OnceLock::new()
             },
         }
     }
@@ -884,15 +884,16 @@ impl UserID {
     }
 
     fn do_parse(&self) -> Result<&ConventionallyParsedUserID> {
-        self.parsed.get_or_try_init(|| {
-            let s = str::from_utf8(&self.value)?;
+        self.parsed.get_or_init(
+            || -> std::result::Result<ConventionallyParsedUserID, Error>
+            {
+                let s = str::from_utf8(&self.value)
+                    .map_err(|e| Error::InvalidArgument(e.to_string()))?;
 
-            ConventionallyParsedUserID::new(s).map_err(|err| {
-                // Return the error from the NameAddrOrOther parser.
-                err.context(format!(
-                    "Failed to parse User ID: {:?}", s))
+                ConventionallyParsedUserID::parse(s.to_string())
             })
-        })
+            .as_ref()
+            .map_err(|e| e.clone().into())
     }
 
     /// Parses the User ID according to de facto conventions, and

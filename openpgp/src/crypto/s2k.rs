@@ -190,25 +190,30 @@ impl S2K {
         #[allow(deprecated)]
         match self {
             &S2K::Argon2 { salt, t, p, m, } => {
-                let config = argon2::Config {
-                    time_cost: t.into(),
-                    lanes: p.into(),
-                    mem_cost: 2u32.checked_pow(m.into())
+                let mut config = argon2::ParamsBuilder::new();
+                config.t_cost(t.into());
+                config.p_cost(p.into());
+                config.m_cost(
+                    2u32.checked_pow(m.into())
                         .ok_or_else(|| Error::InvalidArgument(
                             format!("Argon2 memory parameter out of bounds: {}",
-                                    m)))?,
-                    hash_length: key_size.try_into()
+                                    m)))?);
+                config.output_len(
+                    key_size.try_into()
                         .map_err(|_| Error::InvalidArgument(
                             format!("key size parameter out of bounds: {}",
-                                    key_size)))?,
-                    thread_mode: argon2::ThreadMode::Parallel,
-                    variant: argon2::Variant::Argon2id,
-                    ..argon2::Config::default()
-                };
+                                    key_size)))?);
+                let params = config.build()
+                    .map_err(|e| Error::InvalidOperation(e.to_string()))?;
+                let argon2 = argon2::Argon2::new(
+                    argon2::Algorithm::Argon2id,
+                    argon2::Version::V0x13,
+                    params);
+                let mut sk: SessionKey = vec![0; key_size].into();
                 password.map(|password| {
-                    Ok(argon2::hash_raw(password, &salt, &config)?
-                       .into())
-                })
+                    argon2.hash_password_into(password, &salt, &mut sk)
+                }).map_err(|e| Error::InvalidOperation(e.to_string()))?;
+                Ok(sk)
             },
             &S2K::Simple { hash } | &S2K::Salted { hash, .. }
             | &S2K::Iterated { hash, .. } => password.map(|string| {

@@ -364,7 +364,8 @@ pub enum Error {
     ///
     /// The optional time is the time at which the operation was
     /// determined to no longer be secure.
-    #[error("{0} is not considered secure{}",
+    #[error("{} is not considered secure{}",
+            .0,
             .1.as_ref().map(|t| {
                 if *t == std::time::UNIX_EPOCH {
                     "".to_string()
