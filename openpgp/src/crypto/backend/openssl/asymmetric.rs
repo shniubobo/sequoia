@@ -14,12 +14,13 @@ use std::time::SystemTime;
 
 use openssl::bn::{BigNum, BigNumRef, BigNumContext};
 use openssl::derive::Deriver;
-use openssl::ec::{EcGroup, EcKey, EcPoint, PointConversionForm};
 use openssl::ecdsa::EcdsaSig;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
+use openssl::pkey_rsa::{PKeyRsaBuilder, PKeyRsaParams};
+use openssl::pkey_ecdsa::{PKeyEcdsaBuilder, PKeyEcdsaParams};
 use openssl::pkey_ctx::PkeyCtx;
-use openssl::rsa::{Padding, Rsa, RsaPrivateKeyBuilder};
+use openssl::rsa::{Padding};
 use openssl::sign::Signer as OpenSslSigner;
 use openssl::sign::Verifier;
 
@@ -228,6 +229,14 @@ impl TryFrom<&Curve> for Nid {
     }
 }
 
+impl TryFrom<&Curve> for &'static str {
+    type Error = crate::Error;
+    fn try_from(curve: &Curve) -> std::result::Result<&'static str, crate::Error> {
+        let nid: Nid = curve.try_into()?;
+        nid.short_name().map_err(|_| crate::Error::UnsupportedEllipticCurve(curve.clone()).into())
+    }
+}
+
 impl KeyPair {
     pub(crate) fn sign_backend(&self,
                                secret: &mpi::SecretKeyMaterial,
@@ -248,12 +257,14 @@ impl KeyPair {
                     mpi::PublicKey::RSA { e, n },
                     mpi::SecretKeyMaterial::RSA { p, q, d, .. },
                 ) => {
-                    let key =
-                        RsaPrivateKeyBuilder::new(n.try_into()?, e.try_into()?, d.try_into()?)?
-                            .set_factors(p.try_into()?, q.try_into()?)?
-                            .build();
-
-                    let key = PKey::from_rsa(key)?;
+                    let bn: BigNum = n.try_into()?;
+                    let be: BigNum = e.try_into()?;
+                    let bd: BigNum = d.try_into()?;
+                    let bp: BigNum = p.try_into()?;
+                    let bq: BigNum = q.try_into()?;
+                    let key = PKeyRsaBuilder::<openssl::pkey::Private>::new(&bn, &be, Some(&bd))?
+                        .set_factors(&bp, &bq)?
+                        .build()?;
 
                     let mut signature: Vec<u8> = vec![];
 
@@ -300,14 +311,21 @@ impl KeyPair {
                     mpi::PublicKey::ECDSA { curve, q },
                     mpi::SecretKeyMaterial::ECDSA { scalar },
                 ) => {
-                    let nid = curve.try_into()?;
-                    let group = EcGroup::from_curve_name(nid)?;
-                    let mut ctx = BigNumContext::new()?;
-                    let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-                    let mut private = BigNum::new_secure()?;
-                    private.copy_from_slice(scalar.value())?;
-                    let key = EcKey::from_private_components(&group, &private, &point)?;
-                    let sig = EcdsaSig::sign(digest, &key)?;
+                    let b_scalar: BigNum = scalar.try_into()?;
+                    let key = PKeyEcdsaBuilder::<openssl::pkey::Private>::new(
+                            curve.try_into()?,
+                            q.value(),
+                            Some(&b_scalar)
+                        )?
+                        .build()?;
+
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.sign_init()?;
+                    let mut signature: Vec<u8> = vec![];
+                    ctx.sign_to_vec(&digest, &mut signature)?;
+
+                    let sig = EcdsaSig::from_der(&signature)?;
+
                     Ok(mpi::Signature::ECDSA {
                         r: sig.r().into(),
                         s: sig.s().into(),
@@ -346,13 +364,20 @@ impl KeyPair {
                     },
                     mpi::Ciphertext::RSA { ref c },
                 ) => {
-                    let key =
-                        RsaPrivateKeyBuilder::new(n.try_into()?, e.try_into()?, d.try_into()?)?
-                            .set_factors(p.try_into()?, q.try_into()?)?
-                            .build();
+                    let bn: BigNum = n.try_into()?;
+                    let be: BigNum = e.try_into()?;
+                    let bd: BigNum = d.try_into()?;
+                    let bp: BigNum = p.try_into()?;
+                    let bq: BigNum = q.try_into()?;
+                    let key = PKeyRsaBuilder::<openssl::pkey::Private>::new(&bn, &be, Some(&bd))?
+                        .set_factors(&bp, &bq)?
+                        .build()?;
 
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.decrypt_init()?;
+                    ctx.set_rsa_padding(Padding::PKCS1)?;
                     let mut buf: Protected = vec![0; key.size().try_into()?].into();
-                    let encrypted_len = key.private_decrypt(c.value(), &mut buf, Padding::PKCS1)?;
+                    let encrypted_len = ctx.decrypt(c.value(), Some(&mut buf))?;
                     buf[..encrypted_len].into()
                 }
 
@@ -393,13 +418,19 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                         .into());
                     }
 
-                    let e = BigNum::from_slice(e.value())?;
-                    let n = BigNum::from_slice(n.value())?;
-                    let rsa = Rsa::<openssl::pkey::Public>::from_public_components(n, e)?;
+                    let bn: BigNum = n.try_into()?;
+                    let be: BigNum = e.try_into()?;
+                    let key = PKeyRsaBuilder::<openssl::pkey::Public>::new(&bn, &be, None)?
+                        .build()?;
 
                     // The ciphertext has the length of the modulus.
-                    let mut buf = vec![0; rsa.size().try_into()?];
-                    rsa.public_encrypt(data, &mut buf, Padding::PKCS1)?;
+                    let mut buf = vec![0; key.size().try_into()?];
+
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.encrypt_init()?;
+                    ctx.set_rsa_padding(Padding::PKCS1)?;
+                    ctx.encrypt_to_vec(data, &mut buf)?;
+
                     Ok(mpi::Ciphertext::RSA {
                         c: buf.into(),
                     })
@@ -434,17 +465,17 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
     ) -> Result<()> {
         let ok = match (self.mpis(), sig) {
             (mpi::PublicKey::RSA { e, n }, mpi::Signature::RSA { s }) => {
-                let e = BigNum::from_slice(e.value())?;
-                let n = BigNum::from_slice(n.value())?;
-                let keypair = Rsa::<openssl::pkey::Public>::from_public_components(n, e)?;
-                let keypair = PKey::from_rsa(keypair)?;
+                let bn: BigNum = n.try_into()?;
+                let be: BigNum = e.try_into()?;
+                let key = PKeyRsaBuilder::<openssl::pkey::Public>::new(&bn, &be, None)?
+                    .build()?;
 
                 let signature = s.value();
                 let mut v = vec![];
                 v.extend(hash_algo.oid()?);
                 v.extend(digest);
 
-                let mut ctx = PkeyCtx::new(&keypair)?;
+                let mut ctx = PkeyCtx::new(&key)?;
                 ctx.verify_init()?;
                 ctx.verify(&v, signature)?
             }
@@ -457,6 +488,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                     y.try_into()?,
                 )?;
                 let key: PKey<_> = dsa.try_into()?;
+
                 let r = r.try_into()?;
                 let s = s.try_into()?;
                 let signature = DsaSig::from_private_components(r, s)?;
@@ -465,16 +497,21 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 ctx.verify(&digest, &signature.to_der()?)?
             }
             (mpi::PublicKey::ECDSA { curve, q }, mpi::Signature::ECDSA { s, r }) => {
-                let nid = curve.try_into()?;
-                let group = EcGroup::from_curve_name(nid)?;
-                let mut ctx = BigNumContext::new()?;
-                let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-                let key = EcKey::from_public_key(&group, &point)?;
+                let key = PKeyEcdsaBuilder::<openssl::pkey::Public>::new(
+                        curve.try_into()?,
+                        q.value(),
+                        None
+                    )?
+                    .build()?;
+
                 let sig = EcdsaSig::from_private_components(
                     r.try_into()?,
                     s.try_into()?,
                 )?;
-                sig.verify(digest, &key)?
+
+                let mut ctx = PkeyCtx::new(&key)?;
+                ctx.verify_init()?;
+                ctx.verify(digest, &sig.to_der()?)?
             }
             _ => {
                 return Err(crate::Error::MalformedPacket(format!(
@@ -549,18 +586,17 @@ where
 
     /// Generates a new RSA key with a public modulus of size `bits`.
     pub fn generate_rsa(bits: usize) -> Result<Self> {
-        let key = Rsa::generate(bits.try_into()?)?;
-        let e = key.e();
-        let n = key.n();
-        let d = key.d();
-        let p = key
-            .p()
-            .ok_or_else(|| crate::Error::InvalidOperation("p".into()))?;
-        let q = key
-            .q()
-            .ok_or_else(|| crate::Error::InvalidOperation("q".into()))?;
+        let key = PKeyRsaBuilder::<openssl::pkey::Private>::new_generate(bits as u32, None)?.generate()?;
+
+        let params = PKeyRsaParams::<openssl::pkey::Private>::from_pkey(&key).unwrap();
+        let e = params.e()?;
+        let n = params.n()?;
+        let d = params.d()?;
+        let p = params.p().map_err(|_| crate::Error::InvalidOperation("p".into()))?;
+        let q = params.q().map_err(|_| crate::Error::InvalidOperation("q".into()))?;
+
         // RFC 4880: `p < q`
-        let (p, q) = rsa_sort_pq(p, q);
+        let (p, q) = rsa_sort_pq(&p, &q);
 
         let mut ctx = BigNumContext::new_secure()?;
         let mut u = BigNum::new_secure()?;
@@ -594,20 +630,14 @@ where
                                                   mpi::PublicKey,
                                                   mpi::SecretKeyMaterial)>
     {
-        let nid = (&curve).try_into()?;
-        let group = EcGroup::from_curve_name(nid)?;
-        let key = EcKey::generate(&group)?;
+        let key = PKey::<openssl::pkey::Private>::ec_gen((&curve).try_into()?)?;
 
         let hash = crate::crypto::ecdh::default_ecdh_kdf_hash(&curve);
         let sym = crate::crypto::ecdh::default_ecdh_kek_cipher(&curve);
-        let mut ctx = BigNumContext::new()?;
 
-        let q = MPI::new(&key.public_key().to_bytes(
-            &group,
-            PointConversionForm::UNCOMPRESSED,
-            &mut ctx,
-        )?);
-        let scalar = key.private_key().to_vec().into();
+        let params = PKeyEcdsaParams::<openssl::pkey::Private>::from_pkey(&key)?;
+        let q = MPI::new(params.public_key()?);
+        let scalar = params.private_key()?.to_vec().into();
 
         if for_signing {
             Ok((
