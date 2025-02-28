@@ -14,12 +14,12 @@ use std::time::SystemTime;
 
 use openssl::bn::{BigNum, BigNumRef, BigNumContext};
 use openssl::derive::Deriver;
-use openssl::ec::{EcGroup, EcKey, EcPoint, PointConversionForm};
 use openssl::ecdsa::EcdsaSig;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
+use openssl::ossl_param::OsslParamBuilder;
 use openssl::pkey_ctx::PkeyCtx;
-use openssl::rsa::{Padding, Rsa, RsaPrivateKeyBuilder};
+use openssl::rsa::{Padding};
 use openssl::sign::Signer as OpenSslSigner;
 use openssl::sign::Verifier;
 
@@ -248,12 +248,22 @@ impl KeyPair {
                     mpi::PublicKey::RSA { e, n },
                     mpi::SecretKeyMaterial::RSA { p, q, d, .. },
                 ) => {
-                    let key =
-                        RsaPrivateKeyBuilder::new(n.try_into()?, e.try_into()?, d.try_into()?)?
-                            .set_factors(p.try_into()?, q.try_into()?)?
-                            .build();
+                    let n = BigNum::from_slice(n.value())?;
+                    let e = BigNum::from_slice(e.value())?;
+                    let d = BigNum::from_slice(d.value())?;
+                    let p = BigNum::from_slice(p.value())?;
+                    let q = BigNum::from_slice(q.value())?;
 
-                    let key = PKey::from_rsa(key)?;
+                    let mut bld = OsslParamBuilder::new()?;
+                    bld.add_bn("n\0", &n)?;
+                    bld.add_bn("e\0", &e)?;
+                    bld.add_bn("d\0", &d)?;
+                    bld.add_bn("rsa-factor1\0", &p)?;
+                    bld.add_bn("rsa-factor2\0", &q)?;
+                    let params = bld.to_params()?;
+                    let mut ctx = PkeyCtx::new_from_name(None, "RSA", None)?;
+                    ctx.fromdata_init()?;
+                    let key = PKey::<openssl::pkey::Private>::fromdata(ctx, params)?;
 
                     let mut signature: Vec<u8> = vec![];
 
@@ -275,15 +285,25 @@ impl KeyPair {
                     mpi::PublicKey::DSA { p, q, g, y },
                     mpi::SecretKeyMaterial::DSA { x },
                 ) => {
-                    use openssl::dsa::{Dsa, DsaSig};
-                    let dsa = Dsa::from_private_components(
-                        p.try_into()?,
-                        q.try_into()?,
-                        g.try_into()?,
-                        x.try_into()?,
-                        y.try_into()?,
-                    )?;
-                    let key: PKey<_> = dsa.try_into()?;
+                    use openssl::dsa::DsaSig;
+
+                    let p = BigNum::from_slice(p.value())?;
+                    let q = BigNum::from_slice(q.value())?;
+                    let g = BigNum::from_slice(g.value())?;
+                    let x = BigNum::from_slice(x.value())?;
+                    let y = BigNum::from_slice(y.value())?;
+
+                    let mut bld = OsslParamBuilder::new()?;
+                    bld.add_bn("p\0", &p)?;
+                    bld.add_bn("q\0", &q)?;
+                    bld.add_bn("g\0", &g)?;
+                    bld.add_bn("priv\0", &x)?;
+                    bld.add_bn("pub\0", &y)?;
+                    let params = bld.to_params()?;
+                    let mut ctx = PkeyCtx::new_from_name(None, "DSA", None)?;
+                    ctx.fromdata_init()?;
+                    let key = PKey::<openssl::pkey::Private>::fromdata(ctx, params)?;
+
                     let mut ctx = PkeyCtx::new(&key)?;
                     ctx.sign_init()?;
                     let mut signature = vec![];
@@ -300,14 +320,25 @@ impl KeyPair {
                     mpi::PublicKey::ECDSA { curve, q },
                     mpi::SecretKeyMaterial::ECDSA { scalar },
                 ) => {
-                    let nid = curve.try_into()?;
-                    let group = EcGroup::from_curve_name(nid)?;
-                    let mut ctx = BigNumContext::new()?;
-                    let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-                    let mut private = BigNum::new_secure()?;
-                    private.copy_from_slice(scalar.value())?;
-                    let key = EcKey::from_private_components(&group, &private, &point)?;
-                    let sig = EcdsaSig::sign(digest, &key)?;
+                    let nid: Nid = curve.try_into()?;
+                    let privkey = BigNum::from_slice(scalar.value())?;
+
+                    let mut bld = OsslParamBuilder::new()?;
+                    bld.add_utf8_string("group\0", nid.short_name()?)?;
+                    bld.add_octet_string("pub\0", q.value())?;
+                    bld.add_bn("priv\0", &privkey)?;
+                    let params = bld.to_params()?;
+                    let mut ctx = PkeyCtx::new_from_name(None, "EC", None)?;
+                    ctx.fromdata_init().unwrap();
+                    let key = PKey::<openssl::pkey::Private>::fromdata(ctx, params)?;
+
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.sign_init()?;
+                    let mut signature: Vec<u8> = vec![];
+                    ctx.sign_to_vec(&digest, &mut signature)?;
+
+                    let sig = EcdsaSig::from_der(&signature)?;
+
                     Ok(mpi::Signature::ECDSA {
                         r: sig.r().into(),
                         s: sig.s().into(),
@@ -346,13 +377,28 @@ impl KeyPair {
                     },
                     mpi::Ciphertext::RSA { ref c },
                 ) => {
-                    let key =
-                        RsaPrivateKeyBuilder::new(n.try_into()?, e.try_into()?, d.try_into()?)?
-                            .set_factors(p.try_into()?, q.try_into()?)?
-                            .build();
+                    let n = BigNum::from_slice(n.value())?;
+                    let e = BigNum::from_slice(e.value())?;
+                    let d = BigNum::from_slice(d.value())?;
+                    let p = BigNum::from_slice(p.value())?;
+                    let q = BigNum::from_slice(q.value())?;
 
+                    let mut bld = OsslParamBuilder::new()?;
+                    bld.add_bn("n\0", &n)?;
+                    bld.add_bn("e\0", &e)?;
+                    bld.add_bn("d\0", &d)?;
+                    bld.add_bn("rsa-factor1\0", &p)?;
+                    bld.add_bn("rsa-factor2\0", &q)?;
+                    let params = bld.to_params()?;
+                    let mut ctx = PkeyCtx::new_from_name(None, "RSA", None)?;
+                    ctx.fromdata_init()?;
+                    let key = PKey::<openssl::pkey::Private>::fromdata(ctx, params)?;
+
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.decrypt_init()?;
+                    ctx.set_rsa_padding(Padding::PKCS1)?;
                     let mut buf: Protected = vec![0; key.size().try_into()?].into();
-                    let encrypted_len = key.private_decrypt(c.value(), &mut buf, Padding::PKCS1)?;
+                    let encrypted_len = ctx.decrypt(c.value(), Some(&mut buf))?;
                     buf[..encrypted_len].into()
                 }
 
@@ -395,11 +441,23 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
 
                     let e = BigNum::from_slice(e.value())?;
                     let n = BigNum::from_slice(n.value())?;
-                    let rsa = Rsa::<openssl::pkey::Public>::from_public_components(n, e)?;
+
+                    let mut bld = OsslParamBuilder::new()?;
+                    bld.add_bn("n\0", &n)?;
+                    bld.add_bn("e\0", &e)?;
+                    let params = bld.to_params()?;
+                    let mut ctx = PkeyCtx::new_from_name(None, "RSA", None)?;
+                    ctx.fromdata_init()?;
+                    let key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
 
                     // The ciphertext has the length of the modulus.
-                    let mut buf = vec![0; rsa.size().try_into()?];
-                    rsa.public_encrypt(data, &mut buf, Padding::PKCS1)?;
+                    let mut buf = vec![0; key.size().try_into()?];
+
+                    let mut ctx = PkeyCtx::new(&key)?;
+                    ctx.encrypt_init()?;
+                    ctx.set_rsa_padding(Padding::PKCS1)?;
+                    ctx.encrypt_to_vec(data, &mut buf)?;
+
                     Ok(mpi::Ciphertext::RSA {
                         c: buf.into(),
                     })
@@ -436,27 +494,42 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
             (mpi::PublicKey::RSA { e, n }, mpi::Signature::RSA { s }) => {
                 let e = BigNum::from_slice(e.value())?;
                 let n = BigNum::from_slice(n.value())?;
-                let keypair = Rsa::<openssl::pkey::Public>::from_public_components(n, e)?;
-                let keypair = PKey::from_rsa(keypair)?;
+
+               let mut bld = OsslParamBuilder::new()?;
+               bld.add_bn("n\0", &n)?;
+               bld.add_bn("e\0", &e)?;
+               let params = bld.to_params()?;
+               let mut ctx = PkeyCtx::new_from_name(None, "RSA", None)?;
+               ctx.fromdata_init()?;
+               let key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
 
                 let signature = s.value();
                 let mut v = vec![];
                 v.extend(hash_algo.oid()?);
                 v.extend(digest);
 
-                let mut ctx = PkeyCtx::new(&keypair)?;
+                let mut ctx = PkeyCtx::new(&key)?;
                 ctx.verify_init()?;
                 ctx.verify(&v, signature)?
             }
             (mpi::PublicKey::DSA { p, q, g, y }, mpi::Signature::DSA { r, s }) => {
-                use openssl::dsa::{Dsa, DsaSig};
-                let dsa = Dsa::from_public_components(
-                    p.try_into()?,
-                    q.try_into()?,
-                    g.try_into()?,
-                    y.try_into()?,
-                )?;
-                let key: PKey<_> = dsa.try_into()?;
+                use openssl::dsa::DsaSig;
+
+                let p = BigNum::from_slice(p.value())?;
+                let q = BigNum::from_slice(q.value())?;
+                let g = BigNum::from_slice(g.value())?;
+                let y = BigNum::from_slice(y.value())?;
+
+                let mut bld = OsslParamBuilder::new()?;
+                bld.add_bn("p\0", &p)?;
+                bld.add_bn("q\0", &q)?;
+                bld.add_bn("g\0", &g)?;
+                bld.add_bn("pub\0", &y)?;
+                let params = bld.to_params()?;
+                let mut ctx = PkeyCtx::new_from_name(None, "DSA", None)?;
+                ctx.fromdata_init()?;
+                let key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
+
                 let r = r.try_into()?;
                 let s = s.try_into()?;
                 let signature = DsaSig::from_private_components(r, s)?;
@@ -465,16 +538,24 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 ctx.verify(&digest, &signature.to_der()?)?
             }
             (mpi::PublicKey::ECDSA { curve, q }, mpi::Signature::ECDSA { s, r }) => {
-                let nid = curve.try_into()?;
-                let group = EcGroup::from_curve_name(nid)?;
-                let mut ctx = BigNumContext::new()?;
-                let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-                let key = EcKey::from_public_key(&group, &point)?;
+                let nid: Nid = curve.try_into()?;
+
+                let mut bld = OsslParamBuilder::new()?;
+                bld.add_utf8_string("group\0", nid.short_name()?)?;
+                bld.add_octet_string("pub\0", q.value())?;
+                let params = bld.to_params().unwrap();
+                let mut ctx = PkeyCtx::new_from_name(None, "EC", None)?;
+                ctx.fromdata_init().unwrap();
+                let key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
+
                 let sig = EcdsaSig::from_private_components(
                     r.try_into()?,
                     s.try_into()?,
                 )?;
-                sig.verify(digest, &key)?
+
+                let mut ctx = PkeyCtx::new(&key)?;
+                ctx.verify_init()?;
+                ctx.verify(digest, &sig.to_der()?)?
             }
             _ => {
                 return Err(crate::Error::MalformedPacket(format!(
@@ -549,16 +630,22 @@ where
 
     /// Generates a new RSA key with a public modulus of size `bits`.
     pub fn generate_rsa(bits: usize) -> Result<Self> {
-        let key = Rsa::generate(bits.try_into()?)?;
-        let e = key.e();
-        let n = key.n();
-        let d = key.d();
-        let p = key
-            .p()
-            .ok_or_else(|| crate::Error::InvalidOperation("p".into()))?;
-        let q = key
-            .q()
-            .ok_or_else(|| crate::Error::InvalidOperation("q".into()))?;
+        let mut ctx = PkeyCtx::new_from_name(None, "RSA", None)?;
+        ctx.keygen_init()?;
+
+        let mut bld = OsslParamBuilder::new()?;
+        bld.add_uint("bits\0", bits.try_into()?)?;
+        let params = bld.to_params()?;
+        ctx.set_params(params)?;
+        let key = ctx.generate()?;
+
+        let params = key.todata(0x87)?; // FIXME magic number
+        let e = params.locate("e\0")?.get_bn()?;
+        let n = params.locate("n\0")?.get_bn()?;
+        let d = params.locate("d\0")?.get_bn()?;
+        let p = params.locate("rsa-factor1\0")?.get_bn()?;
+        let q = params.locate("rsa-factor2\0")?.get_bn()?;
+
         // RFC 4880: `p < q`
         let (p, q) = rsa_sort_pq(p, q);
 
@@ -594,20 +681,18 @@ where
                                                   mpi::PublicKey,
                                                   mpi::SecretKeyMaterial)>
     {
-        let nid = (&curve).try_into()?;
-        let group = EcGroup::from_curve_name(nid)?;
-        let key = EcKey::generate(&group)?;
+        let nid: Nid = (&curve).try_into()?;
+        let key = PKey::<openssl::pkey::Private>::ec_gen(nid.short_name()?)?;
+
+        let params = key.todata(0x87)?; // FIXME magic number
 
         let hash = crate::crypto::ecdh::default_ecdh_kdf_hash(&curve);
         let sym = crate::crypto::ecdh::default_ecdh_kek_cipher(&curve);
-        let mut ctx = BigNumContext::new()?;
 
-        let q = MPI::new(&key.public_key().to_bytes(
-            &group,
-            PointConversionForm::UNCOMPRESSED,
-            &mut ctx,
-        )?);
-        let scalar = key.private_key().to_vec().into();
+        let pubkey = params.locate("pub\0")?.get_octet_string()?;
+        let q = MPI::new(pubkey);
+        let privkey = params.locate("priv\0")?.get_bn()?;
+        let scalar = privkey.to_vec().into();
 
         if for_signing {
             Ok((
