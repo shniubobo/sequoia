@@ -7470,8 +7470,23 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
         assert_eq!(vcert.keys().for_signing().count(), 1);
         assert_eq!(vcert.keys().for_transport_encryption().count(), 1);
 
+        // The following key uses Argon2, and it takes 2 GiB to
+        // efficiently derive the KEK.  This isn't viable on 32 bit
+        // architectures.
+        let name = if cfg!(target_pointer_width = "16") {
+            return Ok(()); // No chance we even got here.
+        } else if cfg!(target_pointer_width = "32") {
+            // For 32 bit architectures, we have a test vector which
+            // uses the "SECOND RECOMMENDED" parameter choice for
+            // memory constrained systems (see Section 4 of RFC 9106).
+            "v6-minimal-secret-locked-for-constrained-envs.key"
+        } else {
+            // 64 bit or weird.  Good luck.
+            "v6-minimal-secret-locked.key"
+        };
+
         let cert = Cert::from_bytes(
-            crate::tests::file("crypto-refresh/v6-minimal-secret-locked.key")).unwrap();
+            crate::tests::file(&format!("crypto-refresh/{}", name)))?;
         assert_eq!(cert.userids().count(), 0);
         let vcert = cert.with_policy(p, t)?;
         assert_eq!(vcert.keys().count(), 2);

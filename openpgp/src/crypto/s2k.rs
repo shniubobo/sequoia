@@ -205,14 +205,20 @@ impl S2K {
                                     key_size)))?);
                 let params = config.build()
                     .map_err(|e| Error::InvalidOperation(e.to_string()))?;
+
+                // Allocate the blocks for the Argon2 computation.
+                let mut blocks = Blocks::new(&params)?;
+
                 let argon2 = argon2::Argon2::new(
                     argon2::Algorithm::Argon2id,
                     argon2::Version::V0x13,
                     params);
                 let mut sk: SessionKey = vec![0; key_size].into();
                 password.map(|password| {
-                    argon2.hash_password_into(password, &salt, &mut sk)
+                    argon2.hash_password_into_with_memory(
+                        password, &salt, &mut sk, blocks.as_mut())
                 }).map_err(|e| Error::InvalidOperation(e.to_string()))?;
+
                 Ok(sk)
             },
             &S2K::Simple { hash } | &S2K::Salted { hash, .. }
@@ -482,6 +488,60 @@ impl Arbitrary for S2K {
                 parameters: Some(arbitrary_bounded_vec(g, 200).into()),
             },
             _ => unreachable!(),
+        }
+    }
+}
+
+/// Memory for the Argon2 computation.
+///
+/// We use fallible allocation to gracefully fail if we cannot
+/// allocate the required space.
+struct Blocks {
+    blocks: *mut argon2::Block,
+    count: usize,
+}
+
+impl Blocks {
+    fn new(p: &argon2::Params) -> Result<Self> {
+        use std::alloc::Layout;
+
+        let error = || anyhow::Error::from(
+            Error::InvalidOperation(
+                "failed to allocate memory for key derivation"
+                    .into()));
+
+        let count = p.block_count();
+        let l = Layout::array::<argon2::Block>(count)
+            .map_err(|_| error())?;
+        let blocks = unsafe {
+            std::alloc::alloc_zeroed(l)
+                as *mut argon2::Block
+        };
+        if blocks.is_null() {
+            Err(error())
+        } else {
+            Ok(Blocks { blocks, count, })
+        }
+    }
+}
+
+impl Drop for Blocks {
+    fn drop(&mut self) {
+        use std::alloc::Layout;
+
+        let l = Layout::array::<argon2::Block>(self.count)
+            .expect("was valid before");
+        unsafe {
+            std::alloc::dealloc(self.blocks as *mut _, l)
+        };
+    }
+}
+
+impl AsMut<[argon2::Block]> for Blocks {
+    fn as_mut(&mut self) -> &mut [argon2::Block] {
+        unsafe {
+            std::slice::from_raw_parts_mut(
+                self.blocks, self.count)
         }
     }
 }
