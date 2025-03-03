@@ -732,9 +732,9 @@ a_cutoff_list!(AsymmetricAlgorithmCutoffList, AsymmetricAlgorithm, 23,
                    ACCEPT,                   // 13. NistP384.
                    ACCEPT,                   // 14. NistP521.
                    ACCEPT,                   // 15. BrainpoolP256.
-                   ACCEPT,                   // 16. BrainpoolP512.
-                   ACCEPT,                   // 17. Cv25519.
-                   ACCEPT,                   // 18. BrainpoolP384.
+                   ACCEPT,                   // 16. BrainpoolP384.
+                   ACCEPT,                   // 17. BrainpoolP512.
+                   ACCEPT,                   // 18. Cv25519.
                    ACCEPT,                   // 19. X25519.
                    ACCEPT,                   // 20. X448.
                    ACCEPT,                   // 21. Ed25519.
@@ -1781,13 +1781,13 @@ impl From<AsymmetricAlgorithm> for u8 {
             NistP384 => 13,
             NistP521 => 14,
             BrainpoolP256 => 15,
-            BrainpoolP384 => 18,
-            BrainpoolP512 => 16,
-            Cv25519 => 17,
-            X25519 => 18,
-            X448 => 19,
-            Ed25519 => 20,
-            Ed448 => 21,
+            BrainpoolP384 => 16,
+            BrainpoolP512 => 17,
+            Cv25519 => 18,
+            X25519 => 19,
+            X448 => 20,
+            Ed25519 => 21,
+            Ed448 => 22,
             Unknown => 255,
         }
     }

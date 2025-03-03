@@ -4,6 +4,13 @@
 #+STARTUP: content hidestars
 
 
+* Changes in 2.0.0
+** Notable fixes
+   - We now gracefully handle memory allocation failures when
+     computing Argon2.
+   - We fixed an internal mapping from asymmetric algorithm to slots
+     in a policy data structure.
+
 * Changes in 2.0.0.alpha.2
 ** Notable changes
    - Our MSRV is now 1.79.
