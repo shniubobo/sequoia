@@ -59,7 +59,7 @@ impl ConventionallyParsedUserID {
         self.uri.map(|(s, e)| &self.userid[s..e])
     }
 
-    fn parse(userid: String) -> std::result::Result<Self, Error> {
+    fn parse(userid: String) -> Result<Self> {
         fn user_id_parser() -> &'static Regex {
             use std::sync::OnceLock;
             static USER_ID_PARSER: OnceLock<Regex> = OnceLock::new();
@@ -478,7 +478,7 @@ pub struct UserID {
 
     hash_algo_security: OnceLock<HashAlgoSecurity>,
 
-    parsed: OnceLock<std::result::Result<ConventionallyParsedUserID, Error>>,
+    parsed: OnceLock<ConventionallyParsedUserID>,
 }
 assert_send_and_sync!(UserID);
 
@@ -884,16 +884,14 @@ impl UserID {
     }
 
     fn do_parse(&self) -> Result<&ConventionallyParsedUserID> {
-        self.parsed.get_or_init(
-            || -> std::result::Result<ConventionallyParsedUserID, Error>
-            {
-                let s = str::from_utf8(&self.value)
-                    .map_err(|e| Error::InvalidArgument(e.to_string()))?;
+        if let Some(p) = self.parsed.get() {
+            return Ok(p);
+        }
 
-                ConventionallyParsedUserID::parse(s.to_string())
-            })
-            .as_ref()
-            .map_err(|e| e.clone().into())
+        let s = str::from_utf8(&self.value)?;
+        let p = ConventionallyParsedUserID::parse(s.to_string())?;
+        let _lost_race = self.parsed.set(p.clone());
+        Ok(self.parsed.get().expect("just set"))
     }
 
     /// Parses the User ID according to de facto conventions, and
