@@ -1,11 +1,7 @@
 [package]
-# Implementing v6 OpenPGP requires breaking the API.  Prevent
-# accidental publishing.
-publish = false
-
 name = "sequoia-ipc"
 description = "Interprocess communication infrastructure for Sequoia"
-version = "0.35.1"
+version = "0.36.0"
 authors = [
     "Justus Winter <justus@sequoia-pgp.org>",
     "Kai Michaelis <kai@sequoia-pgp.org>",
@@ -25,7 +21,7 @@ gitlab = { repository = "sequoia-pgp/sequoia" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false }
 
 anyhow = "1.0.18"
 capnp-rpc = "0.19"
@@ -35,7 +31,7 @@ libc = "0.2.66"
 memsec = { version = ">=0.5", default-features = false }
 rand = { version = "0.8" }
 tempfile = "3.1"
-thiserror = "1.0.2"
+thiserror = ">=1, <3"
 tokio = { version = "1.19", features = [ "rt-multi-thread", "io-util", "net" ] }
 tokio-util = { version = "0.7", features = ["compat"] }
 socket2 = "0.5"
@@ -56,11 +52,11 @@ bench = false
 
 # Enables a crypto backend for the tests:
 [target.'cfg(not(windows))'.dev-dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false, features = ["crypto-nettle", "__implicit-crypto-backend-for-tests"] }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false, features = ["crypto-nettle", "__implicit-crypto-backend-for-tests"] }
 
 # Enables a crypto backend for the tests:
 [target.'cfg(windows)'.dev-dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false, features = ["crypto-cng", "__implicit-crypto-backend-for-tests"] }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false, features = ["crypto-cng", "__implicit-crypto-backend-for-tests"] }
 
 # Enables a crypto backend for the docs.rs generation:
 [package.metadata.docs.rs]
