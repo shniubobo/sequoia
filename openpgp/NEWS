@@ -5,6 +5,12 @@
 
 
 * Changes in 2.0.0
+** Notable changes
+   - This release adds support for RFC 9580, which revises RFC 4880.
+     The revision adds new cryptographic algorithms, deprecates and
+     removes old ones, and supports authenticated encryption.  The
+     legacy protocol version is still supported.
+
 ** Notable fixes
    - We now gracefully handle memory allocation failures when
      computing Argon2.
