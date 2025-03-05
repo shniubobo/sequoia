@@ -1,11 +1,7 @@
 [package]
-# Implementing v6 OpenPGP requires breaking the API.  Prevent
-# accidental publishing.
-publish = false
-
 name = "sequoia-autocrypt"
 description = "Autocrypt support"
-version = "0.25.1"
+version = "0.26.0"
 authors = [
     "Justus Winter <justus@sequoia-pgp.org>",
     "Kai Michaelis <kai@sequoia-pgp.org>",
@@ -19,14 +15,14 @@ keywords = ["autocrypt", "mua", "opportunistic", "mail", "encryption"]
 categories = ["cryptography", "authentication", "email"]
 license = "LGPL-2.0-or-later"
 edition = "2021"
-rust-version = "1.67"
+rust-version = "1.79"
 
 [badges]
 gitlab = { repository = "sequoia-pgp/sequoia" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false }
 base64 = ">= 0.21, < 0.23"
 
 [lib]
@@ -34,11 +30,11 @@ bench = false
 
 # Enables a crypto backend for the tests:
 [target.'cfg(not(windows))'.dev-dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false, features = ["crypto-nettle", "__implicit-crypto-backend-for-tests"] }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false, features = ["crypto-nettle", "__implicit-crypto-backend-for-tests"] }
 
 # Enables a crypto backend for the tests:
 [target.'cfg(windows)'.dev-dependencies]
-sequoia-openpgp = { path = "../openpgp", default-features = false, features = ["crypto-cng", "__implicit-crypto-backend-for-tests"] }
+sequoia-openpgp = { version = "2", path = "../openpgp", default-features = false, features = ["crypto-cng", "__implicit-crypto-backend-for-tests"] }
 
 # Enables a crypto backend for the docs.rs generation:
 [package.metadata.docs.rs]
