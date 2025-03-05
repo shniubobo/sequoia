@@ -9,10 +9,12 @@ use crate::packet::{key, Key};
 use crate::types::Curve;
 use crate::{Error, Result};
 
-use openssl::bn::{BigNum, BigNumContext};
+use openssl::bn::BigNum;
 use openssl::derive::Deriver;
-use openssl::ec::{EcGroup, EcKey, EcPoint, PointConversionForm};
+use openssl::ossl_param::OsslParamBuilder;
 use openssl::pkey::PKey;
+use openssl::pkey_ctx::PkeyCtx;
+use openssl::nid::Nid;
 
 /// Wraps a session key using Elliptic Curve Diffie-Hellman.
 pub fn encrypt<R>(
@@ -30,22 +32,22 @@ where
         return Err(Error::InvalidArgument("implemented elsewhere".into()).into());
     }
 
-    let nid = curve.try_into()?;
-    let group = EcGroup::from_curve_name(nid)?;
-    let mut ctx = BigNumContext::new()?;
-    let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-    let recipient_key = EcKey::from_public_key(&group, &point)?;
-    let recipient_key = PKey::<_>::try_from(recipient_key)?;
+    let nid: Nid = curve.try_into()?;
 
-    let key = EcKey::generate(&group)?;
+    let mut bld = OsslParamBuilder::new()?;
+    bld.add_utf8_string("group\0", nid.short_name()?)?;
+    bld.add_octet_string("pub\0", q.value())?;
+    let params = bld.to_params()?;
+    let mut ctx = PkeyCtx::new_from_name(None, "EC", None)?;
+    ctx.fromdata_init()?;
+    let recipient_key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
 
-    let q = mpi::MPI::new(&key.public_key().to_bytes(
-        &group,
-        PointConversionForm::UNCOMPRESSED,
-        &mut ctx,
-    )?);
+    let key = PKey::<openssl::pkey::Private>::ec_gen(nid.short_name()?)?;
+    let params = key.todata(0x87)?; // FIXME magic number
 
-    let key = PKey::<_>::try_from(key)?;
+    let pubkey = params.locate("pub\0")?.get_octet_string()?;
+    let q = mpi::MPI::new(pubkey);
+
     let mut deriver = Deriver::new(&key)?;
     deriver.set_peer(&recipient_key)?;
 
@@ -79,17 +81,25 @@ where
         return Err(Error::InvalidArgument("implemented elsewhere".into()).into());
     }
 
-    let nid = curve.try_into()?;
-    let group = EcGroup::from_curve_name(nid)?;
-    let mut ctx = BigNumContext::new()?;
-    let point = EcPoint::from_bytes(&group, e.value(), &mut ctx)?;
+    let nid: Nid = curve.try_into()?;
 
-    let public_point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-    let scalar = BigNum::from_slice(scalar.value())?;
-    let key = EcKey::from_private_components(&group, &scalar, &public_point)?;
+    let privkey = BigNum::from_slice(scalar.value())?;
+    let mut bld = OsslParamBuilder::new()?;
+    bld.add_utf8_string("group\0", nid.short_name()?)?;
+    bld.add_octet_string("pub\0", q.value())?;
+    bld.add_bn("priv\0", &privkey)?;
+    let params = bld.to_params()?;
+    let mut ctx = PkeyCtx::new_from_name(None, "EC", None)?;
+    ctx.fromdata_init()?;
+    let key = PKey::<openssl::pkey::Private>::fromdata(ctx, params)?;
 
-    let recipient_key = EcKey::from_public_key(&group, &point)?;
-    let recipient_key = PKey::<_>::try_from(recipient_key)?;
+    let mut bld = OsslParamBuilder::new()?;
+    bld.add_utf8_string("group\0", nid.short_name()?)?;
+    bld.add_octet_string("pub\0", e.value())?;
+    let params = bld.to_params()?;
+    let mut ctx = PkeyCtx::new_from_name(None, "EC", None)?;
+    ctx.fromdata_init()?;
+    let recipient_key = PKey::<openssl::pkey::Public>::fromdata(ctx, params)?;
 
     let key = PKey::<_>::try_from(key)?;
     let mut deriver = Deriver::new(&key)?;

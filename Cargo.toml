@@ -77,3 +77,9 @@ opt-level = 2
 opt-level = 2
 [profile.dev.package.x25519-dalek]
 opt-level = 2
+
+[patch.crates-io]
+openssl = { git = "https://github.com/Jakuje/rust-openssl.git", branch = "openssl-3-evp_pkey" }
+openssl-sys = { git = "https://github.com/Jakuje/rust-openssl.git", branch = "openssl-3-evp_pkey" }
+#openssl = { path = "../rust-openssl/openssl" }
+#openssl-sys = { path = "../rust-openssl/openssl-sys" }
