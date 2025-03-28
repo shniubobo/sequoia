@@ -2418,7 +2418,7 @@ impl_parse_with_buffered_reader!(
     });
 
 impl OnePassSig6 {
-    #[allow(clippy::blocks_in_if_conditions)]
+    #[allow(clippy::blocks_in_conditions)]
     fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let indent = php.recursion_depth();
         tracer!(TRACE, "OnePassSig6", indent);
