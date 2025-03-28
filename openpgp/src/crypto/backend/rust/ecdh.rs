@@ -17,8 +17,6 @@ use crate::types::Curve;
 
 use super::GenericArrayExt;
 
-const CURVE25519_SIZE: usize = 32;
-
 /// Wraps a session key using Elliptic Curve Diffie-Hellman.
 #[allow(non_snake_case)]
 pub fn encrypt<R>(recipient: &Key<key::PublicParts, R>,
