@@ -88,7 +88,7 @@ impl Asymmetric for super::Backend {
         let secret = StaticSecret::random_from_rng(&mut OsRng);
         let public = PublicKey::from(&secret);
         let mut secret_bytes = secret.to_bytes();
-        let secret: Protected = secret_bytes.as_ref().into();
+        let secret: Protected = secret_bytes.into();
         unsafe {
             memsec::memzero(secret_bytes.as_mut_ptr(), secret_bytes.len());
         }
@@ -139,10 +139,6 @@ impl Asymmetric for super::Backend {
         let public = VerifyingKey::from_bytes(public).map_err(|e| {
             Error::InvalidKey(e.to_string())
         })?;
-        let signature = signature.as_ref().try_into().map_err(|e: std::array::TryFromSliceError| {
-            Error::InvalidArgument(e.to_string())
-        })?;
-
         let signature = Signature::from_bytes(signature);
         Ok(public.verify(digest, &signature).is_ok())
     }
