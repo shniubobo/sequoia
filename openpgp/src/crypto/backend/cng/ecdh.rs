@@ -107,7 +107,7 @@ where
                 _ => unreachable!(),
             };
 
-            encrypt_wrap(recipient, session_key, VB, &S)
+            encrypt_wrap(recipient.role_as_subordinate(), session_key, VB, &S)
         }
 
         // Not implemented in CNG.

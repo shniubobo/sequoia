@@ -2839,7 +2839,8 @@ impl<'a, C> ValidComponentAmalgamation<'a, C>
                 },
             }?;
 
-            let revoked = c._revocation_status(policy, t, false, Some(sig));
+            let revoked = c.revocation_status_intern(
+                policy, Some(t), false, Some(sig));
             let primary = sig.primary_userid().unwrap_or(false);
             let signature_creation_time = match sig.signature_creation_time() {
                 Some(time) => Some(time),
@@ -2932,8 +2933,9 @@ where
     }
 
     fn revocation_status(&self) -> RevocationStatus<'a> {
-        self.bundle()._revocation_status(self.policy(), self.cert.time,
-                                         false, Some(self.binding_signature))
+        self.bundle().revocation_status_intern(
+            self.policy(), Some(self.cert.time), false,
+            Some(self.binding_signature))
     }
 
     fn revocation_keys(&self)

@@ -69,11 +69,10 @@ pub(crate) fn default_ecdh_kek_cipher(curve: &Curve) -> SymmetricAlgorithm {
 /// (i.e. with the 0x40 prefix for X25519, or 0x04 for the NIST
 /// curves), `S` is the shared Diffie-Hellman secret.
 #[allow(non_snake_case, dead_code)]
-pub(crate) fn encrypt_wrap<R>(recipient: &Key<key::PublicParts, R>,
-                              session_key: &SessionKey, VB: MPI,
-                              S: &Protected)
+pub(crate) fn encrypt_wrap(recipient: &Key<key::PublicParts, key::SubordinateRole>,
+                           session_key: &SessionKey, VB: MPI,
+                           S: &Protected)
     -> Result<mpi::Ciphertext>
-    where R: key::KeyRole
 {
     match recipient.mpis() {
         mpi::PublicKey::ECDH { ref curve, ref hash, ref sym,.. } => {

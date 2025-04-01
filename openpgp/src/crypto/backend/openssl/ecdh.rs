@@ -51,7 +51,7 @@ where
 
     let secret = deriver.derive_to_vec()?.into();
 
-    encrypt_wrap(recipient, session_key, q, &secret)
+    encrypt_wrap(recipient.role_as_subordinate(), session_key, q, &secret)
 }
 
 /// Unwraps a session key using Elliptic Curve Diffie-Hellman.

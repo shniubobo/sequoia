@@ -662,15 +662,15 @@ impl<C> ComponentBundle<C> {
     ///     even if there is a newer self-signature).
     ///
     /// selfsig must be the newest live self signature at time `t`.
-    pub(crate) fn _revocation_status<'a, T>(&'a self, policy: &dyn Policy, t: T,
-                                            hard_revocations_are_final: bool,
-                                            selfsig: Option<&Signature>)
+    pub(crate) fn revocation_status_intern<'a>(&'a self, policy: &dyn Policy,
+                                               t: Option<time::SystemTime>,
+                                               hard_revocations_are_final: bool,
+                                               selfsig: Option<&Signature>)
         -> RevocationStatus<'a>
-        where T: Into<Option<time::SystemTime>>
     {
         // Fallback time.
         let time_zero = || time::UNIX_EPOCH;
-        let t = t.into().unwrap_or_else(crate::now);
+        let t = t.unwrap_or_else(crate::now);
         let selfsig_creation_time
             = selfsig.and_then(|s| s.signature_creation_time())
                      .unwrap_or_else(time_zero);
@@ -973,8 +973,8 @@ impl<P: key::KeyParts> ComponentBundle<Key<P, key::SubordinateRole>> {
         where T: Into<Option<time::SystemTime>>
     {
         let t = t.into();
-        self._revocation_status(policy, t, true,
-                                self.binding_signature(policy, t).ok())
+        self.revocation_status_intern(policy, t, true,
+                                      self.binding_signature(policy, t).ok())
     }
 }
 
@@ -1049,7 +1049,7 @@ impl ComponentBundle<UserID> {
         where T: Into<Option<time::SystemTime>>
     {
         let t = t.into();
-        self._revocation_status(policy, t, false, self.binding_signature(policy, t).ok())
+        self.revocation_status_intern(policy, t, false, self.binding_signature(policy, t).ok())
     }
 }
 
@@ -1119,8 +1119,8 @@ impl ComponentBundle<UserAttribute> {
         where T: Into<Option<time::SystemTime>>
     {
         let t = t.into();
-        self._revocation_status(policy, t, false,
-                                self.binding_signature(policy, t).ok())
+        self.revocation_status_intern(policy, t, false,
+                                      self.binding_signature(policy, t).ok())
     }
 }
 

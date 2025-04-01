@@ -511,7 +511,14 @@ impl<'a> TSK<'a> {
         P: key::KeyParts,
         R: key::KeyRole,
     {
-        let key = key.parts_into_public().role_into_unspecified();
+        Self::add_stub_internal(key.parts_into_unspecified()
+                                .role_into_unspecified())
+    }
+
+
+    /// Adds a GnuPG-style secret key stub to the key.
+    pub(crate) fn add_stub_internal(key: key::UnspecifiedKey) -> key::UnspecifiedSecret
+    {
 
         // Emit a GnuPG-style secret key stub.
         let stub = crate::crypto::S2K::Private {

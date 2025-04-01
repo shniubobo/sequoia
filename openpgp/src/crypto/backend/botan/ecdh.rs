@@ -57,7 +57,7 @@ pub fn encrypt<R>(recipient: &Key<key::PublicParts, R>,
                 let S: Protected = v.agree(&R, 32, b"", "Raw")?.into();
                 let Sx: Protected = S[..field_size].into();
 
-                encrypt_wrap(recipient, session_key,
+                encrypt_wrap(recipient.role_as_subordinate(), session_key,
                              MPI::new_point(&Vx.to_bin()?, &Vy.to_bin()?,
                                             field_size * 8),
                              &Sx.into())

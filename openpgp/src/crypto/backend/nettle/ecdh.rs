@@ -80,7 +80,8 @@ pub fn encrypt<R>(recipient: &Key<key::PublicParts, R>,
                     Sx.insert(0, 0);
                 }
 
-                encrypt_wrap(recipient, session_key, VB, &Sx.into())
+                encrypt_wrap(recipient.role_as_subordinate(),
+                             session_key, VB, &Sx.into())
             }
 
             // Not implemented in Nettle

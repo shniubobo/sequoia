@@ -103,7 +103,7 @@ pub fn encrypt<R>(recipient: &Key<key::PublicParts, R>,
             return Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
     };
 
-    encrypt_wrap(recipient, session_key, VB, &shared)
+    encrypt_wrap(recipient.role_as_subordinate(), session_key, VB, &shared)
 }
 
 /// Unwraps a session key using Elliptic Curve Diffie-Hellman.

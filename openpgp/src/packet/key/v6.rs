@@ -321,13 +321,12 @@ where
     ///
     /// This is an internal version for parse.rs that avoids going
     /// through SystemTime.
-    pub(crate) fn make<T>(creation_time: T,
-                          pk_algo: PublicKeyAlgorithm,
-                          mpis: mpi::PublicKey,
-                          secret: Option<SecretKeyMaterial>)
-                          -> Result<Self>
+    pub(crate) fn make(creation_time: Timestamp,
+                       pk_algo: PublicKeyAlgorithm,
+                       mpis: mpi::PublicKey,
+                       secret: Option<SecretKeyMaterial>)
+                       -> Result<Self>
     where
-        T: Into<Timestamp>,
     {
         Ok(Key6 {
             common: Key4::make(creation_time, pk_algo, mpis, secret)?,

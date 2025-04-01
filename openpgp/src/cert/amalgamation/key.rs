@@ -2161,8 +2161,9 @@ impl<'a, P, R, R2> ValidAmalgamation<'a, Key<P, R>>
         if self.primary() {
             self.cert.revocation_status()
         } else {
-            self.bundle()._revocation_status(self.policy(), self.time(),
-                                             true, Some(self.binding_signature))
+            self.bundle().revocation_status_intern(
+                self.policy(), Some(self.time()), true,
+                Some(self.binding_signature))
         }
     }
 

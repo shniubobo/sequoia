@@ -1814,7 +1814,7 @@ impl<P, R> Key<P, R>
                 let S = Backend::x25519_shared_point(&v, R.try_into()?)?;
 
                 crate::crypto::ecdh::encrypt_wrap(
-                    self.parts_as_public(), data, VB, &S)
+                    self.parts_as_public().role_as_subordinate(), data, VB, &S)
             },
 
             RSAEncryptSign | RSAEncrypt |

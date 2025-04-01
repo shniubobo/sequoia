@@ -383,17 +383,15 @@ impl<P, R> Key4<P, R>
     ///
     /// This is an internal version for parse.rs that avoids going
     /// through SystemTime.
-    pub(crate) fn make<T>(creation_time: T,
-                          pk_algo: PublicKeyAlgorithm,
-                          mpis: mpi::PublicKey,
-                          secret: Option<SecretKeyMaterial>)
-                          -> Result<Self>
-    where
-        T: Into<Timestamp>,
+    pub(crate) fn make(creation_time: Timestamp,
+                       pk_algo: PublicKeyAlgorithm,
+                       mpis: mpi::PublicKey,
+                       secret: Option<SecretKeyMaterial>)
+                       -> Result<Self>
     {
         Ok(Key4 {
             common: Default::default(),
-            creation_time: creation_time.into(),
+            creation_time,
             pk_algo,
             mpis,
             secret,
@@ -1318,7 +1316,7 @@ mod tests {
         let sk = SessionKey::from(Vec::from(&dek[..]));
 
         // Expected
-        let got_enc = ecdh::encrypt_wrap(&key.parts_into_public(),
+        let got_enc = ecdh::encrypt_wrap(&key.parts_into_public().role_into_subordinate(),
                                            &sk, eph_pubkey, &shared_sec)
             .unwrap();
 

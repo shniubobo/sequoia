@@ -780,7 +780,8 @@ impl Cert {
                 _ => ()
             }
         }
-        self.primary_key().bundle()._revocation_status(policy, t, true, sig)
+        self.primary_key().bundle().revocation_status_intern(
+            policy, t, true, sig)
     }
 
     /// Generates a revocation certificate.
