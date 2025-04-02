@@ -1,5 +1,5 @@
 //! Elliptic Curve Diffie-Hellman.
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryInto;
 
 use crate::crypto::ecdh::{decrypt_unwrap, encrypt_wrap};
 use crate::crypto::mpi;
@@ -9,10 +9,10 @@ use crate::packet::{key, Key};
 use crate::types::Curve;
 use crate::{Error, Result};
 
-use openssl::bn::{BigNum, BigNumContext};
+use openssl::bn::BigNum;
 use openssl::derive::Deriver;
-use openssl::ec::{EcGroup, EcKey, EcPoint, PointConversionForm};
 use openssl::pkey::PKey;
+use openssl::pkey_ecdsa::{PKeyEcdsaBuilder, PKeyEcdsaParams};
 
 /// Wraps a session key using Elliptic Curve Diffie-Hellman.
 pub fn encrypt<R>(
@@ -30,22 +30,18 @@ where
         return Err(Error::InvalidArgument("implemented elsewhere".into()).into());
     }
 
-    let nid = curve.try_into()?;
-    let group = EcGroup::from_curve_name(nid)?;
-    let mut ctx = BigNumContext::new()?;
-    let point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-    let recipient_key = EcKey::from_public_key(&group, &point)?;
-    let recipient_key = PKey::<_>::try_from(recipient_key)?;
+    let recipient_key = PKeyEcdsaBuilder::<openssl::pkey::Public>::new(
+            curve.try_into()?,
+            q.value(),
+            None
+        )?
+        .build()?;
 
-    let key = EcKey::generate(&group)?;
+    let key = PKey::<openssl::pkey::Private>::ec_gen(curve.try_into()?)?;
+    let params = PKeyEcdsaParams::<openssl::pkey::Private>::from_pkey(&key)?;
 
-    let q = mpi::MPI::new(&key.public_key().to_bytes(
-        &group,
-        PointConversionForm::UNCOMPRESSED,
-        &mut ctx,
-    )?);
+    let q = mpi::MPI::new(params.public_key()?);
 
-    let key = PKey::<_>::try_from(key)?;
     let mut deriver = Deriver::new(&key)?;
     deriver.set_peer(&recipient_key)?;
 
@@ -79,19 +75,21 @@ where
         return Err(Error::InvalidArgument("implemented elsewhere".into()).into());
     }
 
-    let nid = curve.try_into()?;
-    let group = EcGroup::from_curve_name(nid)?;
-    let mut ctx = BigNumContext::new()?;
-    let point = EcPoint::from_bytes(&group, e.value(), &mut ctx)?;
+    let b_scalar: BigNum = scalar.try_into()?;
+    let key = PKeyEcdsaBuilder::<openssl::pkey::Private>::new(
+            curve.try_into()?,
+            q.value(),
+            Some(&b_scalar)
+        )?
+        .build()?;
 
-    let public_point = EcPoint::from_bytes(&group, q.value(), &mut ctx)?;
-    let scalar = BigNum::from_slice(scalar.value())?;
-    let key = EcKey::from_private_components(&group, &scalar, &public_point)?;
+    let recipient_key = PKeyEcdsaBuilder::<openssl::pkey::Public>::new(
+            curve.try_into()?,
+            e.value(),
+            None
+        )?
+        .build()?;
 
-    let recipient_key = EcKey::from_public_key(&group, &point)?;
-    let recipient_key = PKey::<_>::try_from(recipient_key)?;
-
-    let key = PKey::<_>::try_from(key)?;
     let mut deriver = Deriver::new(&key)?;
     deriver.set_peer(&recipient_key)?;
     let secret = deriver.derive_to_vec()?.into();

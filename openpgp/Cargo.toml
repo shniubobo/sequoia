@@ -47,11 +47,11 @@ xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 # At least 0.10.55 is needed due `no-ocb` check:
 # https://github.com/sfackler/rust-openssl/blob/master/openssl/CHANGELOG.md
-openssl = { version = "0.10.55", optional = true }
+openssl = { version = "0.10.70", optional = true }
 # We need to directly depend on the sys crate so that the metadata produced
 # in its build script is passed to sequoia-openpgp's build script
 # see: https://doc.rust-lang.org/cargo/reference/build-scripts.html#the-links-manifest-key
-openssl-sys = { version = "0.9.90", optional = true }
+openssl-sys = { version = "0.9.105", optional = true }
 
 # Botan.
 botan = { version = ">= 0.10.6, < 0.12", optional = true }
