@@ -1582,7 +1582,8 @@ impl<'a> Policy for StandardPolicy<'a> {
             (PublicKeyAlgorithm::Ed25519, _) => AsymmetricAlgorithm::Ed25519,
             (PublicKeyAlgorithm::Ed448, _) => AsymmetricAlgorithm::Ed448,
 
-            _ => Unknown,
+            (PublicKeyAlgorithm::Private(_), _)
+                | (PublicKeyAlgorithm::Unknown(_), _) => Unknown,
         };
 
         let time = self.time.unwrap_or_else(Timestamp::now);

@@ -3404,44 +3404,73 @@ pub(crate) mod test {
     #[test]
     fn decryptor() -> Result<()> {
         let p = P::new();
-        for alg in &[
-            "rsa", "elg", "cv25519", "cv25519.unclamped",
-            "nistp256", "nistp384", "nistp521",
-            "brainpoolP256r1", "brainpoolP384r1", "brainpoolP512r1",
-            "secp256k1",
-            "x448",
+        for (key_file, message, plaintext) in &[
+            ("messages/encrypted/rsa.sec.pgp",
+             "messages/encrypted/rsa.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/elg.sec.pgp",
+             "messages/encrypted/elg.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/cv25519.sec.pgp",
+             "messages/encrypted/cv25519.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/cv25519.unclamped.sec.pgp",
+             "messages/encrypted/cv25519.unclamped.msg.pgp",
+             "дружба"),
+            ("messages/encrypted/nistp256.sec.pgp",
+             "messages/encrypted/nistp256.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/nistp384.sec.pgp",
+             "messages/encrypted/nistp384.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/nistp521.sec.pgp",
+             "messages/encrypted/nistp521.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/brainpoolP256r1.sec.pgp",
+             "messages/encrypted/brainpoolP256r1.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/brainpoolP384r1.sec.pgp",
+             "messages/encrypted/brainpoolP384r1.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/brainpoolP512r1.sec.pgp",
+             "messages/encrypted/brainpoolP512r1.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/secp256k1.sec.pgp",
+             "messages/encrypted/secp256k1.msg.pgp",
+             "Hello World!\n"),
+            ("messages/encrypted/x448.sec.pgp",
+             "messages/encrypted/x448.msg.pgp",
+             "Hello World!\n"),
         ] {
-            eprintln!("Test vector {:?}...", alg);
-            let key = Cert::from_bytes(crate::tests::message(
-                &format!("encrypted/{}.sec.pgp", alg)))?;
+            eprintln!("Test vector {:?}...", key_file);
+            let key = Cert::from_bytes(crate::tests::file(key_file))?;
             if ! key.primary_key().key().pk_algo().is_supported() {
                 eprintln!("Skipping {} because we don't support {}",
-                          alg, key.primary_key().key().pk_algo());
+                          key, key.primary_key().key().pk_algo());
                 continue;
             }
 
             if let Some(k) =
-                key.with_policy(&p, None)?.keys().subkeys().supported().next()
+                key.with_policy(&p, None)?.keys().subkeys().supported().last()
             {
                 use crate::crypto::mpi::PublicKey;
                 match k.key().mpis() {
                     PublicKey::ECDH { curve, .. } if ! curve.is_supported() => {
                         eprintln!("Skipping {} because we don't support \
-                                   the curve {}", alg, curve);
+                                   the curve {}", key_file, curve);
                         continue;
                     },
                     _ => (),
                 }
             } else {
                 eprintln!("Skipping {} because we don't support the algorithm",
-                          alg);
+                          key_file);
                 continue;
             }
 
             let h = VHelper::for_decryption(0, 0, 0, 0, Vec::new(),
                                             vec![key], Vec::new());
-            let mut d = DecryptorBuilder::from_bytes(
-                crate::tests::message(&format!("encrypted/{}.msg.pgp", alg)))?
+            let mut d = DecryptorBuilder::from_bytes(crate::tests::file(message))?
                 .with_policy(&p, None, h)?;
             assert!(d.message_processed());
 
@@ -3453,13 +3482,9 @@ pub(crate) mod test {
 
             let mut content = Vec::new();
             d.read_to_end(&mut content).unwrap();
-            if content[0] == b'H' {
-                assert_eq!(&b"Hello World!\n"[..], &content[..]);
-            } else {
-                assert_eq!("дружба", &String::from_utf8_lossy(&content));
-            }
-            eprintln!("decrypted {:?} using {}",
-                      String::from_utf8(content).unwrap(), alg);
+            let content = String::from_utf8(content).unwrap();
+            eprintln!("decrypted {:?} using {}", content, key_file);
+            assert_eq!(&content[..], &plaintext[..]);
         }
 
         Ok(())
