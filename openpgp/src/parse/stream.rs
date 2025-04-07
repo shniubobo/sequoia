@@ -3244,7 +3244,7 @@ pub(crate) mod test {
          .collect::<Vec<_>>();
         let tests = &[
             // Signed messages.
-            (crate::tests::message("signed-1.gpg").to_vec(),
+            (crate::tests::message("signed-1.pgp").to_vec(),
              crate::tests::manifesto().to_vec(),
              true,
              Some(crate::frozen_time()),
@@ -3252,7 +3252,7 @@ pub(crate) mod test {
             // The same, but with a marker packet.
             ({
                 let pp = crate::PacketPile::from_bytes(
-                    crate::tests::message("signed-1.gpg"))?;
+                    crate::tests::message("signed-1.pgp"))?;
                 let mut buf = Vec::new();
                 Packet::Marker(Default::default()).serialize(&mut buf)?;
                 pp.serialize(&mut buf)?;
@@ -3262,7 +3262,7 @@ pub(crate) mod test {
              true,
              Some(crate::frozen_time()),
              VHelper::new(1, 0, 0, 0, certs.clone())),
-            (crate::tests::message("signed-1-sha256-testy.gpg").to_vec(),
+            (crate::tests::message("signed-1-sha256-testy.pgp").to_vec(),
              crate::tests::manifesto().to_vec(),
              true,
              Some(crate::frozen_time()),
@@ -3498,7 +3498,7 @@ pub(crate) mod test {
     #[test]
     fn verifier_legacy() -> Result<()> {
         let packets = crate::PacketPile::from_bytes(
-            crate::tests::message("signed-1.gpg")
+            crate::tests::message("signed-1.pgp")
         )?
             .into_children()
             .collect::<Vec<_>>();
@@ -4028,7 +4028,7 @@ EK8=
     fn v4skesk_v1seip_aes128() -> Result<()> {
         test_password_encrypted_message(
             SymmetricAlgorithm::AES128,
-            "messages/encrypted-aes128-password-123456789.gpg",
+            "messages/encrypted-aes128-password-123456789.pgp",
             "123456789",
             crate::tests::manifesto())
     }
@@ -4038,7 +4038,7 @@ EK8=
     fn v4skesk_v1seip_aes192() -> Result<()> {
         test_password_encrypted_message(
             SymmetricAlgorithm::AES192,
-            "messages/encrypted-aes192-password-123456.gpg",
+            "messages/encrypted-aes192-password-123456.pgp",
             "123456",
             crate::tests::manifesto())
     }
@@ -4048,7 +4048,7 @@ EK8=
     fn v4skesk_v1seip_aes256() -> Result<()> {
         test_password_encrypted_message(
             SymmetricAlgorithm::AES256,
-            "messages/encrypted-aes256-password-123.gpg",
+            "messages/encrypted-aes256-password-123.pgp",
             "123",
             crate::tests::manifesto())
     }

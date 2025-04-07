@@ -35,7 +35,7 @@
 //! # use openpgp::Packet;
 //! # use openpgp::parse::{Parse, PacketParserResult, PacketParser};
 //! #
-//! # f(include_bytes!("../../../tests/data/messages/signed.gpg"));
+//! # f(include_bytes!("../../../tests/data/messages/signed.pgp"));
 //! #
 //! # fn f(message_data: &[u8]) -> Result<()> {
 //! let mut ppr = PacketParser::from_bytes(message_data)?;
@@ -7561,7 +7561,7 @@ fn subpacket_test_1 () {
     use crate::PacketPile;
     use crate::parse::Parse;
 
-    let pile = PacketPile::from_bytes(crate::tests::message("signed.gpg")).unwrap();
+    let pile = PacketPile::from_bytes(crate::tests::message("signed.pgp")).unwrap();
     eprintln!("PacketPile has {} top-level packets.", pile.children().len());
     eprintln!("PacketPile: {:?}", pile);
 
@@ -7639,7 +7639,7 @@ fn subpacket_test_2() {
     // XXX: The subpackets marked with * are not tested.
 
     let pile = PacketPile::from_bytes(
-        crate::tests::key("subpackets/shaw.gpg")).unwrap();
+        crate::tests::key("subpackets/shaw.pgp")).unwrap();
 
     // Test #1
     if let (Some(&Packet::PublicKey(ref key)),
@@ -7865,7 +7865,7 @@ fn subpacket_test_2() {
     }
 
     let pile = PacketPile::from_bytes(
-        crate::tests::key("subpackets/marven.gpg")).unwrap();
+        crate::tests::key("subpackets/marven.pgp")).unwrap();
 
     // Test #3
     if let Some(&Packet::Signature(ref sig)) = pile.children().nth(1) {

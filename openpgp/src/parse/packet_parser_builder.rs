@@ -193,7 +193,7 @@ impl<'a> PacketParserBuilder<'a> {
     ///
     /// // Parse a signed message.
     /// let message_data: &[u8] = // ...
-    /// #    include_bytes!("../../tests/data/messages/signed-1.gpg");
+    /// #    include_bytes!("../../tests/data/messages/signed-1.pgp");
     /// let mut ppr = PacketParserBuilder::from_bytes(message_data)?
     ///     .max_packet_size(256)    // Only parse 256 bytes of headers.
     ///     .buffer_unread_content() // Used below.
@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn armor() {
         // Not ASCII armor encoded data.
-        let msg = crate::tests::message("sig.gpg");
+        let msg = crate::tests::message("sig.pgp");
 
         // Make sure we can read the first packet.
         let ppr = PacketParserBuilder::from_bytes(msg).unwrap()

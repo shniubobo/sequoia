@@ -487,7 +487,7 @@ impl<'a> PacketPileParser<'a> {
 fn test_recurse() -> Result<()> {
     let mut count = 0;
     let mut ppp =
-        PacketPileParser::from_bytes(crate::tests::key("public-key.gpg"))?;
+        PacketPileParser::from_bytes(crate::tests::key("public-key.pgp"))?;
     while ppp.packet().is_ok() {
         count += 1;
         ppp.recurse().unwrap();
@@ -502,7 +502,7 @@ fn test_recurse() -> Result<()> {
 fn test_next() -> Result<()> {
     let mut count = 0;
     let mut ppp =
-        PacketPileParser::from_bytes(crate::tests::key("public-key.gpg"))?;
+        PacketPileParser::from_bytes(crate::tests::key("public-key.pgp"))?;
     while ppp.packet().is_ok() {
         count += 1;
         ppp.next().unwrap();
@@ -525,7 +525,7 @@ fn message_parser_reader_interface() {
     // A message containing a compressed packet that contains a
     // literal packet.
     let mut ppp = PacketPileParser::from_bytes(
-        crate::tests::message("compressed-data-algo-1.gpg")).unwrap();
+        crate::tests::message("compressed-data-algo-1.pgp")).unwrap();
     let mut count = 0;
     while let Ok(pp) = ppp.packet_mut() {
         if let Packet::Literal(_) = pp.packet {

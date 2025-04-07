@@ -639,7 +639,7 @@ impl<'a> PacketParserBuilder<'a> {
     /// # use openpgp::Result;
     /// # use openpgp::PacketPile;
     /// # use openpgp::parse::{Parse, PacketParser, PacketParserBuilder};
-    /// # f(include_bytes!("../tests/data/keys/public-key.gpg"));
+    /// # f(include_bytes!("../tests/data/keys/public-key.pgp"));
     /// #
     /// # fn f(message_data: &[u8]) -> Result<PacketPile> {
     /// let message = PacketParserBuilder::from_bytes(message_data)?
@@ -671,7 +671,7 @@ mod test {
         // just rely on the fact that an assertion is not thrown.
 
         // A flat message.
-        let pile = PacketPile::from_bytes(crate::tests::key("public-key.gpg"))
+        let pile = PacketPile::from_bytes(crate::tests::key("public-key.pgp"))
             .unwrap();
         eprintln!("PacketPile has {} top-level packets.",
                   pile.children().len());
@@ -692,7 +692,7 @@ mod test {
         // A message containing a compressed packet that contains a
         // literal packet.
         let pile = PacketPile::from_bytes(
-            crate::tests::message("compressed-data-algo-1.gpg")).unwrap();
+            crate::tests::message("compressed-data-algo-1.pgp")).unwrap();
         eprintln!("PacketPile has {} top-level packets.",
                   pile.children().len());
         eprintln!("PacketPile: {:?}", pile);
@@ -709,7 +709,7 @@ mod test {
     #[test]
     fn deserialize_test_3 () {
         let pile =
-            PacketPile::from_bytes(crate::tests::message("signed.gpg")).unwrap();
+            PacketPile::from_bytes(crate::tests::message("signed.pgp")).unwrap();
         eprintln!("PacketPile has {} top-level packets.",
                   pile.children().len());
         eprintln!("PacketPile: {:?}", pile);
@@ -732,7 +732,7 @@ mod test {
         use std::convert::TryInto;
         use crate::parse::PacketPileParser;
 
-        let data = crate::tests::key("dkg.gpg");
+        let data = crate::tests::key("dkg.pgp");
         let mut ppp: PacketPileParser =
             PacketParserBuilder::from_bytes(data).unwrap()
             //.trace()
@@ -746,7 +746,7 @@ mod test {
         //pile.pretty_print();
         assert_eq!(pile.children().len(), 1450);
 
-        let data = crate::tests::key("lutz.gpg");
+        let data = crate::tests::key("lutz.pgp");
         let mut ppp: PacketPileParser =
             PacketParserBuilder::from_bytes(data).unwrap()
             //.trace()
@@ -769,7 +769,7 @@ mod test {
         // quine.
         let max_recursion_depth = 128;
         let pile = PacketParserBuilder::from_bytes(
-            crate::tests::message("compression-quine.gpg")).unwrap()
+            crate::tests::message("compression-quine.pgp")).unwrap()
             .max_recursion_depth(max_recursion_depth)
             .into_packet_pile().unwrap();
 
@@ -791,7 +791,7 @@ mod test {
         let max_recursion_depth = 255;
         let mut ppr : PacketParserResult
             = PacketParserBuilder::from_bytes(
-                crate::tests::message("compression-quine.gpg")).unwrap()
+                crate::tests::message("compression-quine.pgp")).unwrap()
                 .max_recursion_depth(max_recursion_depth)
                 .build().unwrap();
 
@@ -824,7 +824,7 @@ mod test {
         // packet, we expect recurse() to not recurse.
 
         let ppr = PacketParserBuilder::from_bytes(
-                crate::tests::message("compressed-data-algo-1.gpg")).unwrap()
+                crate::tests::message("compressed-data-algo-1.pgp")).unwrap()
             .buffer_unread_content()
             .build().unwrap();
 
