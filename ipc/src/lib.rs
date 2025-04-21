@@ -440,9 +440,12 @@ impl Server {
                 let (mut socket, _) = socket.accept().await?;
 
                 let _ = socket.set_nodelay(true);
-                let received_cookie = Cookie::receive_async(&mut socket).await?;
+                let received_cookie = match Cookie::receive_async(&mut socket).await {
+                    Err(_) => continue, // XXX: Log the error?
+                    Ok(received_cookie) => received_cookie,
+                };
                 if received_cookie != cookie {
-                    return Err(anyhow::anyhow!("Bad cookie"));
+                    continue;   // XXX: Log the error?
                 }
 
                 let (reader, writer) = socket.into_split();
