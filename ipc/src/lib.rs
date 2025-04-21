@@ -279,9 +279,9 @@ impl Descriptor {
         let descriptor = self.clone();
         let join_handle = thread::spawn(move || -> Result<()> {
             Server::new(descriptor)
-               .expect("Failed to spawn server") // XXX
-               .serve_listener(l)
-               .expect("Failed to spawn server"); // XXX
+                .with_context(|| "Failed to spawn server".to_string())?
+                .serve_listener(l)
+                .with_context(|| "Failed to spawn server".to_string())?;
             Ok(())
         });
 
