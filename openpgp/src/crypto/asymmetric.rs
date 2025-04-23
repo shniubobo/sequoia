@@ -226,6 +226,7 @@ impl Signer for KeyPair {
         use crate::crypto::backend::{Backend, interface::Asymmetric};
 
         self.secret().map(|secret| {
+            #[allow(deprecated)]
             match (self.public().pk_algo(), self.public().mpis(), secret) {
                 (PublicKeyAlgorithm::Ed25519,
                  mpi::PublicKey::Ed25519 { a },
@@ -259,6 +260,13 @@ impl Signer for KeyPair {
                     },
                     _ => Err(
                         Error::UnsupportedEllipticCurve(curve.clone()).into()),
+                },
+
+                (PublicKeyAlgorithm::DSA,
+                 mpi::PublicKey::DSA { p, q, g, y },
+                 mpi::SecretKeyMaterial::DSA { x }) => {
+                    let (r, s) = Backend::dsa_sign(x, p, q, g, y, digest)?;
+                    Ok(mpi::Signature::DSA { r, s })
                 },
 
                 (_algo, _public, secret) =>

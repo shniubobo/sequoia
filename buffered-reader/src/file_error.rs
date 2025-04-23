@@ -1,4 +1,4 @@
-/// Common error type for file operations.
+//! Common error type for file operations.
 
 use std::error::Error;
 use std::fmt;

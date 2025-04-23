@@ -141,6 +141,18 @@ pub trait Asymmetric {
     fn dsa_generate_key(p_bits: usize)
                         -> Result<(MPI, MPI, MPI, MPI, ProtectedMPI)>;
 
+    /// Creates a DSA signature.
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>;
+
+    /// Verifies a DSA signature.
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>;
+
     /// Generates an ElGamal key pair.
     ///
     /// `p_bits` denotes the desired size of the parameter `p`.

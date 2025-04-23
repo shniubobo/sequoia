@@ -168,6 +168,49 @@ impl Asymmetric for super::Backend {
         Ok((key.p().into(), key.q().into(), key.g().into(),
             key.pub_key().into(), key.priv_key().into()))
     }
+
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        use openssl::dsa::{Dsa, DsaSig};
+        let dsa = Dsa::from_private_components(
+            p.try_into()?,
+            q.try_into()?,
+            g.try_into()?,
+            x.try_into()?,
+            y.try_into()?,
+        )?;
+        let key: PKey<_> = dsa.try_into()?;
+        let mut ctx = PkeyCtx::new(&key)?;
+        ctx.sign_init()?;
+        let mut signature = vec![];
+        ctx.sign_to_vec(&digest, &mut signature)?;
+        let signature = DsaSig::from_der(&signature)?;
+        Ok((signature.r().to_vec().into(), signature.s().to_vec().into()))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        use openssl::dsa::{Dsa, DsaSig};
+        let dsa = Dsa::from_public_components(
+            p.try_into()?,
+            q.try_into()?,
+            g.try_into()?,
+            y.try_into()?,
+        )?;
+        let key: PKey<_> = dsa.try_into()?;
+        let r = r.try_into()?;
+        let s = s.try_into()?;
+        let signature = DsaSig::from_private_components(r, s)?;
+        let mut ctx = PkeyCtx::new(&key)?;
+        ctx.verify_init()?;
+        Ok(ctx.verify(&digest, &signature.to_der()?)?)
+    }
 }
 
 impl TryFrom<&ProtectedMPI> for BigNum {
@@ -270,31 +313,7 @@ impl KeyPair {
                         s: signature.into(),
                     })
                 }
-                (
-                    PublicKeyAlgorithm::DSA,
-                    mpi::PublicKey::DSA { p, q, g, y },
-                    mpi::SecretKeyMaterial::DSA { x },
-                ) => {
-                    use openssl::dsa::{Dsa, DsaSig};
-                    let dsa = Dsa::from_private_components(
-                        p.try_into()?,
-                        q.try_into()?,
-                        g.try_into()?,
-                        x.try_into()?,
-                        y.try_into()?,
-                    )?;
-                    let key: PKey<_> = dsa.try_into()?;
-                    let mut ctx = PkeyCtx::new(&key)?;
-                    ctx.sign_init()?;
-                    let mut signature = vec![];
-                    ctx.sign_to_vec(&digest, &mut signature)?;
-                    let signature = DsaSig::from_der(&signature)?;
 
-                    Ok(mpi::Signature::DSA {
-                        r: signature.r().to_vec().into(),
-                        s: signature.s().to_vec().into(),
-                    })
-                }
                 (
                     PublicKeyAlgorithm::ECDSA,
                     mpi::PublicKey::ECDSA { curve, q },
@@ -448,22 +467,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 ctx.verify_init()?;
                 ctx.verify(&v, signature)?
             }
-            (mpi::PublicKey::DSA { p, q, g, y }, mpi::Signature::DSA { r, s }) => {
-                use openssl::dsa::{Dsa, DsaSig};
-                let dsa = Dsa::from_public_components(
-                    p.try_into()?,
-                    q.try_into()?,
-                    g.try_into()?,
-                    y.try_into()?,
-                )?;
-                let key: PKey<_> = dsa.try_into()?;
-                let r = r.try_into()?;
-                let s = s.try_into()?;
-                let signature = DsaSig::from_private_components(r, s)?;
-                let mut ctx = PkeyCtx::new(&key)?;
-                ctx.verify_init()?;
-                ctx.verify(&digest, &signature.to_der()?)?
-            }
+
             (mpi::PublicKey::ECDSA { curve, q }, mpi::Signature::ECDSA { s, r }) => {
                 let nid = curve.try_into()?;
                 let group = EcGroup::from_curve_name(nid)?;

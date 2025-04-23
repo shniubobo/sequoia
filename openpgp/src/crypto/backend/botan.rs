@@ -15,7 +15,9 @@ pub struct Backend(());
 
 impl super::interface::Backend for Backend {
     fn backend() -> String {
-        "Botan".to_string()
+        botan::Version::current()
+            .map(|v| format!("Botan {}", v.string))
+            .unwrap_or_else(|_| "Botan".to_string())
     }
 
     fn random(buf: &mut [u8]) -> crate::Result<()> {

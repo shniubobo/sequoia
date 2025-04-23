@@ -192,6 +192,31 @@ impl Asymmetric for super::Backend {
         Ok((p.into(), q.into(), g.into(), y.as_bytes().into(),
             x.as_bytes().into()))
     }
+
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, _y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        let mut rng = Yarrow::default();
+        let params = dsa::Params::new(p.value(), q.value(), g.value());
+        let secret = dsa::PrivateKey::new(x.value());
+
+        let sig = dsa::sign(&params, &secret, digest, &mut rng)?;
+
+        Ok((MPI::new(&sig.r()), MPI::new(&sig.s())))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        let key = dsa::PublicKey::new(y.value());
+        let params = dsa::Params::new(p.value(), q.value(), g.value());
+        let signature = dsa::Signature::new(r.value(), s.value());
+        Ok(dsa::verify(&params, &key, digest, &signature))
+    }
 }
 
 impl KeyPair {
@@ -233,20 +258,6 @@ impl KeyPair {
 
                 Ok(mpi::Signature::RSA {
                     s: MPI::new(&sig),
-                })
-            },
-
-            (DSA,
-             &PublicKey::DSA { ref p, ref q, ref g, .. },
-             &mpi::SecretKeyMaterial::DSA { ref x }) => {
-                let params = dsa::Params::new(p.value(), q.value(), g.value());
-                let secret = dsa::PrivateKey::new(x.value());
-
-                let sig = dsa::sign(&params, &secret, digest, &mut rng)?;
-
-                Ok(mpi::Signature::DSA {
-                    r: MPI::new(&sig.r()),
-                    s: MPI::new(&sig.s()),
                 })
             },
 
@@ -406,13 +417,6 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 //   https://www.rfc-editor.org/rfc/rfc9580.html#section-5.2.2
                 rsa::verify_digest_pkcs1(&key, digest, hash_algo.oid()?,
                                          s.value())?
-            },
-            (PublicKey::DSA { y, p, q, g }, Signature::DSA { s, r }) => {
-                let key = dsa::PublicKey::new(y.value());
-                let params = dsa::Params::new(p.value(), q.value(), g.value());
-                let signature = dsa::Signature::new(r.value(), s.value());
-
-                dsa::verify(&params, &key, digest, &signature)
             },
             (PublicKey::ECDSA { curve, q }, Signature::ECDSA { s, r }) =>
             {

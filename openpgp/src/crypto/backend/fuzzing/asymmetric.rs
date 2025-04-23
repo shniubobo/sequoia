@@ -57,6 +57,23 @@ impl Asymmetric for super::Backend {
             vec![4].into()))
     }
 
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        let four = MPI::new(&[4]);
+        Ok((four.clone(), four))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        Ok(true)
+    }
+
     fn elgamal_generate_key(p_bits: usize)
                             -> Result<(MPI, MPI, MPI, ProtectedMPI)>
     {

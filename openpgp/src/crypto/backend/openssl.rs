@@ -13,7 +13,7 @@ pub struct Backend(());
 
 impl super::interface::Backend for Backend {
     fn backend() -> String {
-        "OpenSSL".to_string()
+        openssl::version::version().into()
     }
 
     fn random(buf: &mut [u8]) -> crate::Result<()> {

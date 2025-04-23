@@ -22,6 +22,7 @@ use std::borrow::Cow;
 #[cfg(test)]
 use quickcheck::{Arbitrary, Gen};
 
+use crate::fmt::hex;
 use crate::types::{
     Curve,
     HashAlgorithm,
@@ -524,7 +525,7 @@ impl fmt::Debug for ProtectedMPI {
 ///
 ///   [`Key`]: crate::packet::Key
 #[non_exhaustive]
-#[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PublicKey {
     /// RSA public key.
     RSA {
@@ -617,6 +618,79 @@ pub enum PublicKey {
     },
 }
 assert_send_and_sync!(PublicKey);
+
+impl fmt::Debug for PublicKey {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PublicKey::RSA { e, n } =>
+                f.debug_struct("RSA")
+                .field("e", e)
+                .field("n", n)
+                .finish(),
+
+            PublicKey::DSA { p, q, g, y } =>
+                f.debug_struct("DSA")
+                .field("p", p)
+                .field("q", q)
+                .field("g", g)
+                .field("y", y)
+                .finish(),
+
+            PublicKey::ElGamal { p, g, y } =>
+                f.debug_struct("ElGamal")
+                .field("p", p)
+                .field("g", g)
+                .field("y", y)
+                .finish(),
+
+            PublicKey::EdDSA { curve, q } =>
+                f.debug_struct("EdDSA")
+                .field("curve", curve)
+                .field("q", q)
+                .finish(),
+
+            PublicKey::ECDSA { curve, q } =>
+                f.debug_struct("ECDSA")
+                .field("curve", curve)
+                .field("q", q)
+                .finish(),
+
+            PublicKey::ECDH { curve, q, hash, sym } =>
+                f.debug_struct("ECDH")
+                .field("curve", curve)
+                .field("q", q)
+                .field("hash", hash)
+                .field("sym", sym)
+                .finish(),
+
+            PublicKey::X25519 { u } =>
+                f.debug_struct("X25519")
+                .field("u", &hex::encode(u))
+                .finish(),
+
+            PublicKey::X448 { u } =>
+                f.debug_struct("X448")
+                .field("u", &hex::encode(u.as_ref()))
+                .finish(),
+
+            PublicKey::Ed25519 { a } =>
+                f.debug_struct("Ed25519")
+                .field("a", &hex::encode(a))
+                .finish(),
+
+            PublicKey::Ed448 { a } =>
+                f.debug_struct("Ed448")
+                .field("a", &hex::encode(a.as_ref()))
+                .finish(),
+
+            PublicKey::Unknown { mpis, rest } =>
+                f.debug_struct("Unknown")
+                .field("mpis", mpis)
+                .field("rest", &hex::encode(rest))
+                .finish(),
+        }
+    }
+}
 
 impl PublicKey {
     /// Returns the length of the public key in bits.
@@ -832,28 +906,64 @@ impl fmt::Debug for SecretKeyMaterial {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if cfg!(debug_assertions) {
             match self {
-                SecretKeyMaterial::RSA{ ref d, ref p, ref q, ref u } =>
-                    write!(f, "RSA {{ d: {:?}, p: {:?}, q: {:?}, u: {:?} }}", d, p, q, u),
-                SecretKeyMaterial::DSA{ ref x } =>
-                    write!(f, "DSA {{ x: {:?} }}", x),
-                SecretKeyMaterial::ElGamal{ ref x } =>
-                    write!(f, "ElGamal {{ x: {:?} }}", x),
-                SecretKeyMaterial::EdDSA{ ref scalar } =>
-                    write!(f, "EdDSA {{ scalar: {:?} }}", scalar),
-                SecretKeyMaterial::ECDSA{ ref scalar } =>
-                    write!(f, "ECDSA {{ scalar: {:?} }}", scalar),
-                SecretKeyMaterial::ECDH{ ref scalar } =>
-                    write!(f, "ECDH {{ scalar: {:?} }}", scalar),
+                SecretKeyMaterial::RSA { d, p, q, u } =>
+                    f.debug_struct("RSA")
+                    .field("d", d)
+                    .field("p", p)
+                    .field("q", q)
+                    .field("u", u)
+                    .finish(),
+
+                SecretKeyMaterial::DSA { x } =>
+                    f.debug_struct("DSA")
+                    .field("x", x)
+                    .finish(),
+
+                SecretKeyMaterial::ElGamal { x } =>
+                    f.debug_struct("ElGamal")
+                    .field("x", x)
+                    .finish(),
+
+                SecretKeyMaterial::EdDSA { scalar } =>
+                    f.debug_struct("EdDSA")
+                    .field("scalar", scalar)
+                    .finish(),
+
+                SecretKeyMaterial::ECDSA { scalar } =>
+                    f.debug_struct("ECDSA")
+                    .field("scalar", scalar)
+                    .finish(),
+
+                SecretKeyMaterial::ECDH { scalar } =>
+                    f.debug_struct("ECDH")
+                    .field("scalar", scalar)
+                    .finish(),
+
                 SecretKeyMaterial::X25519 { x } =>
-                    write!(f, "X25519 {{ x: {:?} }}", x),
+                    f.debug_struct("X25519")
+                    .field("x", &hex::encode(x))
+                    .finish(),
+
                 SecretKeyMaterial::X448 { x } =>
-                    write!(f, "X448 {{ x: {:?} }}", x),
+                    f.debug_struct("X448")
+                    .field("x", &hex::encode(x))
+                    .finish(),
+
                 SecretKeyMaterial::Ed25519 { x } =>
-                    write!(f, "Ed25519 {{ x: {:?} }}", x),
+                    f.debug_struct("Ed25519")
+                    .field("x", &hex::encode(x))
+                    .finish(),
+
                 SecretKeyMaterial::Ed448 { x } =>
-                    write!(f, "Ed448 {{ x: {:?} }}", x),
-                SecretKeyMaterial::Unknown{ ref mpis, ref rest } =>
-                    write!(f, "Unknown {{ mips: {:?}, rest: {:?} }}", mpis, rest),
+                    f.debug_struct("Ed448")
+                    .field("x", &hex::encode(x))
+                    .finish(),
+
+                SecretKeyMaterial::Unknown{ mpis, rest } =>
+                    f.debug_struct("Unknown")
+                    .field("mpis", mpis)
+                    .field("rest", &hex::encode(rest))
+                    .finish(),
             }
         } else {
             match self {
@@ -1112,7 +1222,7 @@ impl SecretKeyChecksum {
 ///
 ///   [`PKESK`]: crate::packet::PKESK
 #[non_exhaustive]
-#[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ciphertext {
     /// RSA ciphertext.
     RSA {
@@ -1161,6 +1271,47 @@ pub enum Ciphertext {
     },
 }
 assert_send_and_sync!(Ciphertext);
+
+impl fmt::Debug for Ciphertext {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Ciphertext::RSA { c } =>
+                f.debug_struct("RSA")
+                .field("c", c)
+                .finish(),
+
+            Ciphertext::ElGamal { e, c } =>
+                f.debug_struct("ElGamal")
+                .field("e", e)
+                .field("c", c)
+                .finish(),
+
+            Ciphertext::ECDH { e, key } =>
+                f.debug_struct("ECDH")
+                .field("e", e)
+                .field("key", &hex::encode(key))
+                .finish(),
+
+            Ciphertext::X25519 { e, key } =>
+                f.debug_struct("X25519")
+                .field("e", &hex::encode(&e[..]))
+                .field("key", &hex::encode(key))
+                .finish(),
+
+            Ciphertext::X448 { e, key } =>
+                f.debug_struct("X448")
+                .field("e", &hex::encode(&e[..]))
+                .field("key", &hex::encode(key))
+                .finish(),
+
+            Ciphertext::Unknown { mpis, rest } =>
+                f.debug_struct("Unknown")
+                .field("mpis", mpis)
+                .field("rest", &hex::encode(rest))
+                .finish(),
+        }
+    }
+}
 
 impl Ciphertext {
     /// Returns, if known, the public-key algorithm for this
@@ -1242,7 +1393,7 @@ impl Arbitrary for Ciphertext {
 ///
 ///   [`Signature`]: crate::packet::Signature
 #[non_exhaustive]
-#[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Signature {
     /// RSA signature.
     RSA {
@@ -1303,6 +1454,57 @@ pub enum Signature {
     },
 }
 assert_send_and_sync!(Signature);
+
+impl fmt::Debug for Signature {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Signature::RSA { s } =>
+                f.debug_struct("RSA")
+                .field("s", s)
+                .finish(),
+
+            Signature::DSA { r, s } =>
+                f.debug_struct("DSA")
+                .field("r", r)
+                .field("s", s)
+                .finish(),
+
+            Signature::ElGamal { r, s } =>
+                f.debug_struct("ElGamal")
+                .field("r", r)
+                .field("s", s)
+                .finish(),
+
+            Signature::EdDSA { r, s } =>
+                f.debug_struct("EdDSA")
+                .field("r", r)
+                .field("s", s)
+                .finish(),
+
+            Signature::ECDSA { r, s } =>
+                f.debug_struct("ECDSA")
+                .field("r", r)
+                .field("s", s)
+                .finish(),
+
+            Signature::Ed25519 { s } =>
+                f.debug_struct("Ed25519")
+                .field("s", &hex::encode(&s[..]))
+                .finish(),
+
+            Signature::Ed448 { s } =>
+                f.debug_struct("Ed448")
+                .field("s", &hex::encode(&s[..]))
+                .finish(),
+
+            Signature::Unknown { mpis, rest } =>
+                f.debug_struct("Unknown")
+                .field("mpis", mpis)
+                .field("rest", &hex::encode(rest))
+                .finish(),
+        }
+    }
+}
 
 impl Hash for Signature {
     fn hash(&self, mut hash: &mut hash::Context) -> Result<()> {

@@ -120,6 +120,51 @@ impl Asymmetric for super::Backend {
             secret.get_field("x")?.try_into()?))
     }
 
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, _y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        let mut rng = RandomNumberGenerator::new_userspace()?;
+        let secret = Privkey::load_dsa(&p.try_into()?, &q.try_into()?,
+                                       &g.try_into()?, &x.try_into()?)?;
+        let size = q.value().len();
+        let truncated_digest = &digest[..size.min(digest.len())];
+        let sig = secret.sign(truncated_digest, "Raw", &mut rng)?;
+
+        if sig.len() != size * 2 {
+            return Err(Error::MalformedMPI(
+                format!("Expected signature with length {}, got {}",
+                        size * 2, sig.len())).into());
+        }
+
+        Ok((MPI::new(&sig[..size]), MPI::new(&sig[size..])))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        // OpenPGP encodes R and S separately, but our cryptographic
+        // library expects them to be concatenated.
+        let size = q.value().len();
+        let mut sig = Vec::with_capacity(2 * size);
+
+        // We need to zero-pad them at the front, because the MPI
+        // encoding drops leading zero bytes.
+        fn bad(e: impl ToString) -> anyhow::Error {
+            Error::BadSignature(e.to_string()).into()
+        }
+        sig.extend_from_slice(&r.value_padded(size).map_err(bad)?);
+        sig.extend_from_slice(&s.value_padded(size).map_err(bad)?);
+
+        let pk = Pubkey::load_dsa(&p.try_into()?, &q.try_into()?,
+                                  &g.try_into()?, &y.try_into()?)?;
+        let truncated_digest = &digest[..size.min(digest.len())];
+        Ok(pk.verify(truncated_digest, &sig, "Raw")?)
+    }
+
     fn elgamal_generate_key(p_bits: usize)
                             -> Result<(MPI, MPI, MPI, ProtectedMPI)>
     {
@@ -205,27 +250,6 @@ impl KeyPair {
                     &mut rng)?;
                 Ok(mpi::Signature::RSA {
                     s: MPI::new(&sig),
-                })
-            },
-
-            (DSA,
-             PublicKey::DSA { p, q, g, .. },
-             mpi::SecretKeyMaterial::DSA { x }) => {
-                let secret = Privkey::load_dsa(&p.try_into()?, &q.try_into()?,
-                                               &g.try_into()?, &x.try_into()?)?;
-                let size = q.value().len();
-                let truncated_digest = &digest[..size.min(digest.len())];
-                let sig = secret.sign(truncated_digest, "Raw", &mut rng)?;
-
-                if sig.len() != size * 2 {
-                    return Err(Error::MalformedMPI(
-                        format!("Expected signature with length {}, got {}",
-                                size * 2, sig.len())).into());
-                }
-
-                Ok(mpi::Signature::DSA {
-                    r: MPI::new(&sig[..size]),
-                    s: MPI::new(&sig[size..]),
                 })
             },
 
@@ -400,23 +424,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 pk.verify(digest, s.value(),
                           &format!("PKCS1v15(Raw,{})", hash_algo.botan_name()?))?
             },
-            (PublicKey::DSA { y, q, p, g }, Signature::DSA { s, r }) => {
-                // OpenPGP encodes R and S separately, but our
-                // cryptographic library expects them to be
-                // concatenated.
-                let size = q.value().len();
-                let mut sig = Vec::with_capacity(2 * size);
 
-                // We need to zero-pad them at the front, because
-                // the MPI encoding drops leading zero bytes.
-                sig.extend_from_slice(&r.value_padded(size).map_err(bad)?);
-                sig.extend_from_slice(&s.value_padded(size).map_err(bad)?);
-
-                let pk = Pubkey::load_dsa(&p.try_into()?, &q.try_into()?,
-                                          &g.try_into()?, &y.try_into()?)?;
-                let truncated_digest = &digest[..size.min(digest.len())];
-                pk.verify(truncated_digest, &sig, "Raw").unwrap()
-            },
             (PublicKey::ECDSA { curve, q }, Signature::ECDSA { s, r }) =>
             {
                 // OpenPGP encodes R and S separately, but our

@@ -1870,8 +1870,10 @@ impl<P, R> Key<P, R>
                     Err(Error::UnsupportedEllipticCurve(curve.clone()).into()),
             },
 
+            (PublicKey::DSA { p, q, g, y }, Signature::DSA { r, s }) =>
+                Backend::dsa_verify(p, q, g, y, digest, r, s)?,
+
             (PublicKey::RSA { .. }, Signature::RSA { .. }) |
-            (PublicKey::DSA { .. }, Signature::DSA { .. }) |
             (PublicKey::ECDSA { .. }, Signature::ECDSA { .. }) =>
                 return self.verify_backend(sig, hash_algo, digest),
 

@@ -165,6 +165,36 @@ impl Asymmetric for super::Backend {
 
         Ok((p, q, g, public.y().into(), secret.x().into()))
     }
+
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        use dsa::signature::hazmat::PrehashSigner;
+        let c = dsa::Components::from_components(
+            p.into(), q.into(), g.into())?;
+        let public =
+            dsa::VerifyingKey::from_components(c, y.into())?;
+        let secret =
+            dsa::SigningKey::from_components(public, x.into())?;
+        let sig = secret.sign_prehash(digest)?;
+        Ok((sig.r().into(), sig.s().into()))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        use dsa::signature::hazmat::PrehashVerifier;
+        let c = dsa::Components::from_components(
+            p.into(), q.into(), g.into())?;
+        let public = dsa::VerifyingKey::from_components(c, y.into())?;
+        let sig = dsa::Signature::from_components(r.into(), s.into())?;
+        public.verify_prehash(digest, &sig)?;
+        Ok(true)
+    }
 }
 
 impl From<&BigUint> for ProtectedMPI {
@@ -244,23 +274,6 @@ impl KeyPair {
                 let sig = key.sign(padding, digest)?;
                 Ok(mpi::Signature::RSA {
                     s: mpi::MPI::new(&sig),
-                })
-            },
-
-            (PublicKeyAlgorithm::DSA,
-             mpi::PublicKey::DSA { p, q, g, y },
-             mpi::SecretKeyMaterial::DSA { x }) => {
-                use dsa::signature::hazmat::PrehashSigner;
-                let c = dsa::Components::from_components(
-                    p.into(), q.into(), g.into())?;
-                let public =
-                    dsa::VerifyingKey::from_components(c, y.into())?;
-                let secret =
-                    dsa::SigningKey::from_components(public, x.into())?;
-                let sig = secret.sign_prehash(digest)?;
-                Ok(mpi::Signature::DSA {
-                    r: sig.r().into(),
-                    s: sig.s().into(),
                 })
             },
 
@@ -465,16 +478,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
                 key.verify(padding, digest, &s.value_padded(key.size())?)?;
                 Ok(())
             }
-            (mpi::PublicKey::DSA { p, q, g, y },
-             mpi::Signature::DSA { r, s }) => {
-                use dsa::signature::hazmat::PrehashVerifier;
-                let c = dsa::Components::from_components(
-                    p.into(), q.into(), g.into())?;
-                let public = dsa::VerifyingKey::from_components(c, y.into())?;
-                let sig = dsa::Signature::from_components(r.into(), s.into())?;
-                public.verify_prehash(digest, &sig)?;
-                Ok(())
-            },
+
             (mpi::PublicKey::ECDSA { curve, q },
              mpi::Signature::ECDSA { r, s }) => match curve
             {

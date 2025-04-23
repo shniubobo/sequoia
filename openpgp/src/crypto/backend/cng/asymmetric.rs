@@ -171,6 +171,267 @@ impl Asymmetric for super::Backend {
         Err(Error::UnsupportedPublicKeyAlgorithm(
             PublicKeyAlgorithm::DSA).into())
     }
+
+    fn dsa_sign(x: &ProtectedMPI,
+                p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                digest: &[u8])
+                -> Result<(MPI, MPI)>
+    {
+        use cng::key_blob::{DsaKeyPrivateV2Payload, DsaKeyPrivateV2Blob};
+        use cng::key_blob::{DsaKeyPrivatePayload, DsaKeyPrivateBlob};
+        use cng::asymmetric::{
+            AsymmetricAlgorithm,
+            AsymmetricAlgorithmId,
+            AsymmetricKey,
+            Dsa,
+            DsaPrivateBlob,
+            Private,
+            signature::Signer,
+        };
+        use cng::helpers::Blob;
+
+        let y = y.value_padded(p.value().len())
+            .map_err(|e| Error::InvalidKey(e.to_string()))?;
+
+        if y.len() > 3072 / 8 {
+            return Err(Error::InvalidOperation(
+                "DSA keys are supported up to 3072-bits".to_string()).into()
+            );
+        }
+
+        enum Version { V1, V2 }
+        // 1024-bit DSA keys are handled differently
+        let version = if y.len() <= 128 { Version::V1 } else { Version::V2 };
+
+        let blob: DsaPrivateBlob = match version {
+            Version::V1 => {
+                let mut group = [0; 20];
+                if let Ok(v) = q.value_padded(group.len()) {
+                    group[..].copy_from_slice(&v);
+                } else {
+                    return Err(Error::InvalidOperation(
+                        "DSA keys' group parameter exceeds 160 bits"
+                            .to_string()).into());
+                }
+
+                DsaPrivateBlob::V1(Blob::<DsaKeyPrivateBlob>::clone_from_parts(
+                    &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB {
+                        dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC,
+                        cbKey: y.len() as u32,
+                        Count: [0; 4], // unused
+                        Seed: [0; 20], // unused
+                        q: group,
+                    },
+                    &DsaKeyPrivatePayload {
+                        modulus: p.value(),
+                        generator: g.value(),
+                        public: &y,
+                        priv_exp: x.value(),
+                    },
+                ))
+            },
+            Version::V2 => {
+                // https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.ImportExport.cs#L276-L282
+                let hash = match q.value().len() {
+                    20 => 0,
+                    32 => 1,
+                    64 => 2,
+                    _ => return Err(Error::InvalidOperation(
+                        "CNG accepts DSA q with length of either length of 20, 32 or 64".into())
+                                    .into()),
+                };
+
+                // We don't use counter/seed values so set them to 0.
+                // CNG pre-checks that the seed is at least |Q| long,
+                // so we can't use an empty buffer here.
+                let (count, seed) = ([0x0; 4], vec![0x0; q.value().len()]);
+
+                let group_size = std::cmp::min(q.value().len(), 32);
+                let key_size = y.len();
+
+                DsaPrivateBlob::V2(Blob::<DsaKeyPrivateV2Blob>::clone_from_parts(
+                    &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB_V2 {
+                        dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PRIVATE_MAGIC_V2,
+                        Count: count,
+                        // Size of the prime number q.
+                        // Currently, if the key is less than 128
+                        // bits, q is 20 bytes long.
+                        // If the key exceeds 256 bits, q is 32 bytes long.
+                        cbGroupSize: group_size as u32,
+                        cbKey: key_size as u32,
+                        cbSeedLength: seed.len() as u32,
+                        hashAlgorithm: hash,
+                        standardVersion: 1, // FIPS 186-3
+
+                    },
+                    &DsaKeyPrivateV2Payload {
+                        seed: &seed,
+                        group: &q.value_padded(group_size)?,
+                        modulus: &p.value_padded(key_size)?,
+                        generator: &g.value_padded(key_size)?,
+                        public: &y,
+                        priv_exp: &x.value_padded(group_size),
+                    },
+                ))
+            },
+        };
+
+        use win_crypto_ng::asymmetric::{Import};
+
+        let provider = AsymmetricAlgorithm::open(AsymmetricAlgorithmId::Dsa)?;
+        let pair = AsymmetricKey::<Dsa, Private>::import(
+            Dsa,
+            &provider,
+            blob
+        )?;
+
+        // CNG accepts only hash and Q of equal length. Either trim the
+        // digest or pad it with zeroes (since it's treated as a
+        // big-endian number).
+        // See https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.SignVerify.cs#L148.
+        let digest = pad_truncating(&digest, q.value().len());
+        assert_eq!(q.value().len(), digest.len());
+
+        let sig = pair.sign(&digest, None)?;
+
+        // https://tools.ietf.org/html/rfc8032#section-5.1.6
+        let (r, s) = sig.split_at(sig.len() / 2);
+        Ok((mpi::MPI::new(r), mpi::MPI::new(s)))
+    }
+
+    fn dsa_verify(p: &MPI, q: &MPI, g: &MPI, y: &MPI,
+                  digest: &[u8],
+                  r: &MPI, s: &MPI)
+                  -> Result<bool>
+    {
+        use cng::key_blob::{DsaKeyPublicPayload, DsaKeyPublicBlob};
+        use cng::key_blob::{DsaKeyPublicV2Payload, DsaKeyPublicV2Blob};
+        use cng::asymmetric::{
+            AsymmetricAlgorithm,
+            AsymmetricAlgorithmId,
+            AsymmetricKey,
+            Dsa,
+            DsaPublicBlob,
+            Public,
+            signature::Verifier,
+        };
+        use cng::helpers::Blob;
+
+        let y = y.value_padded(p.value().len())
+            .map_err(|e| Error::InvalidKey(e.to_string()))?;
+
+        if y.len() > 3072 / 8 {
+            return Err(Error::InvalidOperation(
+                "DSA keys are supported up to 3072-bits".to_string()).into()
+            );
+        }
+
+        // CNG expects full-sized signatures
+        let field_sz = q.value().len();
+        let mut signature = vec![0u8; 2 * field_sz];
+
+        // We need to zero-pad them at the front, because
+        // the MPI encoding drops leading zero bytes.
+        fn bad(e: impl ToString) -> anyhow::Error {
+            Error::BadSignature(e.to_string()).into()
+        }
+        signature[..field_sz].copy_from_slice(
+            &r.value_padded(field_sz).map_err(bad)?);
+        signature[field_sz..].copy_from_slice(
+            &s.value_padded(field_sz).map_err(bad)?);
+
+        enum Version { V1, V2 }
+        // 1024-bit DSA keys are handled differently
+        let version = if y.len() <= 128 { Version::V1 } else { Version::V2 };
+
+        let blob: DsaPublicBlob = match version {
+            Version::V1 => {
+                let mut group = [0; 20];
+                if let Ok(v) = q.value_padded(group.len()) {
+                    group[..].copy_from_slice(&v);
+                } else {
+                    return Err(Error::InvalidOperation(
+                        "DSA keys' group parameter exceeds 160 bits"
+                            .to_string()).into());
+                }
+
+                DsaPublicBlob::V1(Blob::<DsaKeyPublicBlob>::clone_from_parts(
+                    &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB {
+                        dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC,
+                        cbKey: y.len() as u32,
+                        Count: [0; 4], // unused
+                        Seed: [0; 20], // unused
+                        q: group,
+                    },
+                    &DsaKeyPublicPayload {
+                        modulus: p.value(),
+                        generator: g.value(),
+                        public: &y,
+                    },
+                ))
+            },
+            Version::V2 => {
+                // https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.ImportExport.cs#L276-L282
+                let hash = match q.value().len() {
+                    20 => 0,
+                    32 => 1,
+                    64 => 2,
+                    _ => return Err(Error::InvalidOperation(
+                        "CNG accepts DSA q with length of either length of 20, 32 or 64".into())
+                                    .into()),
+                };
+
+                // We don't use counter/seed values so set them to 0.
+                // CNG pre-checks that the seed is at least |Q| long,
+                // so we can't use an empty buffer here.
+                let (count, seed) = ([0x0; 4], vec![0x0; q.value().len()]);
+
+                DsaPublicBlob::V2(Blob::<DsaKeyPublicV2Blob>::clone_from_parts(
+                    &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB_V2 {
+                        dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC_V2,
+                        Count: count,
+                        // Size of the prime number q .
+                        // Currently, if the key is less than 128
+                        // bits, q is 20 bytes long.
+                        // If the key exceeds 256 bits, q is 32 bytes long.
+                        cbGroupSize: q.value().len() as u32,
+                        cbKey: y.len() as u32,
+                        // https://csrc.nist.gov/csrc/media/publications/fips/186/3/archive/2009-06-25/documents/fips_186-3.pdf
+                        // Length of the seed used to generate the
+                        // prime number q.
+                        cbSeedLength: seed.len() as u32,
+                        hashAlgorithm: hash,
+                        standardVersion: 1, // FIPS 186-3
+
+                    },
+                    &DsaKeyPublicV2Payload {
+                        seed: &seed,
+                        group: q.value(),
+                        modulus: p.value(),
+                        generator: g.value(),
+                        public: &y,
+                    },
+                ))
+            },
+        };
+
+        use win_crypto_ng::asymmetric::Import;
+        let provider = AsymmetricAlgorithm::open(AsymmetricAlgorithmId::Dsa)?;
+        let key = AsymmetricKey::<Dsa, Public>::import(
+            Dsa,
+            &provider,
+            blob
+        )?;
+
+        // CNG accepts only hash and Q of equal length. Either trim the
+        // digest or pad it with zeroes (since it's treated as a
+        // big-endian number).
+        // See https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.SignVerify.cs#L148.
+        let digest = pad_truncating(&digest, q.value().len());
+        assert_eq!(q.value().len(), digest.len());
+
+        Ok(key.verify(&digest, &signature, None).map(|_| true)?)
+    }
 }
 
 impl KeyPair {
@@ -278,126 +539,6 @@ impl KeyPair {
                     }
                 },
 
-                (PublicKeyAlgorithm::DSA,
-                    mpi:: PublicKey::DSA { y, p, q, g },
-                    mpi::SecretKeyMaterial::DSA { x },
-                ) => {
-                    use win_crypto_ng::key_blob::{DsaKeyPrivateV2Payload, DsaKeyPrivateV2Blob};
-                    use win_crypto_ng::key_blob::{DsaKeyPrivatePayload, DsaKeyPrivateBlob};
-                    use win_crypto_ng::asymmetric::{Dsa, DsaPrivateBlob};
-                    use win_crypto_ng::helpers::Blob;
-
-                    let y = y.value_padded(p.value().len())
-                        .map_err(|e| Error::InvalidKey(e.to_string()))?;
-
-                    if y.len() > 3072 / 8 {
-                        return Err(Error::InvalidOperation(
-                            "DSA keys are supported up to 3072-bits".to_string()).into()
-                        );
-                    }
-
-                    enum Version { V1, V2 }
-                    // 1024-bit DSA keys are handled differently
-                    let version = if y.len() <= 128 { Version::V1 } else { Version::V2 };
-
-                    let blob: DsaPrivateBlob = match version {
-                        Version::V1 => {
-                            let mut group = [0; 20];
-                            if let Ok(v) = q.value_padded(group.len()) {
-                                group[..].copy_from_slice(&v);
-                            } else {
-                                return Err(Error::InvalidOperation(
-                                    "DSA keys' group parameter exceeds 160 bits"
-                                        .to_string()).into());
-                            }
-
-                            DsaPrivateBlob::V1(Blob::<DsaKeyPrivateBlob>::clone_from_parts(
-                                &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB {
-                                    dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC,
-                                    cbKey: y.len() as u32,
-                                    Count: [0; 4], // unused
-                                    Seed: [0; 20], // unused
-                                    q: group,
-                                },
-                                &DsaKeyPrivatePayload {
-                                    modulus: p.value(),
-                                    generator: g.value(),
-                                    public: &y,
-                                    priv_exp: x.value(),
-                                },
-                            ))
-                        },
-                        Version::V2 => {
-                            // https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.ImportExport.cs#L276-L282
-                            let hash = match q.value().len() {
-                                20 => 0,
-                                32 => 1,
-                                64 => 2,
-                                _ => return Err(Error::InvalidOperation(
-                                    "CNG accepts DSA q with length of either length of 20, 32 or 64".into())
-                                    .into()),
-                            };
-
-                            // We don't use counter/seed values so set them to 0.
-                            // CNG pre-checks that the seed is at least |Q| long,
-                            // so we can't use an empty buffer here.
-                            let (count, seed) = ([0x0; 4], vec![0x0; q.value().len()]);
-
-                            let group_size = std::cmp::min(q.value().len(), 32);
-                            let key_size = y.len();
-
-                            DsaPrivateBlob::V2(Blob::<DsaKeyPrivateV2Blob>::clone_from_parts(
-                                &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB_V2 {
-                                    dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PRIVATE_MAGIC_V2,
-                                    Count: count,
-                                    // Size of the prime number q.
-                                    // Currently, if the key is less than 128
-                                    // bits, q is 20 bytes long.
-                                    // If the key exceeds 256 bits, q is 32 bytes long.
-                                    cbGroupSize: group_size as u32,
-                                    cbKey: key_size as u32,
-                                    cbSeedLength: seed.len() as u32,
-                                    hashAlgorithm: hash,
-                                    standardVersion: 1, // FIPS 186-3
-
-                                },
-                                &DsaKeyPrivateV2Payload {
-                                    seed: &seed,
-                                    group: &q.value_padded(group_size)?,
-                                    modulus: &p.value_padded(key_size)?,
-                                    generator: &g.value_padded(key_size)?,
-                                    public: &y,
-                                    priv_exp: &x.value_padded(group_size),
-                                },
-                            ))
-                        },
-                    };
-
-                    use win_crypto_ng::asymmetric::{Import};
-
-                    let provider = AsymmetricAlgorithm::open(AsymmetricAlgorithmId::Dsa)?;
-                    let pair = AsymmetricKey::<Dsa, Private>::import(
-                        Dsa,
-                        &provider,
-                        blob
-                    )?;
-
-                    // CNG accepts only hash and Q of equal length. Either trim the
-                    // digest or pad it with zeroes (since it's treated as a
-                    // big-endian number).
-                    // See https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.SignVerify.cs#L148.
-                    let digest = pad_truncating(&digest, q.value().len());
-                    assert_eq!(q.value().len(), digest.len());
-
-                    let sig = pair.sign(&digest, None)?;
-
-                    // https://tools.ietf.org/html/rfc8032#section-5.1.6
-                    let (r, s) = sig.split_at(sig.len() / 2);
-                    mpi::Signature::DSA {
-                        r: mpi::MPI::new(r),
-                        s: mpi::MPI::new(s),
-                    }
-                },
                 (pk_algo, _, _) => Err(Error::InvalidOperation(format!(
                     "unsupported combination of algorithm {:?}, key {:?}, \
                      and secret key {:?}",
@@ -574,124 +715,7 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
 
                 key.verify(digest, &s, Some(padding)).map(|_| true)?
             },
-            (mpi::PublicKey::DSA { y, p, q, g }, mpi::Signature::DSA { r, s }) => {
-                use win_crypto_ng::key_blob::{DsaKeyPublicPayload, DsaKeyPublicBlob};
-                use win_crypto_ng::key_blob::{DsaKeyPublicV2Payload, DsaKeyPublicV2Blob};
-                use win_crypto_ng::asymmetric::{Dsa, DsaPublicBlob};
-                use win_crypto_ng::helpers::Blob;
 
-                let y = y.value_padded(p.value().len())
-                    .map_err(|e| Error::InvalidKey(e.to_string()))?;
-
-                if y.len() > 3072 / 8 {
-                    return Err(Error::InvalidOperation(
-                        "DSA keys are supported up to 3072-bits".to_string()).into()
-                    );
-                }
-
-                // CNG expects full-sized signatures
-                let field_sz = q.value().len();
-                let mut signature = vec![0u8; 2 * field_sz];
-
-                // We need to zero-pad them at the front, because
-                // the MPI encoding drops leading zero bytes.
-                signature[..field_sz].copy_from_slice(
-                    &r.value_padded(field_sz).map_err(bad)?);
-                signature[field_sz..].copy_from_slice(
-                    &s.value_padded(field_sz).map_err(bad)?);
-
-                enum Version { V1, V2 }
-                // 1024-bit DSA keys are handled differently
-                let version = if y.len() <= 128 { Version::V1 } else { Version::V2 };
-
-                let blob: DsaPublicBlob = match version {
-                    Version::V1 => {
-                        let mut group = [0; 20];
-                        if let Ok(v) = q.value_padded(group.len()) {
-                            group[..].copy_from_slice(&v);
-                        } else {
-                            return Err(Error::InvalidOperation(
-                                "DSA keys' group parameter exceeds 160 bits"
-                                    .to_string()).into());
-                        }
-
-                        DsaPublicBlob::V1(Blob::<DsaKeyPublicBlob>::clone_from_parts(
-                            &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB {
-                                dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC,
-                                cbKey: y.len() as u32,
-                                Count: [0; 4], // unused
-                                Seed: [0; 20], // unused
-                                q: group,
-                            },
-                            &DsaKeyPublicPayload {
-                                modulus: p.value(),
-                                generator: g.value(),
-                                public: &y,
-                            },
-                        ))
-                    },
-                    Version::V2 => {
-                        // https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.ImportExport.cs#L276-L282
-                        let hash = match q.value().len() {
-                            20 => 0,
-                            32 => 1,
-                            64 => 2,
-                            _ => return Err(Error::InvalidOperation(
-                                "CNG accepts DSA q with length of either length of 20, 32 or 64".into())
-                                .into()),
-                        };
-
-                        // We don't use counter/seed values so set them to 0.
-                        // CNG pre-checks that the seed is at least |Q| long,
-                        // so we can't use an empty buffer here.
-                        let (count, seed) = ([0x0; 4], vec![0x0; q.value().len()]);
-
-                        DsaPublicBlob::V2(Blob::<DsaKeyPublicV2Blob>::clone_from_parts(
-                            &winapi::shared::bcrypt::BCRYPT_DSA_KEY_BLOB_V2 {
-                                dwMagic: winapi::shared::bcrypt::BCRYPT_DSA_PUBLIC_MAGIC_V2,
-                                Count: count,
-                                // Size of the prime number q .
-                                // Currently, if the key is less than 128
-                                // bits, q is 20 bytes long.
-                                // If the key exceeds 256 bits, q is 32 bytes long.
-                                cbGroupSize: q.value().len() as u32,
-                                cbKey: y.len() as u32,
-                                // https://csrc.nist.gov/csrc/media/publications/fips/186/3/archive/2009-06-25/documents/fips_186-3.pdf
-                                // Length of the seed used to generate the
-                                // prime number q.
-                                cbSeedLength: seed.len() as u32,
-                                hashAlgorithm: hash,
-                                standardVersion: 1, // FIPS 186-3
-
-                            },
-                            &DsaKeyPublicV2Payload {
-                                seed: &seed,
-                                group: q.value(),
-                                modulus: p.value(),
-                                generator: g.value(),
-                                public: &y,
-                            },
-                        ))
-                    },
-                };
-
-                use win_crypto_ng::asymmetric::Import;
-                let provider = AsymmetricAlgorithm::open(AsymmetricAlgorithmId::Dsa)?;
-                let key = AsymmetricKey::<Dsa, Public>::import(
-                    Dsa,
-                    &provider,
-                    blob
-                )?;
-
-                // CNG accepts only hash and Q of equal length. Either trim the
-                // digest or pad it with zeroes (since it's treated as a
-                // big-endian number).
-                // See https://github.com/dotnet/runtime/blob/67d74fca70d4670ad503e23dba9d6bc8a1b5909e/src/libraries/Common/src/System/Security/Cryptography/DSACng.SignVerify.cs#L148.
-                let digest = pad_truncating(&digest, q.value().len());
-                assert_eq!(q.value().len(), digest.len());
-
-                key.verify(&digest, &signature, None).map(|_| true)?
-            },
             (mpi::PublicKey::ECDSA { curve, q }, mpi::Signature::ECDSA { s, r }) =>
             {
                 let (x, y) = q.decode_point(curve)?;
