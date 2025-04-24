@@ -1439,7 +1439,7 @@ mod tests {
     #[test]
     fn fingerprint_test() {
         let pile =
-            PacketPile::from_bytes(crate::tests::key("public-key.gpg")).unwrap();
+            PacketPile::from_bytes(crate::tests::key("public-key.pgp")).unwrap();
 
         // The blob contains a public key and three subkeys.
         let mut pki = 0;

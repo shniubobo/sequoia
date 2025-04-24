@@ -866,7 +866,7 @@ fn packet_path_iter() {
 
     for i in 1..5 {
         let pile = PacketPile::from_bytes(
-            crate::tests::message(&format!("recursive-{}.gpg", i)[..])).unwrap();
+            crate::tests::message(&format!("recursive-{}.pgp", i)[..])).unwrap();
 
         let mut paths1 : Vec<Vec<usize>> = Vec::new();
         for path in paths(pile.children()).iter() {

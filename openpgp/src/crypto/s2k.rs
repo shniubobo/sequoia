@@ -576,14 +576,14 @@ mod tests {
         #[allow(deprecated)]
         let tests = [
             Test {
-                filename: "mode-0-password-1234.gpg",
+                filename: "mode-0-password-1234.pgp",
                 cipher_algo: SymmetricAlgorithm::AES256,
                 s2k: S2K::Simple{ hash: HashAlgorithm::SHA1, },
                 password: "1234".into(),
                 key_hex: "7110EDA4D09E062AA5E4A390B0A572AC0D2C0220F352B0D292B65164C2A67301",
             },
             Test {
-                filename: "mode-1-password-123456-1.gpg",
+                filename: "mode-1-password-123456-1.pgp",
                 cipher_algo: SymmetricAlgorithm::AES256,
                 s2k: S2K::Salted{
                     hash: HashAlgorithm::SHA1,
@@ -593,7 +593,7 @@ mod tests {
                 key_hex: "8B79077CA448F6FB3D3AD2A264D3B938D357C9FB3E41219FD962DF960A9AFA08",
             },
             Test {
-                filename: "mode-1-password-foobar-2.gpg",
+                filename: "mode-1-password-foobar-2.pgp",
                 cipher_algo: SymmetricAlgorithm::AES256,
                 s2k: S2K::Salted{
                     hash: HashAlgorithm::SHA1,
@@ -603,7 +603,7 @@ mod tests {
                 key_hex: "B7D48AAE9B943B22A4D390083E8460B5EDFA118FE1688BF0C473B8094D1A8D10",
             },
             Test {
-                filename: "mode-3-password-qwerty-1.gpg",
+                filename: "mode-3-password-qwerty-1.pgp",
                 cipher_algo: SymmetricAlgorithm::AES256,
                 s2k: S2K::Iterated {
                     hash: HashAlgorithm::SHA1,
@@ -614,7 +614,7 @@ mod tests {
                 key_hex: "575AD156187A3F8CEC11108309236EB499F1E682F0D1AFADFAC4ECF97613108A",
             },
             Test {
-                filename: "mode-3-password-9876-2.gpg",
+                filename: "mode-3-password-9876-2.pgp",
                 cipher_algo: SymmetricAlgorithm::AES256,
                 s2k: S2K::Iterated {
                     hash: HashAlgorithm::SHA1,
@@ -625,7 +625,7 @@ mod tests {
                 key_hex: "736C226B8C64E4E6D0325C6C552EF7C0738F98F48FED65FD8C93265103EFA23A",
             },
             Test {
-                filename: "mode-3-aes192-password-123.gpg",
+                filename: "mode-3-aes192-password-123.pgp",
                 cipher_algo: SymmetricAlgorithm::AES192,
                 s2k: S2K::Iterated {
                     hash: HashAlgorithm::SHA1,
@@ -636,7 +636,7 @@ mod tests {
                 key_hex: "915E96FC694E7F90A6850B740125EA005199C725F3BD27E3",
             },
             Test {
-                filename: "mode-3-twofish-password-13-times-0123456789.gpg",
+                filename: "mode-3-twofish-password-13-times-0123456789.pgp",
                 cipher_algo: SymmetricAlgorithm::Twofish,
                 s2k: S2K::Iterated {
                     hash: HashAlgorithm::SHA1,
@@ -647,7 +647,7 @@ mod tests {
                 key_hex: "EA264FADA5A859C40D88A159B344ECF1F51FF327FDB3C558B0A7DC299777173E",
             },
             Test {
-                filename: "mode-3-aes128-password-13-times-0123456789.gpg",
+                filename: "mode-3-aes128-password-13-times-0123456789.pgp",
                 cipher_algo: SymmetricAlgorithm::AES128,
                 s2k: S2K::Iterated {
                     hash: HashAlgorithm::SHA1,

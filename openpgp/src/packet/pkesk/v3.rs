@@ -202,7 +202,7 @@ mod tests {
         let cert = Cert::from_bytes(
             crate::tests::key("testy-private.pgp")).unwrap();
         let pile = PacketPile::from_bytes(
-            crate::tests::message("encrypted-to-testy.gpg")).unwrap();
+            crate::tests::message("encrypted-to-testy.pgp")).unwrap();
         let mut keypair =
             cert.subkeys().next().unwrap()
             .key().clone().parts_into_secret().unwrap().into_keypair().unwrap();

@@ -1321,16 +1321,16 @@ mod test {
             (userid_sigs, ua_sigs, subkey_sigs)
         }
 
-        check(Cert::from_bytes(crate::tests::key("hash-algos/MD5.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/RipeMD160.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA1.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA224.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA256.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA384.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA512.gpg")).unwrap());
-        check(Cert::from_bytes(crate::tests::key("bannon-all-uids-subkeys.gpg")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/MD5.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/RipeMD160.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA1.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA224.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA256.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA384.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("hash-algos/SHA512.pgp")).unwrap());
+        check(Cert::from_bytes(crate::tests::key("bannon-all-uids-subkeys.pgp")).unwrap());
         let (_userid_sigs, ua_sigs, _subkey_sigs)
-            = check(Cert::from_bytes(crate::tests::key("dkg.gpg")).unwrap());
+            = check(Cert::from_bytes(crate::tests::key("dkg.pgp")).unwrap());
         assert!(ua_sigs > 0);
     }
 }

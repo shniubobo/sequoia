@@ -3654,25 +3654,25 @@ mod test {
         // forms may be different.
 
         let filenames = [
-            "literal-mode-b.gpg",
-            "literal-mode-t-partial-body.gpg",
+            "literal-mode-b.pgp",
+            "literal-mode-t-partial-body.pgp",
 
-            "sig.gpg",
+            "sig.pgp",
 
-            "public-key-bare.gpg",
-            "public-subkey-bare.gpg",
-            "userid-bare.gpg",
+            "public-key-bare.pgp",
+            "public-subkey-bare.pgp",
+            "userid-bare.pgp",
 
-            "s2k/mode-0-password-1234.gpg",
-            "s2k/mode-0-password-1234.gpg",
-            "s2k/mode-1-password-123456-1.gpg",
-            "s2k/mode-1-password-foobar-2.gpg",
-            "s2k/mode-3-aes128-password-13-times-0123456789.gpg",
-            "s2k/mode-3-aes192-password-123.gpg",
-            "s2k/mode-3-encrypted-key-password-bgtyhn.gpg",
-            "s2k/mode-3-password-9876-2.gpg",
-            "s2k/mode-3-password-qwerty-1.gpg",
-            "s2k/mode-3-twofish-password-13-times-0123456789.gpg",
+            "s2k/mode-0-password-1234.pgp",
+            "s2k/mode-0-password-1234.pgp",
+            "s2k/mode-1-password-123456-1.pgp",
+            "s2k/mode-1-password-foobar-2.pgp",
+            "s2k/mode-3-aes128-password-13-times-0123456789.pgp",
+            "s2k/mode-3-aes192-password-123.pgp",
+            "s2k/mode-3-encrypted-key-password-bgtyhn.pgp",
+            "s2k/mode-3-password-9876-2.pgp",
+            "s2k/mode-3-password-qwerty-1.pgp",
+            "s2k/mode-3-twofish-password-13-times-0123456789.pgp",
         ];
 
         for filename in filenames.iter() {
@@ -3710,11 +3710,11 @@ mod test {
         // This is an variant of serialize_test_1 that tests the
         // unknown packet serializer.
         let filenames = [
-            "compressed-data-algo-1.gpg",
-            "compressed-data-algo-2.gpg",
-            "compressed-data-algo-3.gpg",
-            "recursive-2.gpg",
-            "recursive-3.gpg",
+            "compressed-data-algo-1.pgp",
+            "compressed-data-algo-2.pgp",
+            "compressed-data-algo-3.pgp",
+            "recursive-2.pgp",
+            "recursive-3.pgp",
         ];
 
         for filename in filenames.iter() {
@@ -3749,11 +3749,11 @@ mod test {
         // compares the serialized data, but serialize_test_1 doesn't
         // work if the content is non-deterministic.
         let filenames = [
-            "compressed-data-algo-1.gpg",
-            "compressed-data-algo-2.gpg",
-            "compressed-data-algo-3.gpg",
-            "recursive-2.gpg",
-            "recursive-3.gpg",
+            "compressed-data-algo-1.pgp",
+            "compressed-data-algo-2.pgp",
+            "compressed-data-algo-3.pgp",
+            "recursive-2.pgp",
+            "recursive-3.pgp",
         ];
 
         for filename in filenames.iter() {

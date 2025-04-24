@@ -2270,7 +2270,7 @@ mod test {
         ].iter()
             .map(|f| Cert::from_bytes(crate::tests::key(f)).unwrap())
             .collect::<Vec<_>>();
-        let data = "messages/signed-1.gpg";
+        let data = "messages/signed-1.pgp";
 
         let reference = crate::tests::manifesto();
 
@@ -2818,7 +2818,7 @@ mod test {
 
         let p = &P::new();
         let r = DecryptorBuilder::from_bytes(crate::tests::message(
-                "encrypted-to-testy.gpg"))?
+                "encrypted-to-testy.pgp"))?
             .with_policy(p, crate::frozen_time(), Helper {});
         match r {
             Ok(_) => panic!(),
@@ -2830,7 +2830,7 @@ mod test {
         let p = &mut P::new();
         p.reject_packet_tag(Tag::SEIP);
         let r = DecryptorBuilder::from_bytes(crate::tests::message(
-                "encrypted-to-testy.gpg"))?
+                "encrypted-to-testy.pgp"))?
             .with_policy(p, crate::frozen_time(), Helper {});
         match r {
             Ok(_) => panic!(),
@@ -2874,14 +2874,14 @@ mod test {
 
         let p = &P::new();
         DecryptorBuilder::from_bytes(crate::tests::message(
-                "encrypted-to-testy-no-compression.gpg"))?
+                "encrypted-to-testy-no-compression.pgp"))?
             .with_policy(p, crate::frozen_time(), Helper {})?;
 
         // Reject the AES256.
         let p = &mut P::new();
         p.reject_symmetric_algo(SymmetricAlgorithm::AES256);
         let r = DecryptorBuilder::from_bytes(crate::tests::message(
-                "encrypted-to-testy-no-compression.gpg"))?
+                "encrypted-to-testy-no-compression.pgp"))?
             .with_policy(p, crate::frozen_time(), Helper {});
         match r {
             Ok(_) => panic!(),

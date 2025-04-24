@@ -8,11 +8,11 @@ use crate::common::encrypt;
 
 pub fn encrypt_to_donald_sign_by_ivanka(bytes: &[u8]) {
     let sender = Cert::from_bytes(
-        &include_bytes!("../tests/data/keys/ivanka-private.gpg")[..],
+        &include_bytes!("../tests/data/keys/ivanka-private.pgp")[..],
     )
     .unwrap();
     let recipient = Cert::from_bytes(
-        &include_bytes!("../tests/data/keys/the-donald-private.gpg")[..],
+        &include_bytes!("../tests/data/keys/the-donald-private.pgp")[..],
     )
     .unwrap();
     encrypt::encrypt_to_cert_and_sign(bytes, &sender, &recipient).unwrap();
