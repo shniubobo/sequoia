@@ -4175,7 +4175,7 @@ mod test {
         ] {
             eprintln!("Test vector {:?}...", alg);
             let key = Cert::from_bytes(crate::tests::key(
-                &format!("signing/{}.gpg", alg)))?;
+                &format!("signing/{}.pgp", alg)))?;
             if let Some(k) = key.with_policy(&p, None).ok()
                 .and_then(|vcert| vcert.keys().for_signing().supported().next())
             {

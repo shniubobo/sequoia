@@ -1727,7 +1727,7 @@ impl_parse_with_buffered_reader!(Signature);
 #[test]
 fn signature_parser_test () {
     use crate::serialize::MarshalInto;
-    let data = crate::tests::message("sig.gpg");
+    let data = crate::tests::message("sig.pgp");
 
     {
         let pp = PacketParser::from_bytes(data).unwrap().unwrap();
@@ -2388,7 +2388,7 @@ fn one_pass_sig3_parser_test () {
     use crate::PublicKeyAlgorithm;
 
     // This test assumes that the first packet is a OnePassSig packet.
-    let data = crate::tests::message("signed-1.gpg");
+    let data = crate::tests::message("signed-1.pgp");
     let mut pp = PacketParser::from_bytes(data).unwrap().unwrap();
     let p = pp.finish().unwrap();
     // eprintln!("packet: {:?}", p);
@@ -2586,15 +2586,15 @@ fn one_pass_sig_test () {
 
     let tests = [
             Test {
-                filename: "signed-1.gpg",
+                filename: "signed-1.pgp",
                 digest_prefix: vec![ [ 0x83, 0xF5 ] ],
             },
             Test {
-                filename: "signed-2-partial-body.gpg",
+                filename: "signed-2-partial-body.pgp",
                 digest_prefix: vec![ [ 0x2F, 0xBE ] ],
             },
             Test {
-                filename: "signed-3-partial-body-multiple-sigs.gpg",
+                filename: "signed-3-partial-body-multiple-sigs.pgp",
                 digest_prefix: vec![ [ 0x29, 0x64 ], [ 0xff, 0x7d ] ],
             },
     ];
@@ -3277,7 +3277,7 @@ impl_parse_with_buffered_reader!(Literal);
 fn literal_parser_test () {
     use crate::types::DataFormat;
     {
-        let data = crate::tests::message("literal-mode-b.gpg");
+        let data = crate::tests::message("literal-mode-b.pgp");
         let mut pp = PacketParser::from_bytes(data).unwrap().unwrap();
         assert_eq!(pp.header.length(), &BodyLength::Full(18));
         let content = pp.steal_eof().unwrap();
@@ -3294,7 +3294,7 @@ fn literal_parser_test () {
     }
 
     {
-        let data = crate::tests::message("literal-mode-t-partial-body.gpg");
+        let data = crate::tests::message("literal-mode-t-partial-body.pgp");
         let mut pp = PacketParser::from_bytes(data).unwrap().unwrap();
         assert_eq!(pp.header.length(), &BodyLength::Partial(4096));
         let content = pp.steal_eof().unwrap();
@@ -3398,7 +3398,7 @@ fn compressed_data_parser_test () {
             _ => continue,
         }
         let pp = PacketParser::from_bytes(crate::tests::message(
-            &format!("compressed-data-algo-{}.gpg", i))).unwrap().unwrap();
+            &format!("compressed-data-algo-{}.pgp", i))).unwrap().unwrap();
 
         // We expect a compressed packet containing a literal data
         // packet, and that is it.
@@ -3546,7 +3546,7 @@ fn skesk_parser_test() {
 
     let tests = [
         Test {
-            filename: "s2k/mode-3-encrypted-key-password-bgtyhn.gpg",
+            filename: "s2k/mode-3-encrypted-key-password-bgtyhn.pgp",
             cipher_algo: SymmetricAlgorithm::AES128,
             s2k: S2K::Iterated {
                 hash: HashAlgorithm::SHA1,
@@ -4304,7 +4304,7 @@ enum ParserResult<'a> {
 /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
 ///
 /// let openpgp_data: &[u8] = // ...
-/// #    include_bytes!("../tests/data/keys/public-key.gpg");
+/// #    include_bytes!("../tests/data/keys/public-key.pgp");
 /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
 /// while let PacketParserResult::Some(mut pp) = ppr {
 ///     // Start parsing the next packet, recursing.
@@ -4379,7 +4379,7 @@ impl<'a> PacketParserEOF<'a> {
     /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
     ///
     /// let openpgp_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/keys/public-key.gpg");
+    /// #    include_bytes!("../tests/data/keys/public-key.pgp");
     /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Start parsing the next packet, recursing.
@@ -4424,7 +4424,7 @@ impl<'a> PacketParserEOF<'a> {
     /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
     ///
     /// let openpgp_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/keys/public-key.gpg");
+    /// #    include_bytes!("../tests/data/keys/public-key.pgp");
     /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Start parsing the next packet, recursing.
@@ -4468,7 +4468,7 @@ impl<'a> PacketParserEOF<'a> {
     /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
     ///
     /// let openpgp_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/keys/public-key.gpg");
+    /// #    include_bytes!("../tests/data/keys/public-key.pgp");
     /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Start parsing the next packet, recursing.
@@ -4506,7 +4506,7 @@ impl<'a> PacketParserEOF<'a> {
     /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
     ///
     /// let openpgp_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/keys/public-key.gpg");
+    /// #    include_bytes!("../tests/data/keys/public-key.pgp");
     /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Start parsing the next packet, recursing.
@@ -4540,7 +4540,7 @@ impl<'a> PacketParserEOF<'a> {
     /// use openpgp::parse::{Parse, PacketParserResult, PacketParser};
     ///
     /// let openpgp_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/keys/public-key.gpg");
+    /// #    include_bytes!("../tests/data/keys/public-key.pgp");
     /// let mut ppr = PacketParser::from_bytes(openpgp_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Start parsing the next packet, recursing.
@@ -4757,7 +4757,7 @@ impl <'a> PacketParser<'a> {
     ///
     /// // Parse an encrypted message.
     /// let message_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/messages/encrypted-aes256-password-123.gpg");
+    /// #    include_bytes!("../tests/data/messages/encrypted-aes256-password-123.pgp");
     /// let mut ppr = PacketParser::from_bytes(message_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     if let Packet::SEIP(_) = pp.packet {
@@ -5657,7 +5657,7 @@ impl <'a> PacketParser<'a> {
     ///
     /// // Parse a message.
     /// let message_data: &[u8] = // ...
-    /// #   include_bytes!("../tests/data/messages/literal-mode-t-partial-body.gpg");
+    /// #   include_bytes!("../tests/data/messages/literal-mode-t-partial-body.pgp");
     /// let mut ppr = PacketParser::from_bytes(message_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     // Process the packet.
@@ -6053,7 +6053,7 @@ fn packet_parser_reader_interface() {
     // A message containing a compressed packet that contains a
     // literal packet.
     let pp = PacketParser::from_bytes(
-        crate::tests::message("compressed-data-algo-1.gpg")).unwrap().unwrap();
+        crate::tests::message("compressed-data-algo-1.pgp")).unwrap().unwrap();
 
     // The message has the form:
     //
@@ -6127,7 +6127,7 @@ impl<'a> PacketParser<'a> {
     ///
     /// // Parse an encrypted message.
     /// let message_data: &[u8] = // ...
-    /// #    include_bytes!("../tests/data/messages/encrypted-aes256-password-123.gpg");
+    /// #    include_bytes!("../tests/data/messages/encrypted-aes256-password-123.pgp");
     /// let mut ppr = PacketParser::from_bytes(message_data)?;
     /// while let PacketParserResult::Some(mut pp) = ppr {
     ///     if let Packet::SEIP(_) = pp.packet {
@@ -6381,7 +6381,7 @@ mod test {
         // And simple length encodings (no indeterminate length
         // encodings).
         DecryptTest {
-            filename: "encrypted-aes256-password-123.gpg",
+            filename: "encrypted-aes256-password-123.pgp",
             algo: SymmetricAlgorithm::AES256,
             aead_algo: None,
             key_hex: "7EF4F08C44F780BEA866961423306166B8912C43352F3D9617F745E4E3939710",
@@ -6394,7 +6394,7 @@ mod test {
             ],
         },
         DecryptTest {
-            filename: "encrypted-aes192-password-123456.gpg",
+            filename: "encrypted-aes192-password-123456.pgp",
             algo: SymmetricAlgorithm::AES192,
             aead_algo: None,
             key_hex: "B2F747F207EFF198A6C826F1D398DE037986218ED468DB61",
@@ -6407,7 +6407,7 @@ mod test {
             ],
         },
         DecryptTest {
-            filename: "encrypted-aes128-password-123456789.gpg",
+            filename: "encrypted-aes128-password-123456789.pgp",
             algo: SymmetricAlgorithm::AES128,
             aead_algo: None,
             key_hex: "AC0553096429260B4A90B1CEC842D6A0",
@@ -6427,10 +6427,10 @@ mod test {
         //         --cipher-algo camellia256 \
         //         --s2k-cipher-algo camellia256 \
         //         --encrypt --symmetric \
-        //         -o encrypted-camellia256-password-123.gpg \
+        //         -o encrypted-camellia256-password-123.pgp \
         //         a-cypherpunks-manifesto.txt
         DecryptTest {
-            filename: "encrypted-camellia256-password-123.gpg",
+            filename: "encrypted-camellia256-password-123.pgp",
             algo: SymmetricAlgorithm::Camellia256,
             aead_algo: None,
             key_hex: "FC9644B500B9D0540880CB44B40F8C89\
@@ -6444,7 +6444,7 @@ mod test {
             ],
         },
         DecryptTest {
-            filename: "encrypted-camellia192-password-123.gpg",
+            filename: "encrypted-camellia192-password-123.pgp",
             algo: SymmetricAlgorithm::Camellia192,
             aead_algo: None,
             key_hex: "EC941DB1C5F4D3605E3F3C10B30888DA3287256E55CC978B",
@@ -6457,7 +6457,7 @@ mod test {
             ],
         },
         DecryptTest {
-            filename: "encrypted-camellia128-password-123.gpg",
+            filename: "encrypted-camellia128-password-123.pgp",
             algo: SymmetricAlgorithm::Camellia128,
             aead_algo: None,
             key_hex: "E1CF87BF2E030CC89CBC0F03EC2B7DF5",
@@ -6471,7 +6471,7 @@ mod test {
         },
 
         DecryptTest {
-            filename: "encrypted-twofish-password-red-fish-blue-fish.gpg",
+            filename: "encrypted-twofish-password-red-fish-blue-fish.pgp",
             algo: SymmetricAlgorithm::Twofish,
             aead_algo: None,
             key_hex: "96AFE1EDFA7C9CB7E8B23484C718015E5159CFA268594180D4DB68B2543393CB",
@@ -6751,7 +6751,7 @@ mod test {
         let marker_after = marker & 2 > 0;
 
         for test in &["testy.pgp",
-                      "lutz.gpg",
+                      "lutz.pgp",
                       "testy-new.pgp",
                       "neal.pgp"]
         {
@@ -6791,7 +6791,7 @@ mod test {
         let marker_after = marker & 2 > 0;
 
         for test in &["testy.pgp",
-                      "lutz.gpg",
+                      "lutz.pgp",
                       "testy-new.pgp",
                       "neal.pgp"]
         {
@@ -6963,7 +6963,7 @@ mod test {
     #[test]
     fn junk_prefix() {
         // Make sure we can read the first packet.
-        let msg = crate::tests::message("sig.gpg");
+        let msg = crate::tests::message("sig.pgp");
 
         let ppr = PacketParserBuilder::from_bytes(msg).unwrap()
             .dearmor(packet_parser_builder::Dearmor::Disabled)
@@ -6988,8 +6988,8 @@ mod test {
     /// Issue #141.
     #[test]
     fn truncated_packet() {
-        for msg in &[crate::tests::message("literal-mode-b.gpg"),
-                     crate::tests::message("literal-mode-t-partial-body.gpg"),
+        for msg in &[crate::tests::message("literal-mode-b.pgp"),
+                     crate::tests::message("literal-mode-t-partial-body.pgp"),
         ] {
             // Make sure we can read the first packet.
             let ppr = PacketParserBuilder::from_bytes(msg).unwrap()
@@ -7064,7 +7064,7 @@ mod test {
         // Decrypt, then call BufferedReader::next().
         eprintln!("Decrypt, then next():\n");
         let mut ppr = PacketParser::from_bytes(
-            crate::tests::message("encrypted-to-testy.gpg"))?;
+            crate::tests::message("encrypted-to-testy.pgp"))?;
         while let PacketParserResult::Some(mut pp) = ppr {
             match &pp.packet {
                 Packet::SEIP(_) => {
@@ -7080,7 +7080,7 @@ mod test {
         // Decrypt, buffer, then call BufferedReader::recurse().
         eprintln!("\nDecrypt, buffer, then recurse():\n");
         let mut ppr = PacketParser::from_bytes(
-            crate::tests::message("encrypted-to-testy.gpg"))?;
+            crate::tests::message("encrypted-to-testy.pgp"))?;
         while let PacketParserResult::Some(mut pp) = ppr {
             match &pp.packet {
                 Packet::SEIP(_) => {
@@ -7141,7 +7141,7 @@ mod test {
     fn issue_537() -> Result<()> {
         // Buffer unread content.
         let ppr0 = PacketParserBuilder::from_bytes(
-            crate::tests::message("literal-mode-b.gpg"))?
+            crate::tests::message("literal-mode-b.pgp"))?
             .buffer_unread_content()
             .build()?;
         let pp0 = ppr0.unwrap();
@@ -7149,20 +7149,20 @@ mod test {
 
         // Drop unread content.
         let ppr1 = PacketParser::from_bytes(
-            crate::tests::message("literal-mode-b.gpg"))?;
+            crate::tests::message("literal-mode-b.pgp"))?;
         let pp1 = ppr1.unwrap();
         let (packet1, _) = pp1.recurse()?;
 
         // Read content.
         let ppr2 = PacketParser::from_bytes(
-            crate::tests::message("literal-mode-b.gpg"))?;
+            crate::tests::message("literal-mode-b.pgp"))?;
         let mut pp2 = ppr2.unwrap();
         io::copy(&mut pp2, &mut io::sink())?;
         let (packet2, _) = pp2.recurse()?;
 
         // Partially read content.
         let ppr3 = PacketParser::from_bytes(
-            crate::tests::message("literal-mode-b.gpg"))?;
+            crate::tests::message("literal-mode-b.pgp"))?;
         let mut pp3 = ppr3.unwrap();
         let mut buf = [0];
         let nread = pp3.read(&mut buf)?;

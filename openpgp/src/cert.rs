@@ -4503,7 +4503,7 @@ mod test {
     #[test]
     fn merge() {
         use crate::tests::key;
-        let cert_base = Cert::from_bytes(key("bannon-base.gpg")).unwrap();
+        let cert_base = Cert::from_bytes(key("bannon-base.pgp")).unwrap();
 
         // When we merge it with itself, we should get the exact same
         // thing.
@@ -4511,18 +4511,18 @@ mod test {
         assert_eq!(cert_base, merged);
 
         let cert_add_uid_1
-            = Cert::from_bytes(key("bannon-add-uid-1-whitehouse.gov.gpg"))
+            = Cert::from_bytes(key("bannon-add-uid-1-whitehouse.gov.pgp"))
                 .unwrap();
         let cert_add_uid_2
-            = Cert::from_bytes(key("bannon-add-uid-2-fox.com.gpg"))
+            = Cert::from_bytes(key("bannon-add-uid-2-fox.com.pgp"))
                 .unwrap();
         // Duplicate user id, but with a different self-sig.
         let cert_add_uid_3
-            = Cert::from_bytes(key("bannon-add-uid-3-whitehouse.gov-dup.gpg"))
+            = Cert::from_bytes(key("bannon-add-uid-3-whitehouse.gov-dup.pgp"))
                 .unwrap();
 
         let cert_all_uids
-            = Cert::from_bytes(key("bannon-all-uids.gpg"))
+            = Cert::from_bytes(key("bannon-all-uids.pgp"))
             .unwrap();
         // We have four User ID packets, but one has the same User ID,
         // just with a different self-signature.
@@ -4542,14 +4542,14 @@ mod test {
         assert_eq!(cert_all_uids, merged);
 
         let cert_add_subkey_1
-            = Cert::from_bytes(key("bannon-add-subkey-1.gpg")).unwrap();
+            = Cert::from_bytes(key("bannon-add-subkey-1.pgp")).unwrap();
         let cert_add_subkey_2
-            = Cert::from_bytes(key("bannon-add-subkey-2.gpg")).unwrap();
+            = Cert::from_bytes(key("bannon-add-subkey-2.pgp")).unwrap();
         let cert_add_subkey_3
-            = Cert::from_bytes(key("bannon-add-subkey-3.gpg")).unwrap();
+            = Cert::from_bytes(key("bannon-add-subkey-3.pgp")).unwrap();
 
         let cert_all_subkeys
-            = Cert::from_bytes(key("bannon-all-subkeys.gpg")).unwrap();
+            = Cert::from_bytes(key("bannon-all-subkeys.pgp")).unwrap();
 
         // Merge the first user, then the second, then the third.
         let merged = cert_base.clone().merge_public_and_secret(cert_add_subkey_1.clone()).unwrap()
@@ -4577,7 +4577,7 @@ mod test {
         assert_eq!(cert_all_subkeys, merged);
 
         let cert_all
-            = Cert::from_bytes(key("bannon-all-uids-subkeys.gpg"))
+            = Cert::from_bytes(key("bannon-all-uids-subkeys.pgp"))
             .unwrap();
 
         // Merge all the subkeys with all the uids.
@@ -4605,16 +4605,16 @@ mod test {
 
         // Certifications.
         let cert_donald_signs_base
-            = Cert::from_bytes(key("bannon-the-donald-signs-base.gpg"))
+            = Cert::from_bytes(key("bannon-the-donald-signs-base.pgp"))
             .unwrap();
         let cert_donald_signs_all
-            = Cert::from_bytes(key("bannon-the-donald-signs-all-uids.gpg"))
+            = Cert::from_bytes(key("bannon-the-donald-signs-all-uids.pgp"))
             .unwrap();
         let cert_ivanka_signs_base
-            = Cert::from_bytes(key("bannon-ivanka-signs-base.gpg"))
+            = Cert::from_bytes(key("bannon-ivanka-signs-base.pgp"))
             .unwrap();
         let cert_ivanka_signs_all
-            = Cert::from_bytes(key("bannon-ivanka-signs-all-uids.gpg"))
+            = Cert::from_bytes(key("bannon-ivanka-signs-all-uids.pgp"))
             .unwrap();
 
         assert!(cert_donald_signs_base.userids.len() == 1);
@@ -4794,24 +4794,24 @@ mod test {
                       = cert.err().unwrap().downcast::<Error>().unwrap());
 
         // Lutz's key is a v3 key.
-        let cert = Cert::from_bytes(crate::tests::key("lutz.gpg"));
+        let cert = Cert::from_bytes(crate::tests::key("lutz.pgp"));
         assert_match!(Error::UnsupportedCert(..)
                       = cert.err().unwrap().downcast::<Error>().unwrap());
 
         // v3 certifications are not supported
 
         // dkg's includes some v3 signatures.
-        let cert = Cert::from_bytes(crate::tests::key("dkg.gpg"));
-        assert!(cert.is_ok(), "dkg.gpg: {:?}", cert);
+        let cert = Cert::from_bytes(crate::tests::key("dkg.pgp"));
+        assert!(cert.is_ok(), "dkg.pgp: {:?}", cert);
     }
 
     #[test]
     fn keyring_with_v3_public_keys() {
-        let dkg = crate::tests::key("dkg.gpg");
-        let lutz = crate::tests::key("lutz.gpg");
+        let dkg = crate::tests::key("dkg.pgp");
+        let lutz = crate::tests::key("lutz.pgp");
 
         let cert = Cert::from_bytes(dkg);
-        assert!(cert.is_ok(), "dkg.gpg: {:?}", cert);
+        assert!(cert.is_ok(), "dkg.pgp: {:?}", cert);
 
         // Keyring with two good keys
         let mut combined = vec![];
@@ -6328,7 +6328,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     fn test_into_packets() -> Result<()> {
         use crate::serialize::SerializeInto;
 
-        let dkg = Cert::from_bytes(crate::tests::key("dkg.gpg"))?;
+        let dkg = Cert::from_bytes(crate::tests::key("dkg.pgp"))?;
         let mut buf = Vec::new();
         for p in dkg.clone().into_packets() {
             p.serialize(&mut buf)?;

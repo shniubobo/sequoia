@@ -3822,17 +3822,17 @@ mod test {
         let tests = [
             Test {
                 key: "neal.pgp",
-                data: "signed-1.gpg",
+                data: "signed-1.pgp",
                 good: 1,
             },
             Test {
                 key: "neal.pgp",
-                data: "signed-1-sha1-neal.gpg",
+                data: "signed-1-sha1-neal.pgp",
                 good: 1,
             },
             Test {
                 key: "testy.pgp",
-                data: "signed-1-sha256-testy.gpg",
+                data: "signed-1-sha256-testy.pgp",
                 good: 1,
             },
             Test {
@@ -3878,12 +3878,12 @@ mod test {
             // Check with the wrong key.
             Test {
                 key: "neal.pgp",
-                data: "signed-1-sha256-testy.gpg",
+                data: "signed-1-sha256-testy.pgp",
                 good: 0,
             },
             Test {
                 key: "neal.pgp",
-                data: "signed-2-partial-body.gpg",
+                data: "signed-2-partial-body.pgp",
                 good: 1,
             },
         ];
@@ -4276,7 +4276,7 @@ mod test {
         for f in [
             // This has Fingerprint in the hashed, Issuer in the
             // unhashed area.
-            "messages/sig.gpg",
+            "messages/sig.pgp",
             // This has [Issuer, Fingerprint] in the hashed area.
             "contrib/gnupg/timestamp-signature-by-alice.asc",
         ].iter() {
