@@ -43,9 +43,12 @@ ctor = "0.2"
 
 [build-dependencies]
 lalrpop = { version = ">=0.17, <0.21", default-features = false }
+capnpc = "0.19"
 
 [dev-dependencies]
 quickcheck = { version = "1", default-features = false }
+capnp = "0.19"
+clap = { version = "4", features = ["derive"] }
 
 [lib]
 bench = false

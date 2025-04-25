@@ -5,7 +5,13 @@ use std::path::PathBuf;
 
 fn main() {
     lalrpop::Configuration::new().use_cargo_dir_conventions().process().unwrap();
+    capnp("examples/ipc-standalone/hello_protocol.capnp");
     include_test_data().unwrap();
+}
+
+fn capnp(src: &str) {
+    println!("rerun-if-changed={}", src);
+    ::capnpc::CompilerCommand::new().file(src).run().unwrap();
 }
 
 /// Builds the index of the test data for use with the `::tests`
