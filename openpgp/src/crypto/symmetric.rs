@@ -4,7 +4,7 @@ use std::io;
 use std::cmp;
 use std::fmt;
 
-use crate::Result;
+use crate::{Error, Result};
 use crate::SymmetricAlgorithm;
 use crate::vec_resize;
 use crate::{
@@ -45,6 +45,20 @@ impl BlockCipherMode {
     }
 }
 
+/// Padding mode for decryption.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum UnpaddingMode {
+    /// No padding.
+    ///
+    /// If the [`BlockCipherMode`] requires padding of incomplete
+    /// final blocks (see [`BlockCipherMode::requires_padding`]),
+    /// padding is required unless the plaintext's length is a
+    /// multiple of the symmetric algorithm's block size.  Otherwise,
+    /// an error is returned during decryption of the last block.
+    None,
+}
+
 /// A context representing symmetric algorithm state and block cipher
 /// mode.
 pub(crate) trait Context: Send + Sync {
@@ -72,32 +86,39 @@ pub(crate) trait Context: Send + Sync {
 }
 
 /// A `Read`er for decrypting symmetrically encrypted data.
-pub struct Decryptor<'a> {
+pub(crate) struct InternalDecryptor<'a> {
     // The encrypted data.
     source: Box<dyn BufferedReader<Cookie> + 'a>,
 
+    mode: BlockCipherMode,
+    padding: UnpaddingMode,
     dec: Box<dyn Context>,
     block_size: usize,
     // Up to a block of unread data.
     buffer: Vec<u8>,
 }
-assert_send_and_sync!(Decryptor<'_>);
+assert_send_and_sync!(InternalDecryptor<'_>);
 
-impl<'a> Decryptor<'a> {
+impl<'a> InternalDecryptor<'a> {
     /// Instantiate a new symmetric decryptor.
-    pub fn new<R>(algo: SymmetricAlgorithm, key: &SessionKey, source: R)
+    pub fn new<R>(algo: SymmetricAlgorithm,
+                  mode: BlockCipherMode,
+                  padding: UnpaddingMode,
+                  key: &SessionKey,
+                  iv: Option<&[u8]>,
+                  source: R)
                   -> Result<Self>
     where
         R: BufferedReader<Cookie> + 'a,
     {
-        use crate::crypto::symmetric::BlockCipherMode;
         use crate::crypto::backend::{Backend, interface::Symmetric};
         let block_size = algo.block_size()?;
-        let dec = Backend::decryptor(algo, BlockCipherMode::CFB,
-                                     key.as_protected(), None)?;
+        let dec = Backend::decryptor(algo, mode, key.as_protected(), iv)?;
 
-        Ok(Decryptor {
+        Ok(InternalDecryptor {
             source: source.into_boxed(),
+            mode,
+            padding,
             dec,
             block_size,
             buffer: Vec::with_capacity(block_size),
@@ -109,7 +130,7 @@ impl<'a> Decryptor<'a> {
 // gratuitiously do a short read.  Specifically, if the return value
 // is less than `plaintext.len()`, then it is either because we
 // reached the end of the input or an error occurred.
-impl<'a> io::Read for Decryptor<'a> {
+impl<'a> io::Read for InternalDecryptor<'a> {
     fn read(&mut self, plaintext: &mut [u8]) -> io::Result<usize> {
         let mut pos = 0;
 
@@ -144,10 +165,27 @@ impl<'a> io::Read for Decryptor<'a> {
         // Avoid trying to decrypt empty ciphertexts.  Some backends
         // might no like that, for example Botan's CBC mode.
         if ! ciphertext.is_empty() {
+            // Possibly deal with padding.
+            match self.padding {
+                UnpaddingMode::None => if self.mode.requires_padding()
+                    && ciphertext.len() % self.block_size > 0
+                {
+                    return Err(io::Error::new(
+                        io::ErrorKind::UnexpectedEof,
+                        Error::InvalidOperation(
+                            "incomplete last block".into())));
+                },
+            }
+
             self.dec.decrypt(&mut plaintext[pos..pos + to_copy],
                              ciphertext)
                 .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput,
                                             format!("{}", e)))?;
+
+            // Possibly deal with padding.
+            match self.padding {
+                UnpaddingMode::None => (),
+            }
 
             pos += to_copy;
         }
@@ -183,9 +221,26 @@ impl<'a> io::Read for Decryptor<'a> {
 
         vec_resize(&mut self.buffer, ciphertext.len());
 
+        // Possibly deal with padding.
+        match self.padding {
+            UnpaddingMode::None => if self.mode.requires_padding()
+                && ciphertext.len() % self.block_size > 0
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    Error::InvalidOperation(
+                        "incomplete last block".into())));
+            },
+        }
+
         self.dec.decrypt(&mut self.buffer, ciphertext)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput,
                                         format!("{}", e)))?;
+
+        // Possibly deal with padding.
+        match self.padding {
+            UnpaddingMode::None => (),
+        }
 
         plaintext[pos..pos + to_copy].copy_from_slice(&self.buffer[..to_copy]);
         crate::vec_drain_prefix(&mut self.buffer, to_copy);
@@ -198,48 +253,70 @@ impl<'a> io::Read for Decryptor<'a> {
 
 /// A `BufferedReader` that decrypts symmetrically-encrypted data as
 /// it is read.
-pub(crate) struct BufferedReaderDecryptor<'a> {
-    reader: buffered_reader::Generic<Decryptor<'a>, Cookie>,
+pub struct Decryptor<'a> {
+    reader: buffered_reader::Generic<InternalDecryptor<'a>, Cookie>,
 }
 
-impl<'a> BufferedReaderDecryptor<'a> {
-    /// Like `new()`, but sets a cookie, which can be retrieved using
-    /// the `cookie_ref` and `cookie_mut` methods, and set using
-    /// the `cookie_set` method.
-    pub fn with_cookie(algo: SymmetricAlgorithm, key: &SessionKey,
-                       reader: Box<dyn BufferedReader<Cookie> + 'a>,
-                       cookie: Cookie)
-        -> Result<Self>
+impl<'a> Decryptor<'a> {
+    /// Instantiate a new symmetric decryptor.
+    ///
+    /// If `iv` is `None`, and the given `mode` requires an IV, an
+    /// all-zero IV is used.
+    pub fn new<R>(algo: SymmetricAlgorithm,
+                  mode: BlockCipherMode,
+                  padding: UnpaddingMode,
+                  key: &SessionKey,
+                  iv: Option<&[u8]>,
+                  source: R)
+                  -> Result<Self>
+    where
+        R: BufferedReader<Cookie> + 'a,
     {
-        Ok(BufferedReaderDecryptor {
+        Self::with_cookie(
+            algo, mode, padding, key, iv, source, Default::default())
+    }
+
+    /// Like [`Decryptor::new`], but sets a cookie.
+    pub fn with_cookie<R>(algo: SymmetricAlgorithm,
+                          mode: BlockCipherMode,
+                          padding: UnpaddingMode,
+                          key: &SessionKey,
+                          iv: Option<&[u8]>,
+                          reader: R,
+                          cookie: Cookie)
+                          -> Result<Self>
+    where
+        R: BufferedReader<Cookie> + 'a,
+    {
+        Ok(Decryptor {
             reader: buffered_reader::Generic::with_cookie(
-                Decryptor::new(algo, key, reader)?,
+                InternalDecryptor::new(algo, mode, padding, key, iv, reader)?,
                 None, cookie),
         })
     }
 }
 
-impl<'a> io::Read for BufferedReaderDecryptor<'a> {
+impl<'a> io::Read for Decryptor<'a> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<'a> fmt::Display for BufferedReaderDecryptor<'a> {
+impl<'a> fmt::Display for Decryptor<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BufferedReaderDecryptor")
+        write!(f, "Decryptor")
     }
 }
 
-impl<'a> fmt::Debug for BufferedReaderDecryptor<'a> {
+impl<'a> fmt::Debug for Decryptor<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("BufferedReaderDecryptor")
+        f.debug_struct("Decryptor")
             .field("reader", &self.get_ref().unwrap())
             .finish()
     }
 }
 
-impl<'a> BufferedReader<Cookie> for BufferedReaderDecryptor<'a> {
+impl<'a> BufferedReader<Cookie> for Decryptor<'a> {
     fn buffer(&self) -> &[u8] {
         self.reader.buffer()
     }
@@ -507,7 +584,7 @@ mod tests {
 
     /// This test is designed to test the buffering logic in Decryptor
     /// by reading directly from it (i.e. without any buffering
-    /// introduced by the BufferedReaderDecryptor or any other source
+    /// introduced by the Decryptor or any other source
     /// of buffering).
     #[test]
     fn decryptor() {
@@ -526,7 +603,9 @@ mod tests {
                 algo.key_size().unwrap() * 8);
             let ciphertext = buffered_reader::Memory::with_cookie(
                 crate::tests::file(filename), Default::default());
-            let decryptor = Decryptor::new(*algo, &key, ciphertext).unwrap();
+            let decryptor = InternalDecryptor::new(
+                *algo, BlockCipherMode::CFB, UnpaddingMode::None,
+                &key, None, ciphertext).unwrap();
 
             // Read bytewise to test the buffer logic.
             let mut plaintext = Vec::new();
@@ -604,8 +683,9 @@ mod tests {
                 let cur = buffered_reader::Memory::with_cookie(
                     &ciphertext, Default::default());
 
-                let mut decryptor = Decryptor::new(*algo, &key, cur)
-                    .unwrap();
+                let mut decryptor = InternalDecryptor::new(
+                    *algo, BlockCipherMode::CFB, UnpaddingMode::None,
+                    &key, None, cur).unwrap();
 
                 decryptor.read_to_end(&mut plaintext).unwrap();
             }
