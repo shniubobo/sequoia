@@ -2466,10 +2466,21 @@ impl Encrypted {
             mpi::SecretKeyMaterial::from_bytes(
                 key.pk_algo(), &secret).map(|m| m.into())
         } else {
+            use crypto::symmetric::{
+                BlockCipherMode,
+                UnpaddingMode,
+            };
+
             let cur = buffered_reader::Memory::with_cookie(
                 ciphertext, Default::default());
             let mut dec =
-                crypto::symmetric::Decryptor::new(self.algo, &derived_key, cur)?;
+                crypto::symmetric::InternalDecryptor::new(
+                    self.algo,
+                    BlockCipherMode::CFB,
+                    UnpaddingMode::None,
+                    &derived_key,
+                    None,
+                    cur)?;
 
             // Consume the first block.
             let block_size = self.algo.block_size()?;

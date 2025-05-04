@@ -238,7 +238,7 @@ use crate::types::{
     Timestamp,
 };
 use crate::crypto::{self, mpi::{PublicKey, MPI, ProtectedMPI}};
-use crate::crypto::symmetric::{Decryptor, BufferedReaderDecryptor};
+use crate::crypto::symmetric::{Decryptor, InternalDecryptor};
 use crate::message;
 use crate::message::MessageValidator;
 
@@ -6194,6 +6194,11 @@ impl<'a> PacketParser<'a> {
 
         match self.packet.clone() {
             Packet::SEIP(SEIP::V1(_)) => {
+                use crate::crypto::symmetric::{
+                    BlockCipherMode,
+                    UnpaddingMode,
+                };
+
                 let algo = if let Some(a) = algo {
                     a
                 } else {
@@ -6217,8 +6222,9 @@ impl<'a> PacketParser<'a> {
                     let cur = buffered_reader::Memory::with_cookie(
                         &self.data_hard(bl + 2)?[..bl + 2],
                         Default::default());
-                    let mut dec = Decryptor::new(
-                        algo, key, cur)?;
+                    let mut dec = InternalDecryptor::new(
+                        algo, BlockCipherMode::CFB, UnpaddingMode::None,
+                        key, None, cur)?;
                     let mut header = vec![ 0u8; bl + 2 ];
                     dec.read_exact(&mut header)?;
 
@@ -6235,8 +6241,9 @@ impl<'a> PacketParser<'a> {
                 // This can't fail, because we create a decryptor
                 // above with the same parameters.
                 let reader = self.take_reader();
-                let mut reader = BufferedReaderDecryptor::with_cookie(
-                    algo, key, reader, Cookie::default()).unwrap();
+                let mut reader = Decryptor::with_cookie(
+                    algo, BlockCipherMode::CFB, UnpaddingMode::None,
+                    key, None, reader, Cookie::default())?;
                 reader.cookie_mut().level = Some(self.recursion_depth());
 
                 t!("Pushing Decryptor, level {:?}.", reader.cookie_ref().level);
