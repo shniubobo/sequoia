@@ -45,6 +45,21 @@ impl BlockCipherMode {
     }
 }
 
+/// Padding mode for encryption.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum PaddingMode {
+    /// No padding.
+    ///
+    /// If the [`BlockCipherMode`] requires padding of incomplete
+    /// final blocks (see [`BlockCipherMode::requires_padding`]), and
+    /// you chose no padding, you need to ensure that the plaintext's
+    /// length is a multiple of the symmetric algorithm's block size.
+    /// Otherwise, an error is returned during encryption of the last
+    /// block.
+    None,
+}
+
 /// Padding mode for decryption.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
@@ -388,10 +403,12 @@ impl<'a> BufferedReader<Cookie> for Decryptor<'a> {
     }
 }
 
-/// A `Write`r for symmetrically encrypting data.
+/// A `Write`r that symmetrically-encrypts data as it is written.
 pub struct Encryptor<W: io::Write> {
     inner: Option<W>,
 
+    mode: BlockCipherMode,
+    padding: PaddingMode,
     cipher: Box<dyn Context>,
     block_size: usize,
     // Up to a block of unencrypted data.
@@ -403,15 +420,24 @@ assert_send_and_sync!(Encryptor<W> where W: io::Write);
 
 impl<W: io::Write> Encryptor<W> {
     /// Instantiate a new symmetric encryptor.
-    pub fn new(algo: SymmetricAlgorithm, key: &SessionKey, sink: W) -> Result<Self> {
-        use crate::crypto::symmetric::BlockCipherMode;
+    ///
+    /// If `iv` is `None`, and the given `mode` requires an IV, an
+    /// all-zero IV is used.
+    pub fn new(algo: SymmetricAlgorithm,
+               mode: BlockCipherMode,
+               padding: PaddingMode,
+               key: &SessionKey,
+               iv: Option<&[u8]>,
+               sink: W) -> Result<Self> {
         use crate::crypto::backend::{Backend, interface::Symmetric};
         let block_size = algo.block_size()?;
-        let cipher = Backend::encryptor(algo, BlockCipherMode::CFB,
-                                        key.as_protected(), None)?;
+        let cipher =
+            Backend::encryptor(algo, mode, key.as_protected(), iv)?;
 
         Ok(Encryptor {
             inner: Some(sink),
+            mode,
+            padding,
             cipher,
             block_size,
             buffer: Vec::with_capacity(block_size),
@@ -424,8 +450,25 @@ impl<W: io::Write> Encryptor<W> {
         if let Some(mut inner) = self.inner.take() {
             if !self.buffer.is_empty() {
                 let n = self.buffer.len();
-                assert!(n <= self.block_size);
+                assert!(n < self.block_size);
+
+                // Possibly deal with padding.
+                match self.padding {
+                    PaddingMode::None => if self.mode.requires_padding()
+                    {
+                        return Err(Error::InvalidOperation(
+                            "incomplete last block".into())
+                                   .into());
+                    },
+                }
+
                 self.cipher.encrypt(&mut self.scratch[..n], &self.buffer)?;
+
+                // Possibly deal with padding.
+                match self.padding {
+                    PaddingMode::None => (),
+                }
+
                 crate::vec_truncate(&mut self.buffer, 0);
                 inner.write_all(&self.scratch[..n])?;
                 crate::vec_truncate(&mut self.scratch, 0);
@@ -438,13 +481,13 @@ impl<W: io::Write> Encryptor<W> {
     }
 
     /// Acquires a reference to the underlying writer.
-    pub fn get_ref(&self) -> Option<&W> {
+    pub(crate) fn get_ref(&self) -> Option<&W> {
         self.inner.as_ref()
     }
 
     /// Acquires a mutable reference to the underlying writer.
     #[allow(dead_code)]
-    pub fn get_mut(&mut self) -> Option<&mut W> {
+    pub(crate) fn get_mut(&mut self) -> Option<&mut W> {
         self.inner.as_mut()
     }
 }
@@ -494,6 +537,7 @@ impl<W: io::Write> io::Write for Encryptor<W> {
         // Stash rest for later.
         assert!(buf.is_empty() || self.buffer.is_empty());
         self.buffer.extend_from_slice(&buf[whole_blocks..]);
+        assert!(self.buffer.len() < self.block_size);
 
         Ok(amount)
     }
@@ -633,8 +677,9 @@ mod tests {
 
             let mut ciphertext = Vec::new();
             {
-                let mut encryptor = Encryptor::new(*algo, &key, &mut ciphertext)
-                    .unwrap();
+                let mut encryptor = Encryptor::new(
+                    *algo, BlockCipherMode::CFB, PaddingMode::None,
+                    &key, None, &mut ciphertext).unwrap();
 
                 // Write bytewise to test the buffer logic.
                 for b in crate::tests::manifesto().chunks(1) {
@@ -672,7 +717,9 @@ mod tests {
 
             let mut ciphertext = Vec::new();
             {
-                let mut encryptor = Encryptor::new(*algo, &key, &mut ciphertext)
+                let mut encryptor =
+                    Encryptor::new(*algo, BlockCipherMode::CFB, PaddingMode::None,
+                                   &key, None, &mut ciphertext)
                     .unwrap();
 
                 encryptor.write_all(crate::tests::manifesto()).unwrap();
