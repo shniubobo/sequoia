@@ -700,29 +700,33 @@ mod tests {
     /// This test tries to encrypt, then decrypt some data.
     #[test]
     fn roundtrip() {
-        #[allow(deprecated)]
-        for algo in [SymmetricAlgorithm::TripleDES,
-                     SymmetricAlgorithm::CAST5,
-                     SymmetricAlgorithm::Blowfish,
-                     SymmetricAlgorithm::AES128,
-                     SymmetricAlgorithm::AES192,
-                     SymmetricAlgorithm::AES256,
-                     SymmetricAlgorithm::Twofish,
-                     SymmetricAlgorithm::Camellia128,
-                     SymmetricAlgorithm::Camellia192,
-                     SymmetricAlgorithm::Camellia256]
-                     .iter()
+        for algo in SymmetricAlgorithm::variants()
                      .filter(|x| x.is_supported()) {
+          for mode in [BlockCipherMode::CFB,
+                       BlockCipherMode::ECB] {
+            eprintln!("Testing {:?}/{:?}", algo, mode);
+
+            let bs = algo.block_size().unwrap();
+            let text = if mode.requires_padding() {
+                // For modes requiring padding, make sure the payload
+                // is a multiple of the block size, so that we don't
+                // in fact require padding.
+                let l = (crate::tests::manifesto().len() / bs) * bs;
+                &crate::tests::manifesto()[..l]
+            } else {
+                crate::tests::manifesto()
+            };
+
             let key = SessionKey::new(algo.key_size().unwrap()).unwrap();
 
             let mut ciphertext = Vec::new();
             {
                 let mut encryptor =
-                    Encryptor::new(*algo, BlockCipherMode::CFB, PaddingMode::None,
+                    Encryptor::new(algo, mode, PaddingMode::None,
                                    &key, None, &mut ciphertext)
                     .unwrap();
 
-                encryptor.write_all(crate::tests::manifesto()).unwrap();
+                encryptor.write_all(text).unwrap();
             }
 
             let mut plaintext = Vec::new();
@@ -731,13 +735,14 @@ mod tests {
                     &ciphertext, Default::default());
 
                 let mut decryptor = InternalDecryptor::new(
-                    *algo, BlockCipherMode::CFB, UnpaddingMode::None,
+                    algo, mode, UnpaddingMode::None,
                     &key, None, cur).unwrap();
 
                 decryptor.read_to_end(&mut plaintext).unwrap();
             }
 
-            assert_eq!(&plaintext[..], crate::tests::manifesto());
+            assert_eq!(&plaintext[..], text);
+          }
         }
     }
 }
