@@ -260,7 +260,8 @@ impl SymmetricAlgorithm {
     /// assert!(!SymmetricAlgorithm::Private(101).is_supported());
     /// ```
     pub fn is_supported(&self) -> bool {
-        self.is_supported_by_backend()
+        use crate::crypto::backend::{Backend, interface::Symmetric};
+        Backend::supports_algo(*self)
     }
 
     /// Length of a key for this algorithm in bytes.

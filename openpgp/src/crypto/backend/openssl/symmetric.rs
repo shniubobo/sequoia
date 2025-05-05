@@ -1,10 +1,79 @@
-use crate::crypto::symmetric::Context;
+use std::borrow::Cow;
 
-use crate::types::SymmetricAlgorithm;
 use crate::{Error, Result};
+
+use crate::crypto::{
+    SymmetricAlgorithm,
+    self,
+    mem::Protected,
+    symmetric::{BlockCipherMode, Context},
+};
 
 use openssl::cipher::{Cipher, CipherRef};
 use openssl::cipher_ctx::CipherCtx;
+
+impl crypto::backend::interface::Symmetric for super::Backend {
+    fn supports_algo(algo: SymmetricAlgorithm) -> bool {
+        let cipher: &CipherRef = if let Ok(cipher) = algo.make_cfb_cipher() {
+            cipher
+        } else {
+            return false;
+        };
+
+        let mut ctx = if let Ok(ctx) = CipherCtx::new() {
+            ctx
+        } else {
+            return false;
+        };
+        ctx.encrypt_init(Some(cipher), None, None).is_ok()
+    }
+
+    fn encryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        #[allow(deprecated)]
+        match mode {
+            BlockCipherMode::CFB => {
+                let cipher = algo.make_cfb_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.encrypt_init(Some(cipher), Some(key), Some(&iv))?;
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+
+            BlockCipherMode::ECB => {
+                let cipher = algo.make_ecb_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.encrypt_init(Some(cipher), Some(key), None)?;
+                ctx.set_padding(false);
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+        }
+    }
+
+    fn decryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        #[allow(deprecated)]
+        match mode {
+            BlockCipherMode::CFB => {
+                let cipher = algo.make_cfb_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.decrypt_init(Some(cipher), Some(key), Some(&iv))?;
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+
+            BlockCipherMode::ECB => {
+                let cipher = algo.make_ecb_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.decrypt_init(Some(cipher), Some(key), None)?;
+                ctx.set_padding(false);
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+        }
+    }
+}
 
 struct OpenSslMode {
     ctx: CipherCtx,
@@ -63,56 +132,6 @@ impl Context for OpenSslMode {
 }
 
 impl SymmetricAlgorithm {
-    /// Returns whether this algorithm is supported by the crypto backend.
-    pub(crate) fn is_supported_by_backend(&self) -> bool {
-        let cipher: &CipherRef = if let Ok(cipher) = (*self).make_cfb_cipher() {
-            cipher
-        } else {
-            return false;
-        };
-
-        let mut ctx = if let Ok(ctx) = CipherCtx::new() {
-            ctx
-        } else {
-            return false;
-        };
-        ctx.encrypt_init(Some(cipher), None, None).is_ok()
-    }
-
-    /// Creates a OpenSSL context for encrypting in CFB mode.
-    pub(crate) fn make_encrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Context>> {
-        let cipher = self.make_cfb_cipher()?;
-        let mut ctx = CipherCtx::new()?;
-        ctx.encrypt_init(Some(cipher), Some(key), Some(&iv))?;
-        Ok(Box::new(OpenSslMode::new(ctx)))
-    }
-
-    /// Creates a OpenSSL context for decrypting in CFB mode.
-    pub(crate) fn make_decrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Context>> {
-        let cipher = self.make_cfb_cipher()?;
-        let mut ctx = CipherCtx::new()?;
-        ctx.decrypt_init(Some(cipher), Some(key), Some(&iv))?;
-        Ok(Box::new(OpenSslMode::new(ctx)))
-    }
-
-    /// Creates a OpenSSL context for encrypting in ECB mode.
-    pub(crate) fn make_encrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Context>> {
-        let cipher = self.make_ecb_cipher()?;
-        let mut ctx = CipherCtx::new()?;
-        ctx.encrypt_init(Some(cipher), Some(key), None)?;
-        ctx.set_padding(false);
-        Ok(Box::new(OpenSslMode::new(ctx)))
-    }
-
-    /// Creates a OpenSSL context for decrypting in ECB mode.
-    pub(crate) fn make_decrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Context>> {
-        let cipher = self.make_ecb_cipher()?;
-        let mut ctx = CipherCtx::new()?;
-        ctx.decrypt_init(Some(cipher), Some(key), None)?;
-        ctx.set_padding(false);
-        Ok(Box::new(OpenSslMode::new(ctx)))
-    }
-
     fn make_cfb_cipher(self) -> Result<&'static CipherRef> {
         #[allow(deprecated)]
         Ok(match self {

@@ -14,6 +14,37 @@ use crate::{
 
 use buffered_reader::BufferedReader;
 
+/// Block cipher mode of operation.
+///
+/// Block modes govern how a block cipher processes data spanning
+/// multiple blocks.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum BlockCipherMode {
+    /// Full-block cipher feedback mode.
+    CFB,
+
+    /// Electronic codebook mode.
+    ///
+    /// Note: do not use as-is.  Patterns in the plaintext will be
+    /// visible as patterns in the ciphertext.  Mind the penguin!
+    ECB,
+}
+
+impl BlockCipherMode {
+    /// Returns whether the mode requires padding.
+    ///
+    /// Some modes only operate on complete blocks, so if the
+    /// plaintext's length is not a multiple of the symmetric
+    /// algorithm's block size, padding is required.
+    pub fn requires_padding(&self) -> bool {
+        match self {
+            BlockCipherMode::CFB => false,
+            BlockCipherMode::ECB => true,
+        }
+    }
+}
+
 /// A context representing symmetric algorithm state and block cipher
 /// mode.
 pub(crate) trait Context: Send + Sync {
@@ -59,9 +90,11 @@ impl<'a> Decryptor<'a> {
     where
         R: BufferedReader<Cookie> + 'a,
     {
+        use crate::crypto::symmetric::BlockCipherMode;
+        use crate::crypto::backend::{Backend, interface::Symmetric};
         let block_size = algo.block_size()?;
-        let iv = vec![0; block_size];
-        let dec = algo.make_decrypt_cfb(key, iv)?;
+        let dec = Backend::decryptor(algo, BlockCipherMode::CFB,
+                                     key.as_protected(), None)?;
 
         Ok(Decryptor {
             source: source.into_boxed(),
@@ -294,9 +327,11 @@ assert_send_and_sync!(Encryptor<W> where W: io::Write);
 impl<W: io::Write> Encryptor<W> {
     /// Instantiate a new symmetric encryptor.
     pub fn new(algo: SymmetricAlgorithm, key: &SessionKey, sink: W) -> Result<Self> {
+        use crate::crypto::symmetric::BlockCipherMode;
+        use crate::crypto::backend::{Backend, interface::Symmetric};
         let block_size = algo.block_size()?;
-        let iv = vec![0; block_size];
-        let cipher = algo.make_encrypt_cfb(key, iv)?;
+        let cipher = Backend::encryptor(algo, BlockCipherMode::CFB,
+                                        key.as_protected(), None)?;
 
         Ok(Encryptor {
             inner: Some(sink),
@@ -415,15 +450,21 @@ mod tests {
 
     #[test]
     fn smoke_test() {
+        use crate::crypto::mem::Protected;
+        use crate::crypto::symmetric::BlockCipherMode;
+        use crate::crypto::backend::{Backend, interface::Symmetric};
+
         use crate::fmt::hex;
 
         let algo = SymmetricAlgorithm::AES128;
-        let key = &hex::decode("2b7e151628aed2a6abf7158809cf4f3c").unwrap();
+        let key: Protected =
+            hex::decode("2b7e151628aed2a6abf7158809cf4f3c").unwrap().into();
         assert_eq!(key.len(), 16);
 
         // Ensure we use CFB128 by default
         let iv = hex::decode("000102030405060708090A0B0C0D0E0F").unwrap();
-        let mut cfb = algo.make_encrypt_cfb(key, iv).unwrap();
+        let mut cfb =
+            Backend::encryptor(algo, BlockCipherMode::CFB, &key, Some(&iv)).unwrap();
         let msg = hex::decode("6bc1bee22e409f96e93d7e117393172a").unwrap();
         let mut dst = vec![0; msg.len()];
         cfb.encrypt(&mut dst, &*msg).unwrap();
@@ -431,7 +472,8 @@ mod tests {
 
         // 32-byte long message
         let iv = hex::decode("000102030405060708090A0B0C0D0E0F").unwrap();
-        let mut cfb = algo.make_encrypt_cfb(key, iv).unwrap();
+        let mut cfb =
+            Backend::encryptor(algo, BlockCipherMode::CFB, &key, Some(&iv)).unwrap();
         let msg = b"This is a very important message";
         let mut dst = vec![0; msg.len()];
         cfb.encrypt(&mut dst, &*msg).unwrap();
@@ -441,7 +483,8 @@ mod tests {
 
         // 33-byte (uneven) long message
         let iv = hex::decode("000102030405060708090A0B0C0D0E0F").unwrap();
-        let mut cfb = algo.make_encrypt_cfb(key, iv).unwrap();
+        let mut cfb =
+            Backend::encryptor(algo, BlockCipherMode::CFB, &key, Some(&iv)).unwrap();
         let msg = b"This is a very important message!";
         let mut dst = vec![0; msg.len()];
         cfb.encrypt(&mut dst, &*msg).unwrap();
@@ -451,7 +494,8 @@ mod tests {
 
         // 33-byte (uneven) long message, chunked
         let iv = hex::decode("000102030405060708090A0B0C0D0E0F").unwrap();
-        let mut cfb = algo.make_encrypt_cfb(key, iv).unwrap();
+        let mut cfb =
+            Backend::encryptor(algo, BlockCipherMode::CFB, &key, Some(&iv)).unwrap();
         let mut dst = vec![0; msg.len()];
         for (mut dst, msg) in dst.chunks_mut(16).zip(msg.chunks(16)) {
             cfb.encrypt(&mut dst, msg).unwrap();
