@@ -2226,12 +2226,19 @@ impl Unencrypted {
             Ok(Encrypted::new_aead(s2k, symm, aead, iv.into_boxed_slice(),
                                    esk.into_boxed_slice()))
         } else {
+            use crypto::symmetric::{
+                BlockCipherMode,
+                PaddingMode,
+            };
+
             // Ciphertext is preceded by a random block.
             let mut trash = vec![0u8; symm.block_size()?];
             crypto::random(&mut trash)?;
 
             let mut esk = Vec::new();
-            let mut encryptor = Encryptor::new(symm, &derived_key, &mut esk)?;
+            let mut encryptor =
+                Encryptor::new(symm, BlockCipherMode::CFB, PaddingMode::None,
+                               &derived_key, None, &mut esk)?;
             encryptor.write_all(&trash)?;
             self.map(|mpis| mpis.serialize_with_checksum(&mut encryptor,
                                                          checksum))?;

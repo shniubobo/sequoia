@@ -470,9 +470,16 @@ impl<'a> Encryptor<'a, Cookie> {
                key: &SessionKey)
         -> Result<Message<'a>>
     {
+        use crate::crypto::symmetric::{
+            BlockCipherMode,
+            PaddingMode,
+        };
+
         Ok(Message::from(Box::new(Encryptor {
             inner: Generic::new_unboxed(
-                symmetric::Encryptor::new(algo, key, inner.into())?,
+                symmetric::Encryptor::new(
+                    algo, BlockCipherMode::CFB, PaddingMode::None,
+                    key, None, inner.into())?,
                 cookie),
         })))
     }
