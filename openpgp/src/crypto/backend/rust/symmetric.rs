@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::slice;
 
 use cipher::BlockDecryptMut;
@@ -7,10 +8,64 @@ use cipher::KeyIvInit;
 use cipher::generic_array::{ArrayLength, GenericArray};
 
 use crate::{Error, Result};
-use crate::crypto::symmetric::Context;
-use crate::types::SymmetricAlgorithm;
+
+use crate::crypto::{
+    SymmetricAlgorithm,
+    self,
+    mem::Protected,
+    symmetric::{BlockCipherMode, Context},
+};
 
 use super::GenericArrayExt;
+
+impl crypto::backend::interface::Symmetric for super::Backend {
+    fn supports_algo(algo: SymmetricAlgorithm) -> bool {
+        use SymmetricAlgorithm::*;
+        #[allow(deprecated)]
+        match algo {
+            IDEA => true,
+            TripleDES => true,
+            CAST5 => true,
+            Blowfish => true,
+            AES128 => true,
+            AES192 => true,
+            AES256 => true,
+            Twofish => true,
+            Camellia128 => true,
+            Camellia192 => true,
+            Camellia256 => true,
+            Private(_) => false,
+            Unknown(_) => false,
+            Unencrypted => false,
+        }
+    }
+
+    fn encryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB =>
+                algo.make_encrypt_cfb(key, iv.into_owned()),
+
+            BlockCipherMode::ECB =>
+                algo.make_encrypt_ecb(key),
+        }
+    }
+
+    fn decryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB =>
+                algo.make_decrypt_cfb(key, iv.into_owned()),
+
+            BlockCipherMode::ECB =>
+                algo.make_decrypt_ecb(key),
+        }
+    }
+}
 
 enum CfbEncrypt {
     Idea(cfb_mode::Encryptor<idea::Idea>),
@@ -385,7 +440,7 @@ where
 /// Creates a context for encrypting/decrypting in CFB/ECB mode.
 macro_rules! make_mode {
     ($fn:ident, $enum:ident, $mode:ident::$mode2:ident $(, $iv:ident:$ivt:ty)?) => {
-        pub(crate) fn $fn(self, key: &[u8], $($iv: $ivt)?) -> Result<Box<dyn Context>> {
+        fn $fn(self, key: &[u8], $($iv: $ivt)?) -> Result<Box<dyn Context>> {
           zero_stack!(8192 bytes after running || -> Result<Box<dyn Context>> {
             use cipher::generic_array::GenericArray as GA;
 
@@ -478,28 +533,6 @@ macro_rules! make_mode {
 }
 
 impl SymmetricAlgorithm {
-    /// Returns whether this algorithm is supported by the crypto backend.
-    pub(crate) fn is_supported_by_backend(&self) -> bool {
-        use SymmetricAlgorithm::*;
-        #[allow(deprecated)]
-        match self {
-            IDEA => true,
-            TripleDES => true,
-            CAST5 => true,
-            Blowfish => true,
-            AES128 => true,
-            AES192 => true,
-            AES256 => true,
-            Twofish => true,
-            Camellia128 => true,
-            Camellia192 => true,
-            Camellia256 => true,
-            Private(_) => false,
-            Unknown(_) => false,
-            Unencrypted => false,
-        }
-    }
-
     make_mode!(make_encrypt_cfb, CfbEncrypt, cfb_mode::Encryptor, iv: Vec<u8>);
     make_mode!(make_decrypt_cfb, CfbDecrypt, cfb_mode::Decryptor, iv: Vec<u8>);
     make_mode!(make_encrypt_ecb, EcbEncrypt, ecb::Encryptor);

@@ -239,7 +239,9 @@ pub fn aes_key_wrap(algo: SymmetricAlgorithm, key: &Protected,
         return Err(Error::InvalidArgument("Bad key size".into()).into());
     }
 
-    let mut cipher = algo.make_encrypt_ecb(key)?;
+    use crate::crypto::symmetric::BlockCipherMode;
+    use crate::crypto::backend::{Backend, interface::Symmetric};
+    let mut cipher = Backend::encryptor(algo, BlockCipherMode::ECB, key, None)?;
 
     //   Inputs:  Plaintext, n 64-bit values {P1, P2, ..., Pn}, and
     //            Key, K (the KEK).
@@ -309,7 +311,9 @@ pub fn aes_key_unwrap(algo: SymmetricAlgorithm, key: &Protected,
         return Err(Error::InvalidArgument("Bad key size".into()).into());
     }
 
-    let mut cipher = algo.make_decrypt_ecb(key)?;
+    use crate::crypto::symmetric::BlockCipherMode;
+    use crate::crypto::backend::{Backend, interface::Symmetric};
+    let mut cipher = Backend::decryptor(algo, BlockCipherMode::ECB, key, None)?;
 
     //   Inputs:  Ciphertext, (n+1) 64-bit values {C0, C1, ..., Cn}, and
     //            Key, K (the KEK).
