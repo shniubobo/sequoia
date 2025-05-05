@@ -1,7 +1,32 @@
-use crate::crypto::symmetric::Context;
+use std::borrow::Cow;
 
 use crate::Result;
-use crate::types::SymmetricAlgorithm;
+use crate::crypto::{
+    SymmetricAlgorithm,
+    self,
+    mem::Protected,
+    symmetric::{BlockCipherMode, Context},
+};
+
+impl crypto::backend::interface::Symmetric for super::Backend {
+    fn supports_algo(algo: SymmetricAlgorithm) -> bool {
+        true
+    }
+
+    fn encryptor_impl(algo: SymmetricAlgorithm, _mode: BlockCipherMode,
+		      _key: &Protected, _iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        Ok(Box::new(NullCipher(algo.block_size().unwrap_or(16))))
+    }
+
+    fn decryptor_impl(algo: SymmetricAlgorithm, _mode: BlockCipherMode,
+		      _key: &Protected, _iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        Ok(Box::new(NullCipher(algo.block_size().unwrap_or(16))))
+    }
+}
 
 struct NullCipher(usize);
 
@@ -26,50 +51,5 @@ impl Context for NullCipher {
     ) -> Result<()> {
         dst.copy_from_slice(src);
         Ok(())
-    }
-}
-
-impl SymmetricAlgorithm {
-    /// Returns whether this algorithm is supported by the crypto backend.
-    ///
-    /// All backends support all the AES variants.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use sequoia_openpgp as openpgp;
-    /// use openpgp::types::SymmetricAlgorithm;
-    ///
-    /// assert!(SymmetricAlgorithm::AES256.is_supported());
-    /// assert!(SymmetricAlgorithm::TripleDES.is_supported());
-    ///
-    /// assert!(!SymmetricAlgorithm::IDEA.is_supported());
-    /// assert!(!SymmetricAlgorithm::Unencrypted.is_supported());
-    /// assert!(!SymmetricAlgorithm::Private(101).is_supported());
-    /// ```
-    pub(crate) fn is_supported_by_backend(&self) -> bool {
-        true
-    }
-
-    /// Creates a Nettle context for encrypting in CFB mode.
-    pub(crate) fn make_encrypt_cfb(self, key: &[u8], iv: Vec<u8>)
-                                   -> Result<Box<dyn Context>> {
-        Ok(Box::new(NullCipher(self.block_size().unwrap_or(16))))
-    }
-
-    /// Creates a Nettle context for decrypting in CFB mode.
-    pub(crate) fn make_decrypt_cfb(self, key: &[u8], iv: Vec<u8>)
-                                   -> Result<Box<dyn Context>> {
-        Ok(Box::new(NullCipher(self.block_size().unwrap_or(16))))
-    }
-
-    /// Creates a Nettle context for encrypting in ECB mode.
-    pub(crate) fn make_encrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Context>> {
-        Ok(Box::new(NullCipher(self.block_size().unwrap_or(16))))
-    }
-
-    /// Creates a Nettle context for decrypting in ECB mode.
-    pub(crate) fn make_decrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Context>> {
-        Ok(Box::new(NullCipher(self.block_size().unwrap_or(16))))
     }
 }
