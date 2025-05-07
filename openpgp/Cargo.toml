@@ -63,6 +63,7 @@ block-padding = { version = "0.3", optional = true }
 blowfish = { version = "0.9", optional = true, features = ["zeroize"] }
 camellia = { version = "0.1", optional = true, features = ["zeroize"] }
 cast5 = { version = "0.11", optional = true, features = ["zeroize"] }
+cbc = { version = "0.1", optional = true }
 cipher = { version = "0.4", optional = true, features = ["std", "zeroize"] }
 cfb-mode = { version = "0.8", optional = true }
 des = { version = "0.8", optional = true, features = ["zeroize"] }
@@ -121,6 +122,7 @@ crypto-rust = [
     "dep:eax", "dep:ecb", "dep:ed25519", "dep:ed25519-dalek", "dep:idea",
     "dep:md-5", "dep:num-bigint-dig", "dep:ripemd", "dep:rsa", "dep:sha2",
     "dep:sha3",
+    "dep:cbc",
     "sha1collisiondetection/digest-trait", "sha1collisiondetection/oid",
     "dep:twofish", "dep:typenum", "dep:x25519-dalek",
     "dep:ocb3",

@@ -24,6 +24,9 @@ pub enum BlockCipherMode {
     /// Full-block cipher feedback mode.
     CFB,
 
+    /// Cipher block chaining.
+    CBC,
+
     /// Electronic codebook mode.
     ///
     /// Note: do not use as-is.  Patterns in the plaintext will be
@@ -40,6 +43,7 @@ impl BlockCipherMode {
     pub fn requires_padding(&self) -> bool {
         match self {
             BlockCipherMode::CFB => false,
+            BlockCipherMode::CBC => true,
             BlockCipherMode::ECB => true,
         }
     }
@@ -703,6 +707,7 @@ mod tests {
         for algo in SymmetricAlgorithm::variants()
                      .filter(|x| x.is_supported()) {
           for mode in [BlockCipherMode::CFB,
+                       BlockCipherMode::CBC,
                        BlockCipherMode::ECB] {
             eprintln!("Testing {:?}/{:?}", algo, mode);
 

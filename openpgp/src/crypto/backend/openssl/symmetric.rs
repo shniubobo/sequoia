@@ -41,6 +41,14 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 Ok(Box::new(OpenSslMode::new(ctx)))
             },
 
+            BlockCipherMode::CBC => {
+                let cipher = algo.make_cbc_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.encrypt_init(Some(cipher), Some(key), Some(&iv))?;
+                ctx.set_padding(false);
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+
             BlockCipherMode::ECB => {
                 let cipher = algo.make_ecb_cipher()?;
                 let mut ctx = CipherCtx::new()?;
@@ -61,6 +69,14 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 let cipher = algo.make_cfb_cipher()?;
                 let mut ctx = CipherCtx::new()?;
                 ctx.decrypt_init(Some(cipher), Some(key), Some(&iv))?;
+                Ok(Box::new(OpenSslMode::new(ctx)))
+            },
+
+            BlockCipherMode::CBC => {
+                let cipher = algo.make_cbc_cipher()?;
+                let mut ctx = CipherCtx::new()?;
+                ctx.decrypt_init(Some(cipher), Some(key), Some(&iv))?;
+                ctx.set_padding(false);
                 Ok(Box::new(OpenSslMode::new(ctx)))
             },
 
@@ -156,6 +172,34 @@ impl SymmetricAlgorithm {
 
             #[cfg(not(osslconf = "OPENSSL_NO_CAST"))]
             SymmetricAlgorithm::CAST5 => Cipher::cast5_cfb64(),
+            _ => return Err(Error::UnsupportedSymmetricAlgorithm(self))?,
+        })
+    }
+
+    fn make_cbc_cipher(self) -> Result<&'static CipherRef> {
+        #[allow(deprecated)]
+        Ok(match self {
+            #[cfg(not(osslconf = "OPENSSL_NO_IDEA"))]
+            SymmetricAlgorithm::IDEA => Cipher::idea_cbc(),
+
+            SymmetricAlgorithm::AES128 => Cipher::aes_128_cbc(),
+            SymmetricAlgorithm::AES192 => Cipher::aes_192_cbc(),
+            SymmetricAlgorithm::AES256 => Cipher::aes_256_cbc(),
+
+            SymmetricAlgorithm::TripleDES => Cipher::des_ede3_cbc(),
+
+            #[cfg(not(osslconf = "OPENSSL_NO_CAMELLIA"))]
+            SymmetricAlgorithm::Camellia128 => Cipher::camellia128_cbc(),
+            #[cfg(not(osslconf = "OPENSSL_NO_CAMELLIA"))]
+            SymmetricAlgorithm::Camellia192 => Cipher::camellia192_cbc(),
+            #[cfg(not(osslconf = "OPENSSL_NO_CAMELLIA"))]
+            SymmetricAlgorithm::Camellia256 => Cipher::camellia256_cbc(),
+
+            #[cfg(not(osslconf = "OPENSSL_NO_BF"))]
+            SymmetricAlgorithm::Blowfish => Cipher::bf_cbc(),
+
+            #[cfg(not(osslconf = "OPENSSL_NO_CAST"))]
+            SymmetricAlgorithm::CAST5 => Cipher::cast5_cbc(),
             _ => return Err(Error::UnsupportedSymmetricAlgorithm(self))?,
         })
     }

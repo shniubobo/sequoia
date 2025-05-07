@@ -44,6 +44,15 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
             },
 
+            BlockCipherMode::CBC => {
+                let (algo, _) = TryFrom::try_from(algo)?;
+
+                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cbc)?;
+                let mut key = algo.new_key(key)?;
+
+                Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
+            },
+
             BlockCipherMode::ECB => {
                 let (algo, _) = TryFrom::try_from(algo)?;
 
@@ -61,6 +70,9 @@ impl crypto::backend::interface::Symmetric for super::Backend {
     {
         match mode {
             BlockCipherMode::CFB =>
+                Self::encryptor_impl(algo, mode, key, iv),
+
+            BlockCipherMode::CBC =>
                 Self::encryptor_impl(algo, mode, key, iv),
 
             BlockCipherMode::ECB =>
