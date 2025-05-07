@@ -48,6 +48,9 @@ impl crypto::backend::interface::Symmetric for super::Backend {
             BlockCipherMode::CFB =>
                 algo.make_encrypt_cfb(key, iv.into_owned()),
 
+            BlockCipherMode::CBC =>
+                algo.make_encrypt_cbc(key, iv.into_owned()),
+
             BlockCipherMode::ECB =>
                 algo.make_encrypt_ecb(key),
         }
@@ -60,6 +63,9 @@ impl crypto::backend::interface::Symmetric for super::Backend {
         match mode {
             BlockCipherMode::CFB =>
                 algo.make_decrypt_cfb(key, iv.into_owned()),
+
+            BlockCipherMode::CBC =>
+                algo.make_decrypt_cbc(key, iv.into_owned()),
 
             BlockCipherMode::ECB =>
                 algo.make_decrypt_ecb(key),
@@ -93,6 +99,34 @@ enum CfbDecrypt {
     Camellia128(cfb_mode::Decryptor<camellia::Camellia128>),
     Camellia192(cfb_mode::Decryptor<camellia::Camellia192>),
     Camellia256(cfb_mode::Decryptor<camellia::Camellia256>),
+}
+
+enum CbcEncrypt {
+    Idea(cbc::Encryptor<idea::Idea>),
+    TripleDES(cbc::Encryptor<des::TdesEde3>),
+    Cast5(cbc::Encryptor<cast5::Cast5>),
+    Blowfish(cbc::Encryptor<blowfish::Blowfish>),
+    Aes128(cbc::Encryptor<aes::Aes128>),
+    Aes192(cbc::Encryptor<aes::Aes192>),
+    Aes256(cbc::Encryptor<aes::Aes256>),
+    Twofish(cbc::Encryptor<twofish::Twofish>),
+    Camellia128(cbc::Encryptor<camellia::Camellia128>),
+    Camellia192(cbc::Encryptor<camellia::Camellia192>),
+    Camellia256(cbc::Encryptor<camellia::Camellia256>),
+}
+
+enum CbcDecrypt {
+    Idea(cbc::Decryptor<idea::Idea>),
+    TripleDES(cbc::Decryptor<des::TdesEde3>),
+    Cast5(cbc::Decryptor<cast5::Cast5>),
+    Blowfish(cbc::Decryptor<blowfish::Blowfish>),
+    Aes128(cbc::Decryptor<aes::Aes128>),
+    Aes192(cbc::Decryptor<aes::Aes192>),
+    Aes256(cbc::Decryptor<aes::Aes256>),
+    Twofish(cbc::Decryptor<twofish::Twofish>),
+    Camellia128(cbc::Decryptor<camellia::Camellia128>),
+    Camellia192(cbc::Decryptor<camellia::Camellia192>),
+    Camellia256(cbc::Decryptor<camellia::Camellia256>),
 }
 
 enum EcbEncrypt {
@@ -423,6 +457,8 @@ macro_rules! impl_dec_mode {
 
 impl_enc_mode!(CfbEncrypt);
 impl_dec_mode!(CfbDecrypt);
+impl_enc_mode!(CbcEncrypt);
+impl_dec_mode!(CbcDecrypt);
 impl_enc_mode!(EcbEncrypt);
 impl_dec_mode!(EcbDecrypt);
 
@@ -535,6 +571,8 @@ macro_rules! make_mode {
 impl SymmetricAlgorithm {
     make_mode!(make_encrypt_cfb, CfbEncrypt, cfb_mode::Encryptor, iv: Vec<u8>);
     make_mode!(make_decrypt_cfb, CfbDecrypt, cfb_mode::Decryptor, iv: Vec<u8>);
+    make_mode!(make_encrypt_cbc, CbcEncrypt, cbc::Encryptor, iv: Vec<u8>);
+    make_mode!(make_decrypt_cbc, CbcDecrypt, cbc::Decryptor, iv: Vec<u8>);
     make_mode!(make_encrypt_ecb, EcbEncrypt, ecb::Encryptor);
     make_mode!(make_decrypt_ecb, EcbDecrypt, ecb::Decryptor);
 }

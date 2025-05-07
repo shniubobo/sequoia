@@ -63,6 +63,40 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 _ => Err(Error::UnsupportedSymmetricAlgorithm(algo).into()),
             },
 
+            BlockCipherMode::CBC => match algo {
+                SymmetricAlgorithm::TripleDES =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Des3>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::CAST5 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Cast128>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Blowfish =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Blowfish>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES128 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes128>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES192 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes192>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES256 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes256>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Twofish =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Twofish>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia128 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia128>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia192 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia192>::with_encrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia256 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia256>::with_encrypt_key(key)?, iv)),
+                _ => Err(Error::UnsupportedSymmetricAlgorithm(algo).into()),
+            },
+
             BlockCipherMode::ECB => match algo {
                 SymmetricAlgorithm::TripleDES =>
                     Ok(Box::new(cipher::Des3::with_encrypt_key(key)?)),
@@ -127,6 +161,40 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 SymmetricAlgorithm::Camellia256 =>
                     Ok(ModeWrapper::new(
                         mode::Cfb::<cipher::Camellia256>::with_decrypt_key(key)?, iv)),
+                _ => Err(Error::UnsupportedSymmetricAlgorithm(algo).into())
+            },
+
+            BlockCipherMode::CBC => match algo {
+                SymmetricAlgorithm::TripleDES =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Des3>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::CAST5 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Cast128>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Blowfish =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Blowfish>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES128 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes128>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES192 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes192>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::AES256 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Aes256>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Twofish =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Twofish>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia128 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia128>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia192 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia192>::with_decrypt_key(key)?, iv)),
+                SymmetricAlgorithm::Camellia256 =>
+                    Ok(ModeWrapper::new(
+                        mode::Cbc::<cipher::Camellia256>::with_decrypt_key(key)?, iv)),
                 _ => Err(Error::UnsupportedSymmetricAlgorithm(algo).into())
             },
 

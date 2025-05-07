@@ -36,7 +36,18 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(Cfb(cipher, algo.block_size()?)))
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::CBC => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CBC/NoPadding", algo.botan_name()?),
+                    botan::CipherDirection::Encrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
             },
 
             BlockCipherMode::ECB => {
@@ -63,7 +74,18 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(Cfb(cipher, algo.block_size()?)))
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::CBC => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CBC/NoPadding", algo.botan_name()?),
+                    botan::CipherDirection::Decrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
             },
 
             BlockCipherMode::ECB =>
@@ -96,9 +118,9 @@ impl Context for Ecb {
     }
 }
 
-struct Cfb(botan::Cipher, usize);
+struct CTX(botan::Cipher, usize);
 
-impl Context for Cfb {
+impl Context for CTX {
     fn block_size(&self) -> usize {
         self.1
     }
