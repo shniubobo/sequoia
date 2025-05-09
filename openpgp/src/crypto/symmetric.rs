@@ -108,12 +108,16 @@ impl<'a> io::Read for Decryptor<'a> {
             Err(e) => return Err(e),
         };
 
-        self.dec.decrypt(&mut plaintext[pos..pos + to_copy],
-                         ciphertext)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput,
-                                        format!("{}", e)))?;
+        // Avoid trying to decrypt empty ciphertexts.  Some backends
+        // might no like that, for example Botan's CBC mode.
+        if ! ciphertext.is_empty() {
+            self.dec.decrypt(&mut plaintext[pos..pos + to_copy],
+                             ciphertext)
+                .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput,
+                                            format!("{}", e)))?;
 
-        pos += to_copy;
+            pos += to_copy;
+        }
 
         if short_read || pos == plaintext.len() {
             return Ok(pos);
@@ -137,6 +141,12 @@ impl<'a> io::Read for Decryptor<'a> {
             Err(e) => return Err(e),
         };
         assert!(ciphertext.len() <= self.block_size);
+
+        // Avoid trying to decrypt empty ciphertexts.  Some backends
+        // might no like that, for example Botan's CBC mode.
+        if ciphertext.is_empty() {
+            return Ok(pos);
+        }
 
         vec_resize(&mut self.buffer, ciphertext.len());
 
