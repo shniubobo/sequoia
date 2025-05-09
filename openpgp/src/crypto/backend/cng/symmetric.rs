@@ -41,11 +41,10 @@ impl crypto::backend::interface::Symmetric for super::Backend {
             },
 
             BlockCipherMode::CBC => {
-                let (algo, _) = TryFrom::try_from(algo)?;
+                let (algo, _) = TryFrom::try_from(algo).unwrap();
 
-                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cbc)?;
-                let mut key = algo.new_key(key)?;
-                key.set_msg_block_len(key.block_size()?)?;
+                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cbc).unwrap();
+                let mut key = algo.new_key(key).unwrap();
 
                 Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
             },
