@@ -170,7 +170,7 @@ impl SymmetricAlgorithm {
             SymmetricAlgorithm::AES192 => Cipher::aes_192_ecb(),
             SymmetricAlgorithm::AES256 => Cipher::aes_256_ecb(),
 
-            SymmetricAlgorithm::TripleDES => Cipher::des_ecb(),
+            SymmetricAlgorithm::TripleDES => Cipher::des_ede3_ecb(),
 
             #[cfg(not(osslconf = "OPENSSL_NO_CAMELLIA"))]
             SymmetricAlgorithm::Camellia128 => Cipher::camellia128_ecb(),
