@@ -29,10 +29,10 @@ impl Context for OpenSslMode {
         let block_size = self.ctx.block_size();
 
         // SAFETY: If this is a block cipher we require the source length
-        // to be exactly one block long not to populate OpenSSL's
-        // cipher cache.
-        if block_size > 1 && src.len() != block_size {
-            return Err(Error::InvalidArgument("src need to be one block".into()).into());
+        // to be a multiple of the block size.
+        if block_size > 1 && src.len() % block_size > 0 {
+            return Err(Error::InvalidArgument(
+                "src needs to be a multiple of the block size".into()).into());
         }
 
         // SAFETY: `dst` must be big enough to hold decrypted data.
@@ -43,13 +43,17 @@ impl Context for OpenSslMode {
             .into());
         }
 
-        // SAFETY: This call is safe because either: this is a streaming cipher
-        // (block_size == 1) or block cipher (block_size > 1) and `src` is
-        // exactly one block and `dst` is big enough to hold the decrypted
-        // data.
+        // SAFETY: This call is safe because either:
+        //
+        // - this is a streaming cipher (block_size == 1),
+        // - or a block cipher (block_size > 1) and `src` and `dst`
+        //   are a multiple of the block size, and we don't use any
+        //   padding.
+        debug_assert_eq!(dst.len(), src.len());
         unsafe {
             self.ctx.cipher_update_unchecked(src, Some(dst))?;
         }
+
         Ok(())
     }
 
