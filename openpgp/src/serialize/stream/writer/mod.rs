@@ -504,8 +504,8 @@ impl<'a, C: 'a> io::Write for Encryptor<'a, C> {
 }
 
 impl<'a, C: 'a> Stackable<'a, C> for Encryptor<'a, C> {
-    fn into_inner(mut self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
-        let inner = self.inner.inner.finish()?;
+    fn into_inner(self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
+        let inner = self.inner.inner.finalize()?;
         Ok(Some(inner))
     }
     fn pop(&mut self) -> Result<Option<BoxStack<'a, C>>> {

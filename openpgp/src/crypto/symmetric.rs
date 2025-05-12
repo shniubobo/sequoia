@@ -450,7 +450,17 @@ impl<W: io::Write> Encryptor<W> {
     }
 
     /// Finish encryption and write last partial block.
-    pub fn finish(&mut self) -> Result<W> {
+    pub fn finalize(mut self) -> Result<W> {
+        self.finalize_intern()
+    }
+
+    /// Like [`Self::finalize`], but with a mutable reference.
+    ///
+    /// This can be used in [`Self::drop`], whereas [`Self::finalize`]
+    /// consumes self, and is convenient for callers because consuming
+    /// self makes Rust understand that any borrow on the writer
+    /// terminates.
+    fn finalize_intern(&mut self) -> Result<W> {
         if let Some(mut inner) = self.inner.take() {
             if !self.buffer.is_empty() {
                 let n = self.buffer.len();
@@ -564,7 +574,7 @@ impl<W: io::Write> Drop for Encryptor<W> {
         // Unfortunately, we cannot handle errors here.  If error
         // handling is a concern, call finish() and properly handle
         // errors there.
-        let _ = self.finish();
+        let _ = self.finalize_intern();
     }
 }
 
