@@ -735,26 +735,22 @@ mod tests {
             let key = SessionKey::new(algo.key_size().unwrap()).unwrap();
 
             let mut ciphertext = Vec::new();
-            {
-                let mut encryptor =
-                    Encryptor::new(algo, mode, PaddingMode::None,
-                                   &key, None, &mut ciphertext)
-                    .unwrap();
+            let mut encryptor = Encryptor::new(
+                algo, mode, PaddingMode::None,
+                &key, None, &mut ciphertext).unwrap();
 
-                encryptor.write_all(text).unwrap();
-            }
+            encryptor.write_all(text).unwrap();
+            encryptor.finalize().unwrap();
 
             let mut plaintext = Vec::new();
-            {
-                let cur = buffered_reader::Memory::with_cookie(
-                    &ciphertext, Default::default());
+            let reader = buffered_reader::Memory::with_cookie(
+                &ciphertext, Default::default());
 
-                let mut decryptor = InternalDecryptor::new(
-                    algo, mode, UnpaddingMode::None,
-                    &key, None, cur).unwrap();
+            let mut decryptor = InternalDecryptor::new(
+                algo, mode, UnpaddingMode::None,
+                &key, None, reader).unwrap();
 
-                decryptor.read_to_end(&mut plaintext).unwrap();
-            }
+            decryptor.read_to_end(&mut plaintext).unwrap();
 
             assert_eq!(&plaintext[..], text);
           }
