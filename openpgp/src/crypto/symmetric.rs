@@ -1,4 +1,50 @@
-//! Symmetric encryption.
+//! Unauthenticated symmetric encryption and decryption.
+//!
+//! This module provides a uniform streaming interface to
+//! unauthenticated symmetric encryption and decryption using
+//! different block ciphers and padding modes.
+//!
+//! Note: this is a very low-level interface.  It is not about OpenPGP
+//! encryption or decryption.  If you are looking for that, see
+//! [`crate::serialize::stream::Encryptor`] and
+//! [`crate::parse::stream::Decryptor`] instead.
+//!
+//! # Examples
+//!
+//! ```rust
+//! # use std::io::{Read, Write};
+//! # use sequoia_openpgp::crypto::SessionKey;
+//! # use sequoia_openpgp::crypto::SymmetricAlgorithm;
+//! # use sequoia_openpgp::crypto::symmetric::*;
+//! # use sequoia_openpgp::parse::buffered_reader;
+//! # fn main() -> sequoia_openpgp::Result<()> {
+//! let text = b"Hello World :)";
+//! let algo = SymmetricAlgorithm::AES128;
+//! let key = SessionKey::new(algo.key_size()?)?;
+//!
+//! // Encrypt the `text`.
+//! let mut ciphertext = Vec::new();
+//! let mut encryptor = Encryptor::new(
+//!     algo, BlockCipherMode::CFB, PaddingMode::None,
+//!     &key, None, &mut ciphertext)?;
+//! encryptor.write_all(text)?;
+//! encryptor.finalize()?;
+//!
+//! // Decrypt the `ciphertext`.
+//! let mut plaintext = Vec::new();
+//! let reader = buffered_reader::Memory::with_cookie(
+//!     &ciphertext, Default::default());
+//!
+//! let mut decryptor = Decryptor::new(
+//!     algo, BlockCipherMode::CFB, UnpaddingMode::None,
+//!     &key, None, reader)?;
+//!
+//! decryptor.read_to_end(&mut plaintext)?;
+//!
+//! // Check that we recovered it.
+//! assert_eq!(&plaintext[..], text);
+//! # Ok(()) }
+//! ```
 
 use std::io;
 use std::cmp;
