@@ -17,24 +17,20 @@ impl crypto::backend::interface::Symmetric for super::Backend {
 		      _key: &Protected, _iv: Cow<'_, [u8]>)
                       -> Result<Box<dyn Context>>
     {
-        Ok(Box::new(NullCipher(algo.block_size().unwrap_or(16))))
+        Ok(Box::new(NullCipher()))
     }
 
     fn decryptor_impl(algo: SymmetricAlgorithm, _mode: BlockCipherMode,
 		      _key: &Protected, _iv: Cow<'_, [u8]>)
                       -> Result<Box<dyn Context>>
     {
-        Ok(Box::new(NullCipher(algo.block_size().unwrap_or(16))))
+        Ok(Box::new(NullCipher()))
     }
 }
 
-struct NullCipher(usize);
+struct NullCipher();
 
 impl Context for NullCipher {
-    fn block_size(&self) -> usize {
-        self.0
-    }
-
     fn encrypt(
         &mut self,
         dst: &mut [u8],

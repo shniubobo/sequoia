@@ -217,19 +217,20 @@ impl From<SKESK6> for Packet {
 #[cfg(test)]
 impl Arbitrary for SKESK6 {
     fn arbitrary(g: &mut Gen) -> Self {
-        let algo = AEADAlgorithm::default();
-        let mut iv = vec![0u8; algo.nonce_size().unwrap()];
+        let symm = SymmetricAlgorithm::arbitrary(g);
+        let aead = AEADAlgorithm::arbitrary(g);
+        let mut iv = vec![0u8; aead.nonce_size().unwrap_or(16)];
         for b in iv.iter_mut() {
             *b = u8::arbitrary(g);
         }
         let esk_len =
-            (u8::arbitrary(g) % 64) as usize + algo.digest_size().unwrap();
+            symm.key_size().unwrap_or(16) + aead.digest_size().unwrap_or(16);
         let mut esk = vec![0u8; esk_len];
         for b in esk.iter_mut() {
             *b = u8::arbitrary(g);
         }
-        SKESK6::new(SymmetricAlgorithm::arbitrary(g),
-                    algo,
+        SKESK6::new(symm,
+                    aead,
                     S2K::arbitrary(g),
                     iv.into(),
                     esk.into())

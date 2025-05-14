@@ -257,6 +257,24 @@ impl AEADAlgorithm {
                         Ok(Box::new(ctx))
                     },
                 },
+                SymmetricAlgorithm::Twofish => match op {
+                    CipherOp::Encrypt => {
+                        let mut ctx =
+                            Eax::<twofish::Twofish, Encrypt>::with_key_and_nonce(
+                                GenericArray::try_from_slice(key)?,
+                                GenericArray::try_from_slice(nonce)?);
+                        ctx.update_assoc(aad);
+                        Ok(Box::new(ctx))
+                    },
+                    CipherOp::Decrypt => {
+                        let mut ctx =
+                            Eax::<twofish::Twofish, Decrypt>::with_key_and_nonce(
+                                GenericArray::try_from_slice(key)?,
+                                GenericArray::try_from_slice(nonce)?);
+                        ctx.update_assoc(aad);
+                        Ok(Box::new(ctx))
+                    },
+                },
                 SymmetricAlgorithm::Camellia128 => match op {
                     CipherOp::Encrypt => {
                         let mut ctx =
@@ -315,7 +333,6 @@ impl AEADAlgorithm {
                 | SymmetricAlgorithm::TripleDES
                 | SymmetricAlgorithm::CAST5
                 | SymmetricAlgorithm::Blowfish
-                | SymmetricAlgorithm::Twofish
                 | SymmetricAlgorithm::Private(_)
                 | SymmetricAlgorithm::Unknown(_)
                 | SymmetricAlgorithm::Unencrypted =>
@@ -343,6 +360,12 @@ impl AEADAlgorithm {
                             Ocb3::<aes::Aes256, U15>::new_from_slice(key)?;
                         Ok(Box::new(Ocb { cipher, nonce: *nonce, aad: aad.to_vec() }))
                     },
+                    SymmetricAlgorithm::Twofish => {
+                        let nonce = Nonce::try_from_slice(nonce)?;
+                        let cipher =
+                            Ocb3::<twofish::Twofish, U15>::new_from_slice(key)?;
+                        Ok(Box::new(Ocb { cipher, nonce: *nonce, aad: aad.to_vec() }))
+                    },
                     SymmetricAlgorithm::Camellia128 => {
                         let nonce = Nonce::try_from_slice(nonce)?;
                         let cipher =
@@ -365,7 +388,6 @@ impl AEADAlgorithm {
                     | SymmetricAlgorithm::TripleDES
                     | SymmetricAlgorithm::CAST5
                     | SymmetricAlgorithm::Blowfish
-                    | SymmetricAlgorithm::Twofish
                     | SymmetricAlgorithm::Private(_)
                     | SymmetricAlgorithm::Unknown(_)
                     | SymmetricAlgorithm::Unencrypted =>

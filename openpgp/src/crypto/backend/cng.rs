@@ -31,7 +31,7 @@ impl AEADAlgorithm {
         use self::AEADAlgorithm::*;
         match &self {
             EAX => true,
-            OCB => false,
+            OCB => true,
             GCM => true,
             Private(_) | Unknown(_)
                 => false,

@@ -191,10 +191,12 @@ macro_rules! impl_block_size {
 
 macro_rules! impl_enc_mode {
     ($mode:ident) => {
+        impl $mode {
+            impl_block_size!($mode);
+        }
+
         impl Context for $mode
         {
-            impl_block_size!($mode);
-
             fn encrypt(
                 &mut self,
                 dst: &mut [u8],
@@ -324,10 +326,12 @@ macro_rules! impl_enc_mode {
 
 macro_rules! impl_dec_mode {
     ($mode:ident) => {
+        impl $mode {
+            impl_block_size!($mode);
+        }
+
         impl Context for $mode
         {
-            impl_block_size!($mode);
-
             fn encrypt(
                 &mut self,
                 _dst: &mut [u8],

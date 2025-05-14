@@ -102,10 +102,6 @@ impl OpenSslMode {
 }
 
 impl Context for OpenSslMode {
-    fn block_size(&self) -> usize {
-        self.ctx.block_size()
-    }
-
     fn encrypt(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
         // Note that for cipher constructions that OpenSSL considers
         // "streaming" (such as CFB mode) the block size will be

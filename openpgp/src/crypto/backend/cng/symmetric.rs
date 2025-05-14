@@ -31,6 +31,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
 		      key: &Protected, iv: Cow<'_, [u8]>)
                       -> Result<Box<dyn Context>>
     {
+        let block_size = algo.block_size()?;
         match mode {
             BlockCipherMode::CFB => {
                 let (algo, _) = TryFrom::try_from(algo)?;
@@ -41,16 +42,18 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 // set to 8-bit CFB)
                 key.set_msg_block_len(key.block_size()?)?;
 
-                Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
+                Ok(Box::new(KeyWrapper::new(key, block_size,
+                                            Some(iv.into_owned()))))
             },
 
             BlockCipherMode::CBC => {
                 let (algo, _) = TryFrom::try_from(algo)?;
 
                 let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cbc)?;
-                let mut key = algo.new_key(key)?;
+                let key = algo.new_key(key)?;
 
-                Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
+                Ok(Box::new(KeyWrapper::new(key, block_size,
+                                            Some(iv.into_owned()))))
             },
 
             BlockCipherMode::ECB => {
@@ -59,7 +62,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Ecb)?;
                 let key = algo.new_key(key)?;
 
-                Ok(Box::new(KeyWrapper::new(key, None)))
+                Ok(Box::new(KeyWrapper::new(key, block_size, None)))
             },
         }
     }
@@ -83,30 +86,31 @@ impl crypto::backend::interface::Symmetric for super::Backend {
 
 struct KeyWrapper {
     key: Mutex<cng::SymmetricAlgorithmKey>,
+    block_size: usize,
     iv: Option<Protected>,
 }
 
 impl KeyWrapper {
-    fn new(key: cng::SymmetricAlgorithmKey, iv: Option<Vec<u8>>) -> KeyWrapper {
+    fn new(key: cng::SymmetricAlgorithmKey,
+           block_size: usize,
+           iv: Option<Vec<u8>>)
+           -> KeyWrapper
+    {
         KeyWrapper {
             key: Mutex::new(key),
+            block_size,
             iv: iv.map(|iv| iv.into()),
         }
     }
 }
 
 impl Context for KeyWrapper {
-    fn block_size(&self) -> usize {
-        self.key.lock().expect("Mutex not to be poisoned")
-            .block_size().expect("CNG not to fail internally")
-    }
-
     fn encrypt(
         &mut self,
         dst: &mut [u8],
         src: &[u8],
     ) -> Result<()> {
-        let block_size = Context::block_size(self);
+        let block_size = self.block_size;
         // If necessary, round up to the next block size and pad with zeroes
         // NOTE: In theory CFB doesn't need this but CNG always requires
         // passing full blocks.
@@ -132,7 +136,7 @@ impl Context for KeyWrapper {
         dst: &mut [u8],
         src: &[u8],
     ) -> Result<()> {
-        let block_size = Context::block_size(self);
+        let block_size = self.block_size;
         // If necessary, round up to the next block size and pad with zeroes
         // NOTE: In theory CFB doesn't need this but CNG always requires
         // passing full blocks.

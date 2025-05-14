@@ -248,10 +248,6 @@ impl<M> Context for ModeWrapper<M>
 where
     M: nettle::mode::Mode + Send + Sync,
 {
-    fn block_size(&self) -> usize {
-        self.mode.block_size()
-    }
-
     fn encrypt(
         &mut self,
         dst: &mut [u8],
@@ -275,10 +271,6 @@ impl<C> Context for C
 where
     C: Cipher + Send + Sync,
 {
-    fn block_size(&self) -> usize {
-        C::BLOCK_SIZE
-    }
-
     fn encrypt(
         &mut self,
         dst: &mut [u8],

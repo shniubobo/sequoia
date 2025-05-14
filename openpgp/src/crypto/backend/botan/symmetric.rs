@@ -36,7 +36,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+                Ok(Box::new(cipher))
             },
 
             BlockCipherMode::CBC => {
@@ -47,7 +47,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+                Ok(Box::new(cipher))
             },
 
             BlockCipherMode::ECB => {
@@ -56,7 +56,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
 
                 cipher.set_key(key)?;
 
-                Ok(Box::new(Ecb(cipher, algo.block_size()?)))
+                Ok(Box::new(cipher))
             },
         }
     }
@@ -74,7 +74,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+                Ok(Box::new(cipher))
             },
 
             BlockCipherMode::CBC => {
@@ -85,7 +85,7 @@ impl crypto::backend::interface::Symmetric for super::Backend {
                 cipher.set_key(key)?;
                 cipher.start(&iv)?;
 
-                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+                Ok(Box::new(cipher))
             },
 
             BlockCipherMode::ECB =>
@@ -94,18 +94,12 @@ impl crypto::backend::interface::Symmetric for super::Backend {
     }
 }
 
-struct Ecb(botan::BlockCipher, usize);
-
-impl Context for Ecb {
-    fn block_size(&self) -> usize {
-        self.1
-    }
-
+impl Context for botan::BlockCipher {
     fn encrypt(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
         debug_assert_eq!(dst.len(), src.len());
         let l = dst.len().min(src.len());
         dst[..l].copy_from_slice(&src[..l]);
-        self.0.encrypt_in_place(dst)?;
+        self.encrypt_in_place(dst)?;
         Ok(())
     }
 
@@ -113,27 +107,21 @@ impl Context for Ecb {
         debug_assert_eq!(dst.len(), src.len());
         let l = dst.len().min(src.len());
         dst[..l].copy_from_slice(&src[..l]);
-        self.0.decrypt_in_place(dst)?;
+        self.decrypt_in_place(dst)?;
         Ok(())
     }
 }
 
-struct CTX(botan::Cipher, usize);
-
-impl Context for CTX {
-    fn block_size(&self) -> usize {
-        self.1
-    }
-
+impl Context for botan::Cipher {
     fn encrypt(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
         debug_assert_eq!(dst.len(), src.len());
-        self.0.finish_into(src, dst)?;
+        self.finish_into(src, dst)?;
         Ok(())
     }
 
     fn decrypt(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
         debug_assert_eq!(dst.len(), src.len());
-        self.0.finish_into(src, dst)?;
+        self.finish_into(src, dst)?;
         Ok(())
     }
 }

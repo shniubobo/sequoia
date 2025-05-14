@@ -126,10 +126,6 @@ pub enum UnpaddingMode {
 /// A context representing symmetric algorithm state and block cipher
 /// mode.
 pub(crate) trait Context: Send + Sync {
-    /// Block size of the underlying cipher in bytes.
-    #[allow(dead_code)] // Used in some backends.
-    fn block_size(&self) -> usize;
-
     /// Encrypt a single block `src` to a ciphertext block `dst`.
     /// The `dst` and `src` buffers are expected to be at least as large as
     /// the block size of the underlying cipher.
@@ -694,15 +690,13 @@ mod tests {
         for algo in [SymmetricAlgorithm::AES128,
                      SymmetricAlgorithm::AES192,
                      SymmetricAlgorithm::AES256].iter() {
-            // The keys are [0, 1, 2, ...].
+            // The keys are [key.len() - 1, 0, 0, 0, ...].
             let mut key = vec![0u8; algo.key_size().unwrap()];
-            for i in 0..key.len() {
-                key[0] = i as u8;
-            }
+            key[0] = key.len() as u8 - 1;
             let key = key.into();
 
             let filename = &format!(
-                    "raw/a-cypherpunks-manifesto.aes{}.key_ascending_from_0",
+                    "raw/a-cypherpunks-manifesto.aes{}.key_is_key_len_dec1_as_le",
                 algo.key_size().unwrap() * 8);
             let ciphertext = buffered_reader::Memory::with_cookie(
                 crate::tests::file(filename), Default::default());
@@ -727,11 +721,9 @@ mod tests {
         for algo in [SymmetricAlgorithm::AES128,
                      SymmetricAlgorithm::AES192,
                      SymmetricAlgorithm::AES256].iter() {
-            // The keys are [0, 1, 2, ...].
+            // The keys are [key.len() - 1, 0, 0, 0, ...].
             let mut key = vec![0u8; algo.key_size().unwrap()];
-            for i in 0..key.len() {
-                key[0] = i as u8;
-            }
+            key[0] = key.len() as u8 - 1;
             let key = key.into();
 
             let mut ciphertext = Vec::new();
@@ -747,7 +739,7 @@ mod tests {
             }
 
             let filename = format!(
-                "raw/a-cypherpunks-manifesto.aes{}.key_ascending_from_0",
+                "raw/a-cypherpunks-manifesto.aes{}.key_is_key_len_dec1_as_le",
                 algo.key_size().unwrap() * 8);
             let mut cipherfile = Cursor::new(crate::tests::file(&filename));
             let mut reference = Vec::new();

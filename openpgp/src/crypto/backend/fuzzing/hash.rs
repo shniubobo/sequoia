@@ -5,7 +5,7 @@ use crate::Result;
 use crate::types::{HashAlgorithm};
 
 #[derive(Clone)]
-struct NullHasher(HashAlgorithm);
+struct NullHasher();
 
 impl io::Write for NullHasher {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
@@ -43,6 +43,6 @@ impl HashAlgorithm {
     ///
     ///   [`HashAlgorithm::is_supported`]: HashAlgorithm::is_supported()
     pub(crate) fn new_hasher(self) -> Result<Box<dyn Digest>> {
-        Ok(Box::new(NullHasher(self)))
+        Ok(Box::new(NullHasher()))
     }
 }

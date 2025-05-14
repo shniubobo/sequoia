@@ -3486,7 +3486,7 @@ impl SKESK6 {
     fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
-        tracer!(TRACE, "SKESK5::parse", php.recursion_depth());
+        tracer!(TRACE, "SKESK6::parse", php.recursion_depth());
         make_php_try!(php);
 
         // Octet count of the following 5 fields.
