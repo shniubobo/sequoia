@@ -1,11 +1,102 @@
-use crate::crypto::symmetric::Mode;
+use std::borrow::Cow;
 
 use crate::{Error, Result};
-use crate::types::SymmetricAlgorithm;
+
+use crate::crypto::{
+    SymmetricAlgorithm,
+    self,
+    mem::Protected,
+    symmetric::{BlockCipherMode, Context},
+};
+
+impl crypto::backend::interface::Symmetric for super::Backend {
+    fn supports_algo(algo: SymmetricAlgorithm) -> bool {
+        use self::SymmetricAlgorithm::*;
+        #[allow(deprecated)]
+        match algo {
+            TripleDES | IDEA | CAST5 | Blowfish |
+            AES128 | AES192 | AES256 | Twofish |
+            Camellia128 | Camellia192 | Camellia256
+                => true,
+            Unencrypted | Private(_) | Unknown(_)
+                => false,
+        }
+    }
+
+    fn encryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CFB", algo.botan_name()?),
+                    botan::CipherDirection::Encrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::CBC => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CBC/NoPadding", algo.botan_name()?),
+                    botan::CipherDirection::Encrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::ECB => {
+                let mut cipher =
+                    botan::BlockCipher::new(algo.botan_name()?)?;
+
+                cipher.set_key(key)?;
+
+                Ok(Box::new(Ecb(cipher, algo.block_size()?)))
+            },
+        }
+    }
+
+    fn decryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CFB", algo.botan_name()?),
+                    botan::CipherDirection::Decrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::CBC => {
+                let mut cipher = botan::Cipher::new(
+                    &format!("{}/CBC/NoPadding", algo.botan_name()?),
+                    botan::CipherDirection::Decrypt)?;
+
+                cipher.set_key(key)?;
+                cipher.start(&iv)?;
+
+                Ok(Box::new(CTX(cipher, algo.block_size()?)))
+            },
+
+            BlockCipherMode::ECB =>
+                Self::encryptor_impl(algo, mode, key, iv),
+        }
+    }
+}
 
 struct Ecb(botan::BlockCipher, usize);
 
-impl Mode for Ecb {
+impl Context for Ecb {
     fn block_size(&self) -> usize {
         self.1
     }
@@ -27,9 +118,9 @@ impl Mode for Ecb {
     }
 }
 
-struct Cfb(botan::Cipher, usize);
+struct CTX(botan::Cipher, usize);
 
-impl Mode for Cfb {
+impl Context for CTX {
     fn block_size(&self) -> usize {
         self.1
     }
@@ -48,20 +139,6 @@ impl Mode for Cfb {
 }
 
 impl SymmetricAlgorithm {
-    /// Returns whether this algorithm is supported by the crypto backend.
-    pub(crate) fn is_supported_by_backend(&self) -> bool {
-        use self::SymmetricAlgorithm::*;
-        #[allow(deprecated)]
-        match &self {
-            TripleDES | IDEA | CAST5 | Blowfish |
-            AES128 | AES192 | AES256 | Twofish |
-            Camellia128 | Camellia192 | Camellia256
-                => true,
-            Unencrypted | Private(_) | Unknown(_)
-                => false,
-        }
-    }
-
     /// Returns the name of the algorithm for use with Botan's
     /// constructor.
     pub(crate) fn botan_name(self) -> Result<&'static str> {
@@ -83,43 +160,5 @@ impl SymmetricAlgorithm {
             SymmetricAlgorithm::Private(_) =>
                 Err(Error::UnsupportedSymmetricAlgorithm(self).into()),
         }
-    }
-
-    /// Creates a context for encrypting in CFB mode.
-    pub(crate) fn make_encrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Mode>> {
-        let mut cipher = botan::Cipher::new(
-            &format!("{}/CFB", self.botan_name()?),
-            botan::CipherDirection::Encrypt)?;
-
-        cipher.set_key(key)?;
-        cipher.start(&iv)?;
-
-        Ok(Box::new(Cfb(cipher, self.block_size()?)))
-    }
-
-    /// Creates a context for decrypting in CFB mode.
-    pub(crate) fn make_decrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Mode>> {
-        let mut cipher = botan::Cipher::new(
-            &format!("{}/CFB", self.botan_name()?),
-            botan::CipherDirection::Decrypt)?;
-
-        cipher.set_key(key)?;
-        cipher.start(&iv)?;
-
-        Ok(Box::new(Cfb(cipher, self.block_size()?)))
-    }
-
-    /// Creates a context for encrypting in ECB mode.
-    pub(crate) fn make_encrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Mode>> {
-        let mut cipher = botan::BlockCipher::new(self.botan_name()?)?;
-
-        cipher.set_key(key)?;
-
-        Ok(Box::new(Ecb(cipher, self.block_size()?)))
-    }
-
-    /// Creates a context for decrypting in ECB mode.
-    pub(crate) fn make_decrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Mode>> {
-        self.make_encrypt_ecb(key)
     }
 }

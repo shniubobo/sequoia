@@ -4,6 +4,14 @@
 #+STARTUP: content hidestars
 
 
+* Changes in 2.1.0
+** New functionality
+   - crypto::symmetric::Encryptor
+   - crypto::symmetric::Decryptor
+   - crypto::symmetric::BlockCipherMode
+   - crypto::symmetric::PaddingMode
+   - crypto::symmetric::UnpaddingMode
+
 * Changes in 2.0.0
 ** Notable changes
    - This release adds support for RFC 9580, which revises RFC 4880.

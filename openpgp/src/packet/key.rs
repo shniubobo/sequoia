@@ -2226,12 +2226,19 @@ impl Unencrypted {
             Ok(Encrypted::new_aead(s2k, symm, aead, iv.into_boxed_slice(),
                                    esk.into_boxed_slice()))
         } else {
+            use crypto::symmetric::{
+                BlockCipherMode,
+                PaddingMode,
+            };
+
             // Ciphertext is preceded by a random block.
             let mut trash = vec![0u8; symm.block_size()?];
             crypto::random(&mut trash)?;
 
             let mut esk = Vec::new();
-            let mut encryptor = Encryptor::new(symm, &derived_key, &mut esk)?;
+            let mut encryptor =
+                Encryptor::new(symm, BlockCipherMode::CFB, PaddingMode::None,
+                               &derived_key, None, &mut esk)?;
             encryptor.write_all(&trash)?;
             self.map(|mpis| mpis.serialize_with_checksum(&mut encryptor,
                                                          checksum))?;
@@ -2436,7 +2443,7 @@ impl Encrypted {
         P: KeyParts,
         R: KeyRole,
     {
-        use std::io::{Cursor, Read};
+        use std::io::Read;
         use crate::crypto;
 
         constrain_encryption_methods(
@@ -2466,9 +2473,21 @@ impl Encrypted {
             mpi::SecretKeyMaterial::from_bytes(
                 key.pk_algo(), &secret).map(|m| m.into())
         } else {
-            let cur = Cursor::new(ciphertext);
+            use crypto::symmetric::{
+                BlockCipherMode,
+                UnpaddingMode,
+            };
+
+            let cur = buffered_reader::Memory::with_cookie(
+                ciphertext, Default::default());
             let mut dec =
-                crypto::symmetric::Decryptor::new(self.algo, &derived_key, cur)?;
+                crypto::symmetric::InternalDecryptor::new(
+                    self.algo,
+                    BlockCipherMode::CFB,
+                    UnpaddingMode::None,
+                    &derived_key,
+                    None,
+                    cur)?;
 
             // Consume the first block.
             let block_size = self.algo.block_size()?;

@@ -237,22 +237,10 @@ impl<'a, S: Schedule> Decryptor<'a, S> {
                   aead: AEADAlgorithm, chunk_size: usize,
                   schedule: S, key: SessionKey, source: R)
         -> Result<Self>
-        where R: io::Read + Send + Sync + 'a
-    {
-        Self::from_cookie_reader(
-            sym_algo, aead, chunk_size, schedule, key,
-            Box::new(buffered_reader::Generic::with_cookie(
-                source, None, Default::default())))
-    }
-
-    pub fn from_cookie_reader(sym_algo: SymmetricAlgorithm,
-                            aead: AEADAlgorithm, chunk_size: usize,
-                            schedule: S, key: SessionKey,
-                            source: Box<dyn 'a + BufferedReader<Cookie>>)
-        -> Result<Self>
+        where R: BufferedReader<Cookie> + 'a,
     {
         Ok(Decryptor {
-            source,
+            source: source.into_boxed(),
             sym_algo,
             aead,
             key,
@@ -465,7 +453,7 @@ impl<'a, S: Schedule> BufferedReaderDecryptor<'a, S> {
     {
         Ok(BufferedReaderDecryptor {
             reader: buffered_reader::Generic::with_cookie(
-                Decryptor::from_cookie_reader(
+                Decryptor::new(
                     sym_algo, aead, chunk_size, schedule, key, source)?,
                 None, cookie),
         })
@@ -766,8 +754,6 @@ mod tests {
     /// This test tries to encrypt, then decrypt some data.
     #[test]
     fn roundtrip() {
-        use std::io::Cursor;
-
         // EAX and OCB can be used with all symmetric algorithms using
         // a 16-byte block size.
         for sym_algo in [SymmetricAlgorithm::AES128,
@@ -813,6 +799,8 @@ mod tests {
 
                 let mut plaintext = Vec::new();
                 {
+                    let cur = buffered_reader::Memory::with_cookie(
+                        &ciphertext, Default::default());
                     let (message_key, schedule) = SEIPv2Schedule::new(
                         &key,
                         *sym_algo,
@@ -824,7 +812,7 @@ mod tests {
                                                        chunk_size,
                                                        schedule,
                                                        message_key,
-                                                       Cursor::new(&ciphertext))
+                                                       cur)
                         .unwrap();
 
                     decryptor.read_to_end(&mut plaintext).unwrap();

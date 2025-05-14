@@ -150,8 +150,11 @@ impl SKESK4 {
         // Derive key and make a cipher.
         let key = s2k.derive_key(password, esk_algo.key_size()?)?;
         let block_size = esk_algo.block_size()?;
-        let iv = vec![0u8; block_size];
-        let mut cipher = esk_algo.make_encrypt_cfb(&key[..], iv)?;
+
+        use crate::crypto::symmetric::BlockCipherMode;
+        use crate::crypto::backend::{Backend, interface::Symmetric};
+        let mut cipher = Backend::encryptor(esk_algo, BlockCipherMode::CFB,
+                                            key.as_protected(), None)?;
 
         // We need to prefix the cipher specifier to the session key.
         let mut psk: SessionKey = vec![0; 1 + session_key.len()].into();
@@ -235,8 +238,12 @@ impl SKESK4 {
             // Use the derived key to decrypt the ESK. Unlike SEP &
             // SEIP we have to use plain CFB here.
             let blk_sz = self.sym_algo.block_size()?;
-            let iv = vec![0u8; blk_sz];
-            let mut dec  = self.sym_algo.make_decrypt_cfb(&key[..], iv)?;
+
+            use crate::crypto::symmetric::BlockCipherMode;
+            use crate::crypto::backend::{Backend, interface::Symmetric};
+            let mut dec = Backend::decryptor(self.sym_algo, BlockCipherMode::CFB,
+                                             key.as_protected(), None)?;
+
             let mut plain: SessionKey = vec![0u8; esk.len()].into();
             let cipher = esk;
 

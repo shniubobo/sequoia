@@ -467,12 +467,19 @@ assert_send_and_sync!(Encryptor<'_, C> where C);
 impl<'a> Encryptor<'a, Cookie> {
     /// Makes an encrypting writer.
     pub fn new(inner: Message<'a>, cookie: Cookie, algo: SymmetricAlgorithm,
-               key: &[u8])
+               key: &SessionKey)
         -> Result<Message<'a>>
     {
+        use crate::crypto::symmetric::{
+            BlockCipherMode,
+            PaddingMode,
+        };
+
         Ok(Message::from(Box::new(Encryptor {
             inner: Generic::new_unboxed(
-                symmetric::Encryptor::new(algo, key, inner.into())?,
+                symmetric::Encryptor::new(
+                    algo, BlockCipherMode::CFB, PaddingMode::None,
+                    key, None, inner.into())?,
                 cookie),
         })))
     }
@@ -497,8 +504,8 @@ impl<'a, C: 'a> io::Write for Encryptor<'a, C> {
 }
 
 impl<'a, C: 'a> Stackable<'a, C> for Encryptor<'a, C> {
-    fn into_inner(mut self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
-        let inner = self.inner.inner.finish()?;
+    fn into_inner(self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
+        let inner = self.inner.inner.finalize()?;
         Ok(Some(inner))
     }
     fn pop(&mut self) -> Result<Option<BoxStack<'a, C>>> {

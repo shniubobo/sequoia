@@ -430,14 +430,13 @@ mod has_access_to_prekey {
             let mut plaintext = Protected::new(self.plaintext_len);
 
             let mut decryptor =
-                aead::Decryptor::from_cookie_reader(
-                                     SYMMETRIC_ALGO,
+                aead::Decryptor::new(SYMMETRIC_ALGO,
                                      AEAD_ALGO,
                                      self.plaintext_len,
                                      CounterSchedule::default(),
                                      Self::sealing_key(&self.salt)
                                      .expect("was fine during encryption"),
-                                     Box::new(ciphertext))
+                                     ciphertext)
                 .expect("Mandatory algorithm unsupported");
 
             // Be careful not to leak partially decrypted plain text.

@@ -1,13 +1,85 @@
+use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::sync::Mutex;
 
 use win_crypto_ng::symmetric as cng;
 
-use crate::crypto::mem::Protected;
-use crate::crypto::symmetric::Mode;
-
 use crate::{Error, Result};
-use crate::types::SymmetricAlgorithm;
+
+use crate::crypto::{
+    SymmetricAlgorithm,
+    self,
+    mem::Protected,
+    symmetric::{BlockCipherMode, Context},
+};
+
+impl crypto::backend::interface::Symmetric for super::Backend {
+    fn supports_algo(algo: SymmetricAlgorithm) -> bool {
+        use self::SymmetricAlgorithm::*;
+        #[allow(deprecated)]
+        match algo {
+            AES128 | AES192 | AES256 | TripleDES
+                => true,
+            IDEA | CAST5 | Blowfish | Twofish
+                | Camellia128 | Camellia192 | Camellia256
+                | Unencrypted  | Private(_) | Unknown(_)
+                => false,
+        }
+    }
+
+    fn encryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB => {
+                let (algo, _) = TryFrom::try_from(algo)?;
+
+                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cfb)?;
+                let mut key = algo.new_key(key)?;
+                // Use full-block CFB mode as expected everywhere else (by default it's
+                // set to 8-bit CFB)
+                key.set_msg_block_len(key.block_size()?)?;
+
+                Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
+            },
+
+            BlockCipherMode::CBC => {
+                let (algo, _) = TryFrom::try_from(algo)?;
+
+                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cbc)?;
+                let mut key = algo.new_key(key)?;
+
+                Ok(Box::new(KeyWrapper::new(key, Some(iv.into_owned()))))
+            },
+
+            BlockCipherMode::ECB => {
+                let (algo, _) = TryFrom::try_from(algo)?;
+
+                let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Ecb)?;
+                let key = algo.new_key(key)?;
+
+                Ok(Box::new(KeyWrapper::new(key, None)))
+            },
+        }
+    }
+
+    fn decryptor_impl(algo: SymmetricAlgorithm, mode: BlockCipherMode,
+		      key: &Protected, iv: Cow<'_, [u8]>)
+                      -> Result<Box<dyn Context>>
+    {
+        match mode {
+            BlockCipherMode::CFB =>
+                Self::encryptor_impl(algo, mode, key, iv),
+
+            BlockCipherMode::CBC =>
+                Self::encryptor_impl(algo, mode, key, iv),
+
+            BlockCipherMode::ECB =>
+                Self::encryptor_impl(algo, mode, key, iv),
+        }
+    }
+}
 
 struct KeyWrapper {
     key: Mutex<cng::SymmetricAlgorithmKey>,
@@ -23,7 +95,7 @@ impl KeyWrapper {
     }
 }
 
-impl Mode for KeyWrapper {
+impl Context for KeyWrapper {
     fn block_size(&self) -> usize {
         self.key.lock().expect("Mutex not to be poisoned")
             .block_size().expect("CNG not to fail internally")
@@ -34,7 +106,7 @@ impl Mode for KeyWrapper {
         dst: &mut [u8],
         src: &[u8],
     ) -> Result<()> {
-        let block_size = Mode::block_size(self);
+        let block_size = Context::block_size(self);
         // If necessary, round up to the next block size and pad with zeroes
         // NOTE: In theory CFB doesn't need this but CNG always requires
         // passing full blocks.
@@ -60,7 +132,7 @@ impl Mode for KeyWrapper {
         dst: &mut [u8],
         src: &[u8],
     ) -> Result<()> {
-        let block_size = Mode::block_size(self);
+        let block_size = Context::block_size(self);
         // If necessary, round up to the next block size and pad with zeroes
         // NOTE: In theory CFB doesn't need this but CNG always requires
         // passing full blocks.
@@ -106,50 +178,5 @@ impl TryFrom<SymmetricAlgorithm> for (cng::SymmetricAlgorithmId, usize) {
             SymmetricAlgorithm::AES256 => (cng::SymmetricAlgorithmId::Aes, 256),
             algo => Err(UnsupportedAlgorithm(algo))?,
         })
-    }
-}
-
-impl SymmetricAlgorithm {
-    /// Returns whether this algorithm is supported by the crypto backend.
-    pub(crate) fn is_supported_by_backend(&self) -> bool {
-        use self::SymmetricAlgorithm::*;
-        #[allow(deprecated)]
-        match self {
-            AES128 | AES192 | AES256 | TripleDES => true,
-            _ => false,
-        }
-    }
-
-    /// Creates a symmetric cipher context for encrypting in CFB mode.
-    pub(crate) fn make_encrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Mode>> {
-        let (algo, _) = TryFrom::try_from(self)?;
-
-        let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Cfb)?;
-        let mut key = algo.new_key(key)?;
-        // Use full-block CFB mode as expected everywhere else (by default it's
-        // set to 8-bit CFB)
-        key.set_msg_block_len(key.block_size()?)?;
-
-        Ok(Box::new(KeyWrapper::new(key, Some(iv))))
-    }
-
-    /// Creates a symmetric cipher context for decrypting in CFB mode.
-    pub(crate) fn make_decrypt_cfb(self, key: &[u8], iv: Vec<u8>) -> Result<Box<dyn Mode>> {
-        Self::make_encrypt_cfb(self, key, iv)
-    }
-
-    /// Creates a symmetric cipher context for encrypting in ECB mode.
-    pub(crate) fn make_encrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Mode>> {
-        let (algo, _) = TryFrom::try_from(self)?;
-
-        let algo = cng::SymmetricAlgorithm::open(algo, cng::ChainingMode::Ecb)?;
-        let key = algo.new_key(key)?;
-
-        Ok(Box::new(KeyWrapper::new(key, None)))
-    }
-
-    /// Creates a symmetric cipher context for decrypting in ECB mode.
-    pub(crate) fn make_decrypt_ecb(self, key: &[u8]) -> Result<Box<dyn Mode>> {
-        Self::make_encrypt_ecb(self, key)
     }
 }
