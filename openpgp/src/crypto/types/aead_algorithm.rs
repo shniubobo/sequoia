@@ -58,8 +58,22 @@ const AEAD_ALGORITHM_VARIANTS: [AEADAlgorithm; 3] = [
 ];
 
 impl Default for AEADAlgorithm {
+    /// Returns the best AEAD mode supported by the backend.
+    ///
+    /// This SHOULD return OCB, which is the mandatory-to-implement
+    /// algorithm, but fall back to any supported algorithm.
     fn default() -> Self {
-        Self::const_default()
+        [
+            AEADAlgorithm::OCB, // Prefer OCB.
+            AEADAlgorithm::GCM,
+            AEADAlgorithm::EAX, // EAX is the slowest.
+        ]
+            .into_iter()
+            .filter(Self::is_supported)
+            .next()
+        // One is better be supported, else just return OCB and hope
+        // for the best.
+            .unwrap_or(AEADAlgorithm::OCB)
     }
 }
 

@@ -217,7 +217,7 @@ impl From<SKESK6> for Packet {
 #[cfg(test)]
 impl Arbitrary for SKESK6 {
     fn arbitrary(g: &mut Gen) -> Self {
-        let algo = AEADAlgorithm::const_default();
+        let algo = AEADAlgorithm::default();
         let mut iv = vec![0u8; algo.nonce_size().unwrap()];
         for b in iv.iter_mut() {
             *b = u8::arbitrary(g);

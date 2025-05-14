@@ -5,6 +5,13 @@
 
 
 * Changes in 2.1.0
+** Notable fixes
+   - When using the OpenSSL backend, we now check at runtime what AEAD
+     modes are available.  This fixes a severe bug that rendered the
+     crate unusable when OpenSSL was put into FIPS mode on Fedora and
+     RedHat systems, which caused the memory encryption module to
+     abort the process because it relied on OCB being always available.
+
 ** New functionality
    - crypto::symmetric::Encryptor
    - crypto::symmetric::Decryptor

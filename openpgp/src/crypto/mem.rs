@@ -365,7 +365,6 @@ mod has_access_to_prekey {
     // algorithms MUST be supported by the cryptographic library.
     const HASH_ALGO: HashAlgorithm = HashAlgorithm::SHA256;
     const SYMMETRIC_ALGO: SymmetricAlgorithm = SymmetricAlgorithm::AES256;
-    const AEAD_ALGO: AEADAlgorithm = AEADAlgorithm::const_default();
 
     impl Encrypted {
         /// Computes the sealing key used to encrypt the memory.
@@ -391,17 +390,18 @@ mod has_access_to_prekey {
                 });
             }
 
+            let aead_algo = AEADAlgorithm::default();
             let mut salt = [0; 32];
             crate::crypto::random(&mut salt)?;
             let mut ciphertext = Protected::new(
-                p.len() + 2 * AEAD_ALGO.digest_size().expect("supported"));
+                p.len() + 2 * aead_algo.digest_size().expect("supported"));
 
             {
                 let mut encryptor =
                     aead::Encryptor::new(SYMMETRIC_ALGO,
-                                         AEAD_ALGO,
+                                         aead_algo,
                                          p.len(),
-                                         CounterSchedule::default(),
+                                         CounterSchedule { aead_algo },
                                          Self::sealing_key(&salt)?,
                                          io::Cursor::new(&mut ciphertext[..]))
                     .expect("Mandatory algorithm unsupported");
@@ -425,15 +425,16 @@ mod has_access_to_prekey {
                 return fun(&self.ciphertext);
             }
 
+            let aead_algo = AEADAlgorithm::default();
             let ciphertext =
                 Memory::with_cookie(&self.ciphertext, Default::default());
             let mut plaintext = Protected::new(self.plaintext_len);
 
             let mut decryptor =
                 aead::Decryptor::new(SYMMETRIC_ALGO,
-                                     AEAD_ALGO,
+                                     aead_algo,
                                      self.plaintext_len,
-                                     CounterSchedule::default(),
+                                     CounterSchedule { aead_algo },
                                      Self::sealing_key(&self.salt)
                                      .expect("was fine during encryption"),
                                      ciphertext)
@@ -449,8 +450,9 @@ mod has_access_to_prekey {
         }
     }
 
-    #[derive(Default)]
-    struct CounterSchedule {}
+    struct CounterSchedule {
+        aead_algo: AEADAlgorithm,
+    }
 
     impl aead::Schedule for CounterSchedule {
         fn next_chunk<F, R>(&self, index: u64, mut fun: F) -> R
@@ -459,7 +461,7 @@ mod has_access_to_prekey {
         {
             // The nonce is a simple counter.
             let mut nonce_store = [0u8; aead::MAX_NONCE_LEN];
-            let nonce_len = AEAD_ALGO.nonce_size()
+            let nonce_len = self.aead_algo.nonce_size()
                 .expect("Mandatory algorithm unsupported");
             assert!(nonce_len >= 8);
             let nonce = &mut nonce_store[..nonce_len];
@@ -476,7 +478,7 @@ mod has_access_to_prekey {
         {
             // The nonce is a simple counter.
             let mut nonce_store = [0u8; aead::MAX_NONCE_LEN];
-            let nonce_len = AEAD_ALGO.nonce_size()
+            let nonce_len = self.aead_algo.nonce_size()
                 .expect("Mandatory algorithm unsupported");
             assert!(nonce_len >= 8);
             let nonce = &mut nonce_store[..nonce_len];

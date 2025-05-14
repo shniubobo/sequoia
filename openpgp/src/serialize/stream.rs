@@ -3062,7 +3062,7 @@ impl<'a, 'b> Encryptor<'a, 'b> {
                 })
             {
                 // This prefers OCB if supported.  OCB is MTI.
-                self.aead_algo = Some(AEADAlgorithm::const_default());
+                self.aead_algo = Some(AEADAlgorithm::default());
             }
         }
 
@@ -4100,7 +4100,7 @@ mod test {
     // Example copied from `Encryptor::aead_algo` and slightly
     // adjusted since the doctest from `Encryptor::aead_algo` does not
     // run.  Additionally this test case utilizes
-    // `AEADAlgorithm::const_default` to detect which algorithm to
+    // `AEADAlgorithm::default` to detect which algorithm to
     // use.
     #[test]
     fn experimental_aead_encryptor() -> Result<()> {
@@ -4119,7 +4119,7 @@ mod test {
         let message = Message::new(&mut sink);
         let message =
           Encryptor::with_passwords(message, Some("совершенно секретно"))
-              .aead_algo(AEADAlgorithm::const_default())
+              .aead_algo(AEADAlgorithm::default())
               .build()?;
         let mut message = LiteralWriter::new(message).build()?;
         message.write_all(b"Hello world.")?;

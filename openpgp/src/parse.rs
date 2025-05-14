@@ -3491,7 +3491,7 @@ impl SKESK6 {
 
         // Octet count of the following 5 fields.
         let parameter_len = php_try!(php.parse_u8_len("parameter_len"));
-        if parameter_len < 1 + 1 + 1 + 2 /* S2K */ + 12 /* IV */ {
+        if parameter_len < 1 + 1 + 1 + 1 /* S2K */ + 12 /* IV */ {
             return php.fail("expected at least 16 parameter octets");
         }
 

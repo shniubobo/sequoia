@@ -23,26 +23,31 @@ impl super::interface::Backend for Backend {
 }
 
 impl AEADAlgorithm {
-    /// Returns the best AEAD mode supported by the backend.
-    ///
-    /// This SHOULD return OCB, which is the mandatory-to-implement
-    /// algorithm and the most performing one, but fall back to any
-    /// supported algorithm.
-    pub(crate) const fn const_default() -> AEADAlgorithm {
-        if cfg!(not(osslconf = "OPENSSL_NO_OCB")) {
-            AEADAlgorithm::OCB
-        } else {
-            AEADAlgorithm::GCM
-        }
-    }
-
     pub(crate) fn is_supported_by_backend(&self) -> bool {
-        match self {
+        // First, check whether support is compiled in or not.
+        (match self {
             AEADAlgorithm::EAX => false,
             AEADAlgorithm::OCB => cfg!(not(osslconf = "OPENSSL_NO_OCB")),
             AEADAlgorithm::GCM => true,
             AEADAlgorithm::Private(_) |
             AEADAlgorithm::Unknown(_) => false,
+        }) && {
+            // Then, check whether it has been disabled at runtime,
+            // for example by putting OpenSSL into FIPS mode.
+            use std::sync::OnceLock;
+
+            static MODES: [OnceLock<bool>; 3] = [const { OnceLock::new() }; 3];
+            MODES.get(u8::from(*self) as usize - 1)
+                .map(|cell| cell.get_or_init(|| {
+                    let algo = SymmetricAlgorithm::AES128;
+                    let key = [0; 16];
+                    let nonce = &key[..self.nonce_size().unwrap_or(16)];
+                    self.context(algo, &key, &[], nonce,
+                                 crate::crypto::aead::CipherOp::Encrypt)
+                        .is_ok()
+                }))
+                .cloned()
+                .unwrap_or(false)
         }
     }
 

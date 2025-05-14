@@ -30,15 +30,6 @@ impl super::interface::Backend for Backend {
 }
 
 impl AEADAlgorithm {
-    /// Returns the best AEAD mode supported by the backend.
-    ///
-    /// This SHOULD return OCB, which is the mandatory-to-implement
-    /// algorithm and the most performing one, but fall back to any
-    /// supported algorithm.
-    pub(crate) const fn const_default() -> AEADAlgorithm {
-        AEADAlgorithm::OCB
-    }
-
     pub(crate) fn is_supported_by_backend(&self) -> bool {
         true
     }
