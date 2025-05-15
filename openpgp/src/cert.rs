@@ -6393,10 +6393,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     #[allow(deprecated)]
     fn canonicalize_with_v3_sig() -> Result<()> {
-        if ! crate::types::PublicKeyAlgorithm::DSA.is_supported() {
-            eprintln!("Skipping because DSA is not supported");
-            return Ok(());
-        }
+        skip_unless_supported!(crate::types::PublicKeyAlgorithm::DSA);
 
         // This test relies on being able to validate SHA-1
         // signatures.  The standard policy rejects SHA-1.  So, use a
@@ -7391,10 +7388,7 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     #[test]
     #[allow(deprecated)]
     fn v3_binding_signature() -> Result<()> {
-        if ! crate::types::PublicKeyAlgorithm::DSA.is_supported() {
-            eprintln!("Skipping because DSA is not supported");
-            return Ok(());
-        }
+        skip_unless_supported!(crate::types::PublicKeyAlgorithm::DSA);
 
         let c = Cert::from_bytes(
             crate::tests::key("pgp5-dsa-elg-v3-subkey-binding.pgp"))?;
@@ -7430,12 +7424,8 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
     /// Tests v3 revocation signatures.
     #[test]
     fn v3_revocation_signature() -> Result<()> {
-        if ! crate::types::PublicKeyAlgorithm::ECDSA.is_supported()
-            || ! crate::types::Curve::NistP521.is_supported()
-        {
-            eprintln!("Skipping because ECDSA/NistP521 is not supported");
-            return Ok(());
-        }
+        skip_unless_supported!(crate::types::PublicKeyAlgorithm::ECDSA);
+        skip_unless_supported!(crate::types::Curve::NistP521);
 
         let c = Cert::from_bytes(
             crate::tests::key("v4-revoked-by-v3.pgp"))?;

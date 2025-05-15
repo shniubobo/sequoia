@@ -268,3 +268,14 @@ macro_rules! zero_stack {
             #[inline(never)] || $code)
     };
 }
+
+/// Skips a test unless the given algorithm is supported.
+#[allow(unused_macros)]
+macro_rules! skip_unless_supported {
+    ( $algo: expr ) => {
+        if ! $algo.is_supported() {
+            eprintln!("Skipping test because {} is not supported.", $algo);
+            return Ok(());
+        }
+    }
+}

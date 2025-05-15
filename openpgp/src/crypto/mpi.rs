@@ -1566,37 +1566,11 @@ mod tests {
     quickcheck! {
         fn pk_roundtrip(pk: PublicKey) -> bool {
             use std::io::Cursor;
-            use crate::PublicKeyAlgorithm::*;
 
             let mut buf = Vec::new();
             pk.serialize(&mut buf).unwrap();
             let cur = Cursor::new(buf);
-
-            #[allow(deprecated)]
-            let pk_ = match &pk {
-                PublicKey::RSA { .. } =>
-                    PublicKey::parse(RSAEncryptSign, cur).unwrap(),
-                PublicKey::DSA { .. } =>
-                    PublicKey::parse(DSA, cur).unwrap(),
-                PublicKey::ElGamal { .. } =>
-                    PublicKey::parse(ElGamalEncrypt, cur).unwrap(),
-                PublicKey::EdDSA { .. } =>
-                    PublicKey::parse(EdDSA, cur).unwrap(),
-                PublicKey::ECDSA { .. } =>
-                    PublicKey::parse(ECDSA, cur).unwrap(),
-                PublicKey::ECDH { .. } =>
-                    PublicKey::parse(ECDH, cur).unwrap(),
-                PublicKey::X25519 { .. } =>
-                    PublicKey::parse(X25519, cur).unwrap(),
-                PublicKey::X448 { .. } =>
-                    PublicKey::parse(X448, cur).unwrap(),
-                PublicKey::Ed25519 { .. } =>
-                    PublicKey::parse(Ed25519, cur).unwrap(),
-                PublicKey::Ed448 { .. } =>
-                    PublicKey::parse(Ed448, cur).unwrap(),
-
-                PublicKey::Unknown { .. } => unreachable!(),
-            };
+            let pk_ = PublicKey::parse(pk.algo().unwrap(), cur).unwrap();
 
             pk == pk_
         }
@@ -1623,38 +1597,11 @@ mod tests {
 
     quickcheck! {
         fn sk_roundtrip(sk: SecretKeyMaterial) -> bool {
-            use std::io::Cursor;
-            use crate::PublicKeyAlgorithm::*;
-
             let mut buf = Vec::new();
             sk.serialize(&mut buf).unwrap();
-            let cur = Cursor::new(buf);
-
-            #[allow(deprecated)]
-            let sk_ = match &sk {
-                SecretKeyMaterial::RSA { .. } =>
-                    SecretKeyMaterial::parse(RSAEncryptSign, cur).unwrap(),
-                SecretKeyMaterial::DSA { .. } =>
-                    SecretKeyMaterial::parse(DSA, cur).unwrap(),
-                SecretKeyMaterial::EdDSA { .. } =>
-                    SecretKeyMaterial::parse(EdDSA, cur).unwrap(),
-                SecretKeyMaterial::ECDSA { .. } =>
-                    SecretKeyMaterial::parse(ECDSA, cur).unwrap(),
-                SecretKeyMaterial::ECDH { .. } =>
-                    SecretKeyMaterial::parse(ECDH, cur).unwrap(),
-                SecretKeyMaterial::ElGamal { .. } =>
-                    SecretKeyMaterial::parse(ElGamalEncrypt, cur).unwrap(),
-                SecretKeyMaterial::X25519 { .. } =>
-                    SecretKeyMaterial::parse(X25519, cur).unwrap(),
-                SecretKeyMaterial::X448 { .. } =>
-                    SecretKeyMaterial::parse(X448, cur).unwrap(),
-                SecretKeyMaterial::Ed25519 { .. } =>
-                    SecretKeyMaterial::parse(Ed25519, cur).unwrap(),
-                SecretKeyMaterial::Ed448 { .. } =>
-                    SecretKeyMaterial::parse(Ed448, cur).unwrap(),
-
-                SecretKeyMaterial::Unknown { .. } => unreachable!(),
-            };
+            let sk_ =
+                SecretKeyMaterial::from_bytes(sk.algo().unwrap(),
+                                              &buf).unwrap();
 
             sk == sk_
         }
@@ -1663,27 +1610,11 @@ mod tests {
     quickcheck! {
         fn ct_roundtrip(ct: Ciphertext) -> bool {
             use std::io::Cursor;
-            use crate::PublicKeyAlgorithm::*;
 
             let mut buf = Vec::new();
             ct.serialize(&mut buf).unwrap();
             let cur = Cursor::new(buf);
-
-            #[allow(deprecated)]
-            let ct_ = match &ct {
-                Ciphertext::RSA { .. } =>
-                    Ciphertext::parse(RSAEncryptSign, cur).unwrap(),
-                Ciphertext::ElGamal { .. } =>
-                    Ciphertext::parse(ElGamalEncrypt, cur).unwrap(),
-                Ciphertext::ECDH { .. } =>
-                    Ciphertext::parse(ECDH, cur).unwrap(),
-                Ciphertext::X25519 { .. } =>
-                    Ciphertext::parse(X25519, cur).unwrap(),
-                Ciphertext::X448 { .. } =>
-                    Ciphertext::parse(X448, cur).unwrap(),
-
-                Ciphertext::Unknown { .. } => unreachable!(),
-            };
+            let ct_ = Ciphertext::parse(ct.pk_algo().unwrap(), cur).unwrap();
 
             ct == ct_
         }
