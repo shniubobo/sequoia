@@ -7493,4 +7493,104 @@ Pu1xwz57O4zo1VYf6TqHJzVC3OMvMUM2hhdecMUe5x6GorNaj6g=
 
         Ok(())
     }
+
+    #[test]
+    fn digest_prefix_collision() -> Result<()> {
+        // digest-prefix-collision.pgp contains the following
+        // certificate:
+        //
+        // ```
+        // $ sq inspect digest-prefix-collision.pgp
+        // -: OpenPGP Certificate.
+        //
+        //     Fingerprint: 79E4E5102780E8B7F1E838CA650472F3644B916B
+        // Public-key algo: EdDSA
+        // Public-key size: 256 bits
+        //   Creation time: 2024-09-17 12:54:58 UTC
+        // Expiration time: 2027-09-18 06:21:19 UTC (creation time + 2years 11months 30days 9h 16m 45s)
+        //       Key flags: certification
+        //
+        //          Subkey: 84D5973C7AD57EC8BEE5DA9184E0A285CA0379AA
+        // Public-key algo: EdDSA
+        // Public-key size: 256 bits
+        //   Creation time: 2024-09-17 12:54:58 UTC
+        // Expiration time: 2027-09-18 06:21:19 UTC (creation time + 2years 11months 30days 9h 16m 45s)
+        //       Key flags: signing
+        //
+        //          Subkey: 31F1760D9AEA7B5FE1CEAE5AE187113A577FA5ED
+        // Public-key algo: EdDSA
+        // Public-key size: 256 bits
+        //   Creation time: 2024-09-17 12:54:58 UTC
+        // Expiration time: 2027-09-18 06:21:19 UTC (creation time + 2years 11months 30days 9h 16m 45s)
+        //       Key flags: authentication
+        //
+        //          Subkey: 38795530DF04D0CFBD6B82A741A1DE46B78239B4
+        // Public-key algo: ECDH
+        // Public-key size: 256 bits
+        //   Creation time: 2024-09-17 12:54:58 UTC
+        // Expiration time: 2027-09-18 06:21:19 UTC (creation time + 2years 11months 30days 9h 16m 45s)
+        //       Key flags: transport encryption, data-at-rest encryption
+        //
+        //          UserID: alice <alice@example.org>
+        // ```
+        //
+        // We update the expiration time as follows:
+        //
+        // ```
+        // $ sq --time "2024-10-01T00:54:58Z" key subkey expire never
+        //   --key 79E4E5102780E8B7F1E838CA650472F3644B916B
+        //   --key 84D5973C7AD57EC8BEE5DA9184E0A285CA0379AA
+        //   --key 31F1760D9AEA7B5FE1CEAE5AE187113A577FA5ED
+        //   --key 38795530DF04D0CFBD6B82A741A1DE46B78239B4
+        // ```
+        //
+        // I captured the raw packets that `sq key subkey expire` adds
+        // to the certificate, and they are stored in
+        // digest-prefix-collision-to-insert.pgp.  That file contains
+        // the new binding signatures, and each binding signature is
+        // preceeded by a copy of the corresponding component.  This
+        // (should) ensure that the self signatures are merged
+        // correctly.
+        //
+        // Unfortunately, insert_packets dedups the components and the
+        // binding signatures need to be reordered.  Normally, this is
+        // fine, but one binding signature's digest prefix is valid
+        // for two subkeys.  In particular, the binding signature that
+        // updates 31F1760D9AEA7B5FE1CEAE5AE187113A577FA5ED has the
+        // same digest prefix as when it is associated with
+        // 38795530DF04D0CFBD6B82A741A1DE46B78239B4 , which
+        // `Cert::insert_packets` associates it with.
+        //
+        // This test checks that the binding signature is correctly
+        // reordered.
+
+        let cert = Cert::from_bytes(
+            crate::tests::key("digest-prefix-collision.pgp"))?;
+
+        let mut packets = Vec::new();
+        let mut ppr = PacketParser::from_bytes(
+            crate::tests::key("digest-prefix-collision-to-insert.pgp"))?;
+        while let PacketParserResult::Some(pp) = ppr {
+            let (packet, next_ppr) = pp.next()?;
+            ppr = next_ppr;
+            packets.push(packet);
+        }
+
+        let cert = cert.insert_packets(packets).expect("can insert");
+
+        let mut bad = false;
+        for k in cert.subkeys.iter() {
+            eprintln!("  Subkey {}, {} bad signatures",
+                      k.fingerprint(), k.bad_signatures().count());
+            for sig in k.bad_signatures() {
+                eprintln!("    {:?}", sig);
+                bad = true;
+            }
+        }
+
+        if bad {
+            panic!("have bad signatures");
+        }
+        Ok(())
+    }
 }
