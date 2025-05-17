@@ -335,3 +335,10 @@ vulnerability guide].
 
   [our bugtracker]: https://gitlab.com/sequoia-pgp/sequoia/issues
   [security vulnerability guide]: https://gitlab.com/sequoia-pgp/sequoia/-/blob/main/doc/security-vulnerabilities.md
+
+
+### Contributing
+
+You want to help, great!
+We have two guides for you to read: [our guide for new contributors](./GETTING_STARTED.md),
+or you can take a look at our general [contributing](./CONTRIBUTING.md) guide.
