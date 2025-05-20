@@ -580,7 +580,7 @@ impl<'a, C: 'a> io::Write for AEADEncryptor<'a, '_, C> {
 }
 
 impl<'a, C: 'a> Stackable<'a, C> for AEADEncryptor<'a, '_, C> {
-    fn into_inner(mut self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
+    fn into_inner(self: Box<Self>) -> Result<Option<BoxStack<'a, C>>> {
         let inner = self.inner.inner.finalize()?;
         Ok(Some(inner))
     }
