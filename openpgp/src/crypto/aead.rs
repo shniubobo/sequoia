@@ -803,7 +803,8 @@ mod tests {
                 AEADAlgorithm::EAX,
                 AEADAlgorithm::OCB,
                 AEADAlgorithm::GCM,
-            ].iter().filter(|algo| algo.is_supported() && algo.supports_symmetric_algo(sym_algo)) {
+            ].iter().filter(|algo| algo.is_supported()
+                            && algo.supports_symmetric_algo(*sym_algo)) {
                 let chunk_size = 64;
                 let mut key = vec![0; sym_algo.key_size().unwrap()];
                 crate::crypto::random(&mut key).unwrap();

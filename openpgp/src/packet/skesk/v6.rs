@@ -312,7 +312,7 @@ mod test {
             assert_eq!(&derived[..], derived_key);
 
             if aead.is_supported()
-                && aead.supports_symmetric_algo(&cipher)
+                && aead.supports_symmetric_algo(cipher)
             {
                 let sk = s.decrypt(&password)?;
                 eprintln!("sk: {:x?}", &sk[..]);

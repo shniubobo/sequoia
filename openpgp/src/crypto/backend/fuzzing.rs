@@ -34,8 +34,7 @@ impl AEADAlgorithm {
         true
     }
 
-    #[cfg(test)]
-    pub(crate) fn supports_symmetric_algo(&self, _: &SymmetricAlgorithm)
+    pub(crate) fn supports_symmetric_algo(&self, _: SymmetricAlgorithm)
                                           -> bool {
         true
     }
