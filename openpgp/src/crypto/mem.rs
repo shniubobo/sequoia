@@ -331,8 +331,6 @@ const ENCRYPTED_MEMORY_PAGE_SIZE: usize = 4096;
 ///
 /// Code outside of it cannot access it, because `PREKEY` is private.
 mod has_access_to_prekey {
-    use std::io::{self, Read, Write};
-    use buffered_reader::Memory;
     use crate::Result;
     use crate::types::{AEADAlgorithm, HashAlgorithm, SymmetricAlgorithm};
     use crate::crypto::{aead, SessionKey};
@@ -380,6 +378,19 @@ mod has_access_to_prekey {
             Ok(sk)
         }
 
+        /// Returns a zero nonce.
+        ///
+        /// The key is unique to every memory object, and we don't do
+        /// chunking.  The nonce is zero.
+        fn nonce(aead_algo: AEADAlgorithm) -> &'static [u8] {
+            const NONCE_STORE: [u8; aead::MAX_NONCE_LEN] =
+                [0u8; aead::MAX_NONCE_LEN];
+            let nonce_len = aead_algo.nonce_size()
+                .expect("Mandatory algorithm unsupported");
+            debug_assert!(nonce_len >= 8 && nonce_len <= aead::MAX_NONCE_LEN);
+            &NONCE_STORE[..nonce_len]
+        }
+
         /// Encrypts the given chunk of memory.
         pub fn new(p: Protected) -> Result<Self> {
             if DANGER_DISABLE_ENCRYPTED_MEMORY {
@@ -394,20 +405,14 @@ mod has_access_to_prekey {
             let mut salt = [0; 32];
             crate::crypto::random(&mut salt)?;
             let mut ciphertext = Protected::new(
-                p.len() + 2 * aead_algo.digest_size().expect("supported"));
+                p.len() + aead_algo.digest_size().expect("supported"));
 
-            {
-                let mut encryptor =
-                    aead::Encryptor::new(SYMMETRIC_ALGO,
-                                         aead_algo,
-                                         p.len(),
-                                         CounterSchedule { aead_algo },
-                                         Self::sealing_key(&salt)?,
-                                         io::Cursor::new(&mut ciphertext[..]))
-                    .expect("Mandatory algorithm unsupported");
-                encryptor.write_all(&p).unwrap();
-                encryptor.finalize().unwrap();
-            }
+            aead_algo.context(SYMMETRIC_ALGO,
+                              &Self::sealing_key(&salt)?,
+                              &[],
+                              Self::nonce(aead_algo))?
+                .for_encryption()?
+                .encrypt_seal(&mut ciphertext, &p)?;
 
             Ok(Encrypted {
                 plaintext_len: p.len(),
@@ -426,72 +431,21 @@ mod has_access_to_prekey {
             }
 
             let aead_algo = AEADAlgorithm::default();
-            let ciphertext =
-                Memory::with_cookie(&self.ciphertext, Default::default());
             let mut plaintext = Protected::new(self.plaintext_len);
 
-            let mut decryptor =
-                aead::Decryptor::new(SYMMETRIC_ALGO,
-                                     aead_algo,
-                                     self.plaintext_len,
-                                     CounterSchedule { aead_algo },
-                                     Self::sealing_key(&self.salt)
-                                     .expect("was fine during encryption"),
-                                     ciphertext)
-                .expect("Mandatory algorithm unsupported");
+            let r = aead_algo.context(SYMMETRIC_ALGO,
+                              &Self::sealing_key(&self.salt).unwrap(),
+                              &[],
+                              Self::nonce(aead_algo)).unwrap()
+                .for_decryption().unwrap()
+                .decrypt_verify(&mut plaintext, &self.ciphertext);
 
             // Be careful not to leak partially decrypted plain text.
-            let r = decryptor.read_exact(&mut plaintext);
             if r.is_err() {
                 drop(plaintext); // Securely erase partial plaintext.
                 panic!("Encrypted memory modified or corrupted");
             }
             fun(&plaintext)
-        }
-    }
-
-    struct CounterSchedule {
-        aead_algo: AEADAlgorithm,
-    }
-
-    impl<T> aead::Schedule<T> for CounterSchedule {
-        fn chunk(&self,
-                 index: u64,
-                 fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
-                 -> Result<T>
-        {
-            // The nonce is a simple counter.
-            let mut nonce_store = [0u8; aead::MAX_NONCE_LEN];
-            let nonce_len = self.aead_algo.nonce_size()
-                .expect("Mandatory algorithm unsupported");
-            assert!(nonce_len >= 8);
-            let nonce = &mut nonce_store[..nonce_len];
-            let index_be: [u8; 8] = index.to_be_bytes();
-            nonce[nonce_len - 8..].copy_from_slice(&index_be);
-
-            // No AAD.
-            fun(nonce, &[])
-        }
-
-        fn finalizer(&self,
-                     index: u64,
-                     length: u64,
-                     fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
-                     -> Result<T>
-        {
-            // The nonce is a simple counter.
-            let mut nonce_store = [0u8; aead::MAX_NONCE_LEN];
-            let nonce_len = self.aead_algo.nonce_size()
-                .expect("Mandatory algorithm unsupported");
-            assert!(nonce_len >= 8);
-            let nonce = &mut nonce_store[..nonce_len];
-            let index_be: [u8; 8] = index.to_be_bytes();
-            nonce[nonce_len - 8..].copy_from_slice(&index_be);
-
-            // Plaintext bytes as AAD to prevent truncation.
-            let aad: [u8; 8] = length.to_be_bytes();
-
-            fun(nonce, &aad)
         }
     }
 }
