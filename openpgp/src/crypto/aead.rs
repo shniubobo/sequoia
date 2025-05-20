@@ -242,7 +242,12 @@ pub trait Schedule<T>: Send + Sync {
                  -> Result<T>;
 }
 
-pub(crate) struct SEIPv2Schedule {
+/// The key, nonce, and AAD schedule for the version 2 SEIPD packet.
+///
+/// See [Section 5.13.2 of RFC 9580].
+///
+///   [Section 5.13.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13.2
+pub struct SEIPv2Schedule {
     key: SessionKey,
     nonce: Box<[u8]>,
     ad: [u8; Self::AD_PREFIX_LEN],
@@ -266,11 +271,13 @@ impl SEIPv2Schedule {
     /// appended to this prefix.
     const AD_PREFIX_LEN: usize = 5;
 
-    pub(crate) fn new(session_key: &SessionKey,
-                      sym_algo: SymmetricAlgorithm,
-                      aead: AEADAlgorithm,
-                      chunk_size: usize,
-                      salt: &[u8]) -> Result<Self>
+    /// Creates a new schedule to encrypt or decrypt version 2 SEIPD
+    /// packets.
+    pub fn new(session_key: &SessionKey,
+               sym_algo: SymmetricAlgorithm,
+               aead: AEADAlgorithm,
+               chunk_size: usize,
+               salt: &[u8]) -> Result<Self>
     {
         if !(Self::MIN_CHUNK_SIZE..=Self::MAX_CHUNK_SIZE).contains(&chunk_size)
         {
