@@ -4262,7 +4262,7 @@ xHUDBRY0WIQ+50WENDPP";
                             plaintext: &[u8])
                             -> Result<()> {
         if ! (aead.is_supported()
-              && aead.supports_symmetric_algo(&cipher))
+              && aead.supports_symmetric_algo(cipher))
         {
             eprintln!("Skipping test vector {:?}...", name);
             return Ok(());

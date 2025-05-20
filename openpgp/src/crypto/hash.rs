@@ -266,18 +266,17 @@ impl Builder {
 
 
 impl HashAlgorithm {
-    /// Creates a new hash context for this algorithm.
+    /// Creates a new hash context builder for this algorithm.
     ///
     /// # Errors
     ///
-    /// Fails with `Error::UnsupportedHashAlgorithm` if Sequoia does
+    /// Fails with [`Error::UnsupportedHashAlgorithm`] if Sequoia does
     /// not support this algorithm. See
     /// [`HashAlgorithm::is_supported`].
-    ///
-    ///   [`HashAlgorithm::is_supported`]: HashAlgorithm::is_supported()
     pub fn context(self) -> Result<Builder> {
-        // Create contexts only for known hashes.
-        self.digest_size()?;
+        if ! self.is_supported() {
+            return Err(Error::UnsupportedHashAlgorithm(self).into());
+        }
 
         let mut hasher: Box<dyn Digest> = match self {
             HashAlgorithm::SHA1 if ! cfg!(feature = "crypto-fuzzing") =>

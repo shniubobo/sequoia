@@ -2589,16 +2589,14 @@ impl<'a> Key253Schedule<'a> {
         })
     }
 
-    fn decryptor(&self) -> Result<Box<dyn crypto::aead::Aead>> {
-        use crypto::aead::CipherOp;
-        self.aead.context(self.symm, &self.kek, &self.ad, self.nonce,
-                          CipherOp::Decrypt)
+    fn decryptor(&self) -> Result<crypto::aead::DecryptionContext> {
+        self.aead.context(self.symm, &self.kek, &self.ad, self.nonce)?
+            .for_decryption()
     }
 
-    fn encryptor(&self) -> Result<Box<dyn crypto::aead::Aead>> {
-        use crypto::aead::CipherOp;
-        self.aead.context(self.symm, &self.kek, &self.ad, self.nonce,
-                          CipherOp::Encrypt)
+    fn encryptor(&self) -> Result<crypto::aead::EncryptionContext> {
+        self.aead.context(self.symm, &self.kek, &self.ad, self.nonce)?
+            .for_encryption()
     }
 }
 

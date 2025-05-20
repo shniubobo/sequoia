@@ -38,8 +38,7 @@ impl AEADAlgorithm {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn supports_symmetric_algo(&self, algo: &SymmetricAlgorithm) -> bool {
+    pub(crate) fn supports_symmetric_algo(&self, algo: SymmetricAlgorithm) -> bool {
         match &self {
             AEADAlgorithm::EAX =>
                 match algo {

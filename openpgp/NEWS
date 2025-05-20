@@ -18,6 +18,15 @@
    - crypto::symmetric::BlockCipherMode
    - crypto::symmetric::PaddingMode
    - crypto::symmetric::UnpaddingMode
+   - crypto::AEADAlgorithm::context
+   - crypto::aead::MAX_NONCE_LEN
+   - crypto::aead::Builder
+   - crypto::aead::EncryptionContext
+   - crypto::aead::DecryptionContext
+   - crypto::aead::Schedule
+   - crypto::aead::SEIPv2Schedule
+   - crypto::aead::Encryptor
+   - crypto::aead::Decryptor
 
 * Changes in 2.0.0
 ** Notable changes

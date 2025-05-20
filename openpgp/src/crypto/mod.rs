@@ -28,7 +28,7 @@ use crate::{
     Result,
 };
 
-pub(crate) mod aead;
+pub mod aead;
 mod asymmetric;
 pub use self::asymmetric::{Signer, Decryptor, KeyPair};
 pub(crate) mod backend;

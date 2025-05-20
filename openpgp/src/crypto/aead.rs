@@ -1,3 +1,90 @@
+//! Authenticated encryption with additional data.
+//!
+//! This module provides both a uniform streaming (chunked) and a
+//! non-streaming (non-chunked) interface to authenticated symmetric
+//! encryption and decryption using different block ciphers and AEAD
+//! modes.
+//!
+//! Note: this is a very low-level interface.  It is not about OpenPGP
+//! encryption or decryption.  If you are looking for that, see
+//! [`crate::serialize::stream::Encryptor`] and
+//! [`crate::parse::stream::Decryptor`] instead.
+//!
+//! # Examples
+//!
+//! This example demonstrates streaming (chunked) encryption and
+//! decryption.
+//!
+//! ```rust
+//! # use std::io::{Read, Write};
+//! # use sequoia_openpgp::crypto::SessionKey;
+//! # use sequoia_openpgp::crypto::{AEADAlgorithm, SymmetricAlgorithm};
+//! # use sequoia_openpgp::crypto::aead::*;
+//! # use sequoia_openpgp::parse::buffered_reader::{self, BufferedReader};
+//! # fn main() -> sequoia_openpgp::Result<()> {
+//! let text = b"Hello World :)";
+//! let algo = SymmetricAlgorithm::default();
+//! let aead = AEADAlgorithm::default();
+//! let key = SessionKey::new(algo.key_size()?)?;
+//! let chunk_size = 4096;
+//! let schedule = SEIPv2Schedule::new(&key, algo, aead, chunk_size, b"salt")?;
+//!
+//! // Encrypt the `text`.
+//! let mut ciphertext = Vec::new();
+//! let mut encryptor = Encryptor::new(
+//!     algo, aead, chunk_size, schedule.clone(), &mut ciphertext)?;
+//! encryptor.write_all(text)?;
+//! encryptor.finalize()?;
+//!
+//! // Decrypt the `ciphertext`.
+//! let mut plaintext = Vec::new();
+//! let reader = buffered_reader::Memory::with_cookie(
+//!     &ciphertext, Default::default());
+//!
+//! let mut decryptor = Decryptor::new(
+//!     algo, aead, chunk_size, schedule.clone(), reader.into_boxed())?;
+//!
+//! decryptor.read_to_end(&mut plaintext)?;
+//!
+//! // Check that we recovered it.
+//! assert_eq!(&plaintext[..], text);
+//! # Ok(()) }
+//! ```
+//!
+//! This example demonstrates non-streaming (non-chunked) encryption
+//! and decryption.
+//!
+//! ```rust
+//! # use std::io::{Read, Write};
+//! # use sequoia_openpgp::crypto::{self, SessionKey};
+//! # use sequoia_openpgp::crypto::{AEADAlgorithm, SymmetricAlgorithm};
+//! # use sequoia_openpgp::crypto::aead::*;
+//! # fn main() -> sequoia_openpgp::Result<()> {
+//! let text = b"Hello World :)";
+//! let aad = b"Not secret, but authenticated";
+//! let algo = SymmetricAlgorithm::default();
+//! let aead = AEADAlgorithm::default();
+//! let key = SessionKey::new(algo.key_size()?)?;
+//! let mut nonce = vec![0; aead.nonce_size()?];
+//! crypto::random(&mut nonce)?;
+//!
+//! // Encrypt the `text`.
+//! let mut ciphertext = vec![0; text.len() + aead.digest_size()?];
+//! aead.context(algo, &key, aad, &nonce)?
+//!     .for_encryption()?
+//!     .encrypt_seal(&mut ciphertext, text)?;
+//!
+//! // Decrypt the `ciphertext`.
+//! let mut plaintext = vec![0; ciphertext.len() - aead.digest_size()?];
+//! aead.context(algo, &key, aad, &nonce)?
+//!     .for_decryption()?
+//!     .decrypt_verify(&mut plaintext, &ciphertext)?;
+//!
+//! // Check that we recovered it.
+//! assert_eq!(&plaintext[..], text);
+//! # Ok(()) }
+//! ```
+
 use std::cmp;
 use std::convert::TryInto;
 use std::fmt;
@@ -19,16 +106,6 @@ use crate::seal;
 use crate::parse::Cookie;
 use crate::crypto::backend::{Backend, interface::Kdf};
 
-/// Minimum AEAD chunk size.
-///
-/// Implementations MUST support chunk sizes down to 64B.
-const MIN_CHUNK_SIZE: usize = 1 << 6; // 64B
-
-/// Maximum AEAD chunk size.
-///
-/// Implementations MUST support chunk sizes up to 4MiB.
-const MAX_CHUNK_SIZE: usize = 1 << 22; // 4MiB
-
 /// Maximum size of any Nonce used by an AEAD mode.
 pub const MAX_NONCE_LEN: usize = 16;
 
@@ -40,7 +117,120 @@ pub(crate) fn chunk_size_usize(chunk_size: u64) -> Result<usize> {
                      virtual memory: {}", chunk_size)).into())
 }
 
-/// An AEAD mode of operation.
+/// Builds AEAD contexts.
+pub struct Builder<'a> {
+    symm: SymmetricAlgorithm,
+    aead: AEADAlgorithm,
+    key: &'a SessionKey,
+    aad: &'a [u8],
+    nonce: &'a [u8],
+}
+
+impl AEADAlgorithm {
+    /// Creates a new AEAD context builder for this algorithm.
+    ///
+    /// # Errors
+    ///
+    /// Fails with [`Error::UnsupportedSymmetricAlgorithm`] if Sequoia
+    /// does not support the given symmetric algorithm, and
+    /// [`Error::UnsupportedAEADAlgorithm`] if Sequoia does not
+    /// support the given AEAD algorithm, or combination of symmetric
+    /// algorithm and AEAD algorithm.
+    pub fn context<'s>(self,
+                       symm: SymmetricAlgorithm,
+                       key: &'s SessionKey,
+                       aad: &'s [u8],
+                       nonce: &'s [u8])
+                       -> Result<Builder<'s>>
+    {
+        if ! symm.is_supported() {
+            return Err(Error::UnsupportedSymmetricAlgorithm(symm).into());
+        }
+
+        if ! self.is_supported() || ! self.supports_symmetric_algo(symm) {
+            return Err(Error::UnsupportedAEADAlgorithm(self).into());
+        }
+
+        Ok(Builder {
+            symm,
+            aead: self,
+            key,
+            aad,
+            nonce,
+        })
+    }
+}
+
+impl Builder<'_> {
+    /// Returns an AEAD context for encryption.
+    pub fn for_encryption(self) -> Result<EncryptionContext> {
+        Ok(EncryptionContext(
+            self.aead.context_impl(self.symm, self.key, self.aad, self.nonce,
+                                   CipherOp::Encrypt)?))
+    }
+
+    /// Returns an AEAD context for decryption.
+    pub fn for_decryption(self) -> Result<DecryptionContext> {
+        Ok(DecryptionContext(
+            self.aead.context_impl(self.symm, self.key, self.aad, self.nonce,
+                                   CipherOp::Decrypt)?))
+    }
+}
+
+/// A block cipher state and AEAD mode for encryption.
+pub struct EncryptionContext(Box<dyn Aead>);
+
+impl EncryptionContext {
+    /// Encrypts `src` to `dst`.
+    ///
+    /// Encrypts the given plaintext, and adds an authentication tag.
+    ///
+    /// `dst` must be large enough to accommodate both the ciphertext
+    /// and the digest, i.e. its length must be exactly `src.len() +
+    /// self.digest_size()`.
+    pub fn encrypt_seal(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
+        if dst.len() != src.len() + self.digest_size() {
+            return Err(Error::InvalidOperation(
+                "invalid buffer length".into()).into());
+        }
+
+        self.0.encrypt_seal(dst, src)
+    }
+
+    /// Length of the digest in bytes.
+    pub fn digest_size(&self) -> usize {
+        self.0.digest_size()
+    }
+}
+
+/// A block cipher state and AEAD mode for decryption.
+pub struct DecryptionContext(Box<dyn Aead>);
+
+impl DecryptionContext {
+    /// Decrypts `src` to `dst`.
+    ///
+    /// Decrypts the given plaintext, and checks the authentication
+    /// tag.  If the authentication tag is not correct, an error is
+    /// returned.
+    ///
+    /// `src` contains both the ciphertext and the digest, i.e. its
+    /// length must be exactly `dst.len() + self.digest_size()`.
+    pub fn decrypt_verify(&mut self, dst: &mut [u8], src: &[u8]) -> Result<()> {
+        if dst.len() + self.digest_size() != src.len() {
+            return Err(Error::InvalidOperation(
+                "invalid buffer length".into()).into());
+        }
+
+        self.0.decrypt_verify(dst, src)
+    }
+
+    /// Length of the digest in bytes.
+    pub fn digest_size(&self) -> usize {
+        self.0.digest_size()
+    }
+}
+
+/// A block cipher state and AEAD mode of operation.
 ///
 /// # Sealed trait
 ///
@@ -50,7 +240,7 @@ pub(crate) fn chunk_size_usize(chunk_size: u64) -> Result<usize> {
 /// you also need to implement the `seal::Sealed` marker trait.
 ///
 /// [sealed]: https://rust-lang.github.io/api-guidelines/future-proofing.html#sealed-traits-protect-against-downstream-implementations-c-sealed
-pub trait Aead : seal::Sealed {
+pub(crate) trait Aead : seal::Sealed {
     /// Encrypts one chunk `src` to `dst` adding a digest.
     ///
     /// Note: `dst` must be large enough to accommodate both the
@@ -104,45 +294,81 @@ impl AEADAlgorithm {
     }
 }
 
-/// Schedules nonce and additional authenticated data for use with
-/// each AEAD chunk.
-pub trait Schedule: Send + Sync {
-    /// Calls `fun` with the appropriate nonce and additional
-    /// authenticated data.
+/// Schedules key, nonce, and additional authenticated data (AAD) for
+/// use with chunked AEAD encryption.
+pub trait Schedule<T>: Send + Sync {
+    /// Computes key, nonce, and AAD for a chunk.
     ///
-    /// This is appropriate for all but the last chunk.
+    /// For every chunk, implementations must produce a key, a nonce,
+    /// and the additional authenticated data (AAD), then invoke `fun`
+    /// with key, nonce, and AAD.
     ///
     /// `index` is the current chunk index.
-    fn next_chunk<F, R>(&self, index: u64, fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R;
+    fn chunk(&self,
+             index: u64,
+             fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
+             -> Result<T>;
 
-    /// Calls `fun` with the appropriate nonce and additional
-    /// authenticated data for the last chunk.
+    /// Computes key, nonce, and AAD for the final authentication tag.
     ///
-    /// This is appropriate for the last chunk.
+    /// When doing chunked AEAD, we need to protect against truncation
+    /// of the chunked stream.  In OpenPGP this is done by adding a
+    /// final empty chunk that includes the length of the stream in
+    /// the additional authenticated data (AAD).
     ///
-    /// `index` is the current chunk index.
-    fn final_chunk<F, R>(&self, index: u64, length: u64, fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R;
+    /// Implementations must produce a key, a nonce, and the AAD
+    /// (which SHOULD include the length of the stream), then invoke
+    /// `fun` with key, nonce, and AAD.
+    ///
+    /// `index` is the current chunk index. `length` is the total
+    /// length of the stream.
+    fn finalizer(&self,
+                 index: u64,
+                 length: u64,
+                 fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
+                 -> Result<T>;
 }
 
-const SEIP2AD_PREFIX_LEN: usize = 5;
-pub(crate) struct SEIPv2Schedule {
+/// The key, nonce, and AAD schedule for the version 2 SEIPD packet.
+///
+/// See [Section 5.13.2 of RFC 9580].
+///
+///   [Section 5.13.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13.2
+#[derive(Clone)]
+pub struct SEIPv2Schedule {
+    key: SessionKey,
     nonce: Box<[u8]>,
-    ad: [u8; SEIP2AD_PREFIX_LEN],
+    ad: [u8; Self::AD_PREFIX_LEN],
     nonce_len: usize,
 }
 
 impl SEIPv2Schedule {
-    pub(crate) fn new(session_key: &SessionKey,
-                      sym_algo: SymmetricAlgorithm,
-                      aead: AEADAlgorithm,
-                      chunk_size: usize,
-                      salt: &[u8]) -> Result<(SessionKey, Self)>
+    /// Minimum AEAD chunk size.
+    ///
+    /// Implementations MUST support chunk sizes down to 64B.
+    const MIN_CHUNK_SIZE: usize = 1 << 6; // 64B
+
+    /// Maximum AEAD chunk size.
+    ///
+    /// Implementations MUST support chunk sizes up to 4MiB.
+    const MAX_CHUNK_SIZE: usize = 1 << 22; // 4MiB
+
+    /// The length of the additional authenticated data.
+    ///
+    /// For the final tag, the stream length as big-endian u64 is
+    /// appended to this prefix.
+    const AD_PREFIX_LEN: usize = 5;
+
+    /// Creates a new schedule to encrypt or decrypt version 2 SEIPD
+    /// packets.
+    pub fn new(session_key: &SessionKey,
+               sym_algo: SymmetricAlgorithm,
+               aead: AEADAlgorithm,
+               chunk_size: usize,
+               salt: &[u8]) -> Result<Self>
     {
-        if !(MIN_CHUNK_SIZE..=MAX_CHUNK_SIZE).contains(&chunk_size) {
+        if !(Self::MIN_CHUNK_SIZE..=Self::MAX_CHUNK_SIZE).contains(&chunk_size)
+        {
             return Err(Error::InvalidArgument(
                 format!("Invalid AEAD chunk size: {}", chunk_size)).into());
         }
@@ -164,18 +390,20 @@ impl SEIPv2Schedule {
         let key = Vec::from(&key_nonce[..key_size]).into();
         let nonce = Vec::from(&key_nonce[key_size..]).into();
 
-        Ok((key, Self {
+        Ok(Self {
+            key,
             nonce,
             ad,
             nonce_len: aead.nonce_size()?,
-        }))
+        })
     }
 }
 
-impl Schedule for SEIPv2Schedule {
-    fn next_chunk<F, R>(&self, index: u64, mut fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R,
+impl<T> Schedule<T> for SEIPv2Schedule {
+    fn chunk(&self,
+             index: u64,
+             fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
+             -> Result<T>
     {
         // The nonce is the NONCE (NONCE_LEN - 8 bytes taken from the
         // KDF) concatenated with the chunk index.
@@ -185,17 +413,19 @@ impl Schedule for SEIPv2Schedule {
         nonce[..self.nonce.len()].copy_from_slice(&self.nonce);
         nonce[self.nonce.len()..].copy_from_slice(&index_be);
 
-        fun(nonce, &self.ad)
+        fun(&self.key, nonce, &self.ad)
     }
 
-    fn final_chunk<F, R>(&self, index: u64, length: u64, mut fun: F) -> R
-    where
-        F: FnMut(&[u8], &[u8]) -> R,
+    fn finalizer(&self,
+                 index: u64,
+                 length: u64,
+                 fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
+                 -> Result<T>
     {
         // Prepare the associated data.
-        let mut ad = [0u8; SEIP2AD_PREFIX_LEN + 8];
-        ad[..SEIP2AD_PREFIX_LEN].copy_from_slice(&self.ad);
-        write_be_u64(&mut ad[SEIP2AD_PREFIX_LEN..], length);
+        let mut ad = [0u8; Self::AD_PREFIX_LEN + 8];
+        ad[..Self::AD_PREFIX_LEN].copy_from_slice(&self.ad);
+        write_be_u64(&mut ad[Self::AD_PREFIX_LEN..], length);
 
         // The nonce is the NONCE (NONCE_LEN - 8 bytes taken from the
         // KDF) concatenated with the chunk index.
@@ -205,19 +435,18 @@ impl Schedule for SEIPv2Schedule {
         nonce[..self.nonce.len()].copy_from_slice(&self.nonce);
         nonce[self.nonce.len()..].copy_from_slice(&index_be);
 
-        fun(nonce, &ad)
+        fun(&self.key, nonce, &ad)
     }
 }
 
 /// A `Read`er for decrypting AEAD-encrypted data.
-pub struct Decryptor<'a, S: Schedule> {
+pub(crate) struct InternalDecryptor<'a, 's> {
     // The encrypted data.
     source: Box<dyn BufferedReader<Cookie> + 'a>,
 
     sym_algo: SymmetricAlgorithm,
     aead: AEADAlgorithm,
-    key: SessionKey,
-    schedule: S,
+    schedule: Box<dyn Schedule<DecryptionContext> + 's>,
 
     digest_size: usize,
     chunk_size: usize,
@@ -226,25 +455,26 @@ pub struct Decryptor<'a, S: Schedule> {
     // Up to a chunk of unread data.
     buffer: Vec<u8>,
 }
-assert_send_and_sync!(Decryptor<'_, S> where S: Schedule);
+assert_send_and_sync!(InternalDecryptor<'_, '_>);
 
 
-impl<'a, S: Schedule> Decryptor<'a, S> {
+impl<'a, 's> InternalDecryptor<'a, 's> {
     /// Instantiate a new AEAD decryptor.
     ///
     /// `source` is the source to wrap.
-    pub fn new<R>(sym_algo: SymmetricAlgorithm,
-                  aead: AEADAlgorithm, chunk_size: usize,
-                  schedule: S, key: SessionKey, source: R)
+    pub fn new<R, S>(sym_algo: SymmetricAlgorithm,
+                     aead: AEADAlgorithm, chunk_size: usize,
+                     schedule: S, source: R)
         -> Result<Self>
-        where R: BufferedReader<Cookie> + 'a,
+    where
+        R: BufferedReader<Cookie> + 'a,
+        S: Schedule<DecryptionContext> + 's,
     {
-        Ok(Decryptor {
+        Ok(InternalDecryptor {
             source: source.into_boxed(),
             sym_algo,
             aead,
-            key,
-            schedule,
+            schedule: Box::new(schedule),
             digest_size: aead.digest_size()?,
             chunk_size,
             chunk_index: 0,
@@ -348,11 +578,11 @@ impl<'a, S: Schedule> Decryptor<'a, S> {
                 // A chunk has to include at least one byte and a tag.
                 return Err(Error::ManipulatedMessage.into());
             } else {
-                let mut aead = self.schedule.next_chunk(
+                let mut aead = self.schedule.chunk(
                     self.chunk_index,
-                    |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                          CipherOp::Decrypt)
+                    &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
+                            .for_decryption()
                     })?;
 
                 // Decrypt the chunk and check the tag.
@@ -395,11 +625,11 @@ impl<'a, S: Schedule> Decryptor<'a, S> {
 
             if check_final_tag {
                 // We read the whole ciphertext, now check the final digest.
-                let mut aead = self.schedule.final_chunk(
+                let mut aead = self.schedule.finalizer(
                     self.chunk_index, self.bytes_decrypted,
-                    |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                          CipherOp::Decrypt)
+                    &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
+                            .for_decryption()
                     })?;
 
                 let final_digest = self.source.data(final_digest_size)?;
@@ -421,7 +651,7 @@ impl<'a, S: Schedule> Decryptor<'a, S> {
 // gratuitiously do a short read.  Specifically, if the return value
 // is less than `plaintext.len()`, then it is either because we
 // reached the end of the input or an error occurred.
-impl<'a, S: Schedule> io::Read for Decryptor<'a, S> {
+impl io::Read for InternalDecryptor<'_, '_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self.read_helper(buf) {
             Ok(n) => Ok(n),
@@ -437,50 +667,68 @@ impl<'a, S: Schedule> io::Read for Decryptor<'a, S> {
 
 /// A `BufferedReader` that decrypts AEAD-encrypted data as it is
 /// read.
-pub(crate) struct BufferedReaderDecryptor<'a, S: Schedule> {
-    reader: buffered_reader::Generic<Decryptor<'a, S>, Cookie>,
+pub struct Decryptor<'a, 's> {
+    reader: buffered_reader::Generic<InternalDecryptor<'a, 's>, Cookie>,
 }
 
-impl<'a, S: Schedule> BufferedReaderDecryptor<'a, S> {
-    /// Like `new()`, but sets a cookie, which can be retrieved using
-    /// the `cookie_ref` and `cookie_mut` methods, and set using
-    /// the `cookie_set` method.
-    pub fn with_cookie(sym_algo: SymmetricAlgorithm,
-                       aead: AEADAlgorithm, chunk_size: usize, schedule: S,
-                       key: SessionKey, source: Box<dyn BufferedReader<Cookie> + 'a>,
-                       cookie: Cookie)
-        -> Result<Self>
+impl<'a, 's> Decryptor<'a, 's> {
+    /// Instantiate a new AEAD decryptor.
+    ///
+    /// `source` is the ciphertext to decrypt.
+    pub fn new<S>(symm: SymmetricAlgorithm,
+                  aead: AEADAlgorithm,
+                  chunk_size: usize,
+                  schedule: S,
+                  source: Box<dyn BufferedReader<Cookie> + 'a>)
+                  -> Result<Self>
+    where
+        S: Schedule<DecryptionContext> + 's,
     {
-        Ok(BufferedReaderDecryptor {
+        Self::with_cookie(symm, aead, chunk_size, schedule, source,
+                          Default::default())
+    }
+
+    /// Like [`Decryptor::new`], but sets a cookie.
+    pub fn with_cookie<S>(symm: SymmetricAlgorithm,
+                          aead: AEADAlgorithm,
+                          chunk_size: usize,
+                          schedule: S,
+                          source: Box<dyn BufferedReader<Cookie> + 'a>,
+                          cookie: Cookie)
+                          -> Result<Self>
+    where
+        S: Schedule<DecryptionContext> + 's,
+    {
+        Ok(Decryptor {
             reader: buffered_reader::Generic::with_cookie(
-                Decryptor::new(
-                    sym_algo, aead, chunk_size, schedule, key, source)?,
+                InternalDecryptor::new(
+                    symm, aead, chunk_size, schedule, source)?,
                 None, cookie),
         })
     }
 }
 
-impl<'a, S: Schedule> io::Read for BufferedReaderDecryptor<'a, S> {
+impl io::Read for Decryptor<'_, '_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl<'a, S: Schedule> fmt::Display for BufferedReaderDecryptor<'a, S> {
+impl fmt::Display for Decryptor<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BufferedReaderDecryptor")
+        write!(f, "Decryptor")
     }
 }
 
-impl<'a, S: Schedule> fmt::Debug for BufferedReaderDecryptor<'a, S> {
+impl fmt::Debug for Decryptor<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("BufferedReaderDecryptor")
+        f.debug_struct("Decryptor")
             .field("reader", &self.get_ref().unwrap())
             .finish()
     }
 }
 
-impl<'a, S: Schedule> BufferedReader<Cookie> for BufferedReaderDecryptor<'a, S> {
+impl BufferedReader<Cookie> for Decryptor<'_, '_> {
     fn buffer(&self) -> &[u8] {
         self.reader.buffer()
     }
@@ -553,13 +801,12 @@ impl<'a, S: Schedule> BufferedReader<Cookie> for BufferedReaderDecryptor<'a, S> 
 }
 
 /// A `Write`r for AEAD encrypting data.
-pub struct Encryptor<W: io::Write, S: Schedule> {
+pub struct Encryptor<'s, W: io::Write> {
     inner: Option<W>,
 
     sym_algo: SymmetricAlgorithm,
     aead: AEADAlgorithm,
-    key: SessionKey,
-    schedule: S,
+    schedule: Box<dyn Schedule<EncryptionContext> + 's>,
 
     digest_size: usize,
     chunk_size: usize,
@@ -571,19 +818,21 @@ pub struct Encryptor<W: io::Write, S: Schedule> {
     // A place to write encrypted data into.
     scratch: Vec<u8>,
 }
-assert_send_and_sync!(Encryptor<W, S> where W: io::Write, S: Schedule);
+assert_send_and_sync!(Encryptor<'_, W> where W: io::Write);
 
-impl<W: io::Write, S: Schedule> Encryptor<W, S> {
+impl<'s, W: io::Write> Encryptor<'s, W> {
     /// Instantiate a new AEAD encryptor.
-    pub fn new(sym_algo: SymmetricAlgorithm, aead: AEADAlgorithm,
-               chunk_size: usize, schedule: S, key: SessionKey, sink: W)
-               -> Result<Self> {
+    pub fn new<S>(sym_algo: SymmetricAlgorithm, aead: AEADAlgorithm,
+                  chunk_size: usize, schedule: S, sink: W)
+                  -> Result<Self>
+    where
+        S: Schedule<EncryptionContext> + 's,
+    {
         Ok(Encryptor {
             inner: Some(sink),
             sym_algo,
             aead,
-            key,
-            schedule,
+            schedule: Box::new(schedule),
             digest_size: aead.digest_size()?,
             chunk_size,
             chunk_index: 0,
@@ -611,9 +860,9 @@ impl<W: io::Write, S: Schedule> Encryptor<W, S> {
             // And possibly encrypt the chunk.
             if self.buffer.len() == self.chunk_size {
                 let mut aead =
-                    self.schedule.next_chunk(self.chunk_index, |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                          CipherOp::Encrypt)
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
+                            .for_encryption()
                     })?;
 
                 let inner = self.inner.as_mut().unwrap();
@@ -633,9 +882,9 @@ impl<W: io::Write, S: Schedule> Encryptor<W, S> {
             if chunk.len() == self.chunk_size {
                 // Complete chunk.
                 let mut aead =
-                    self.schedule.next_chunk(self.chunk_index, |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                          CipherOp::Encrypt)
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
+                            .for_encryption()
                     })?;
 
                 let inner = self.inner.as_mut().unwrap();
@@ -655,14 +904,24 @@ impl<W: io::Write, S: Schedule> Encryptor<W, S> {
         Ok(amount)
     }
 
-    /// Finish encryption and write last partial chunk.
-    pub fn finish(&mut self) -> Result<W> {
+    /// Finish encryption and write last partial block.
+    pub fn finalize(mut self) -> Result<W> {
+        self.finalize_intern()
+    }
+
+    /// Like [`Self::finalize`], but with a mutable reference.
+    ///
+    /// This can be used in [`Self::drop`], whereas [`Self::finalize`]
+    /// consumes self, and is convenient for callers because consuming
+    /// self makes Rust understand that any borrow on the writer
+    /// terminates.
+    fn finalize_intern(&mut self) -> Result<W> {
         if let Some(mut inner) = self.inner.take() {
             if !self.buffer.is_empty() {
                 let mut aead =
-                    self.schedule.next_chunk(self.chunk_index, |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                          CipherOp::Encrypt)
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
+                            .for_encryption()
                     })?;
 
                 // Encrypt the chunk.
@@ -682,11 +941,11 @@ impl<W: io::Write, S: Schedule> Encryptor<W, S> {
             }
 
             // Write final digest.
-            let mut aead = self.schedule.final_chunk(
+            let mut aead = self.schedule.finalizer(
                 self.chunk_index, self.bytes_encrypted,
-                |iv, ad| {
-                    self.aead.context(self.sym_algo, &self.key, ad, iv,
-                                      CipherOp::Encrypt)
+                &mut |key, iv, ad| {
+                    self.aead.context(self.sym_algo, key, ad, iv)?
+                        .for_encryption()
                 })?;
             debug_assert!(self.digest_size <= self.scratch.len());
             aead.encrypt_seal(&mut self.scratch[..self.digest_size], b"")?;
@@ -700,18 +959,18 @@ impl<W: io::Write, S: Schedule> Encryptor<W, S> {
     }
 
     /// Acquires a reference to the underlying writer.
-    pub fn get_ref(&self) -> Option<&W> {
+    pub(crate) fn get_ref(&self) -> Option<&W> {
         self.inner.as_ref()
     }
 
     /// Acquires a mutable reference to the underlying writer.
     #[allow(dead_code)]
-    pub fn get_mut(&mut self) -> Option<&mut W> {
+    pub(crate) fn get_mut(&mut self) -> Option<&mut W> {
         self.inner.as_mut()
     }
 }
 
-impl<W: io::Write, S: Schedule> io::Write for Encryptor<W, S> {
+impl<W: io::Write> io::Write for Encryptor<'_, W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         match self.write_helper(buf) {
             Ok(n) => Ok(n),
@@ -737,12 +996,12 @@ impl<W: io::Write, S: Schedule> io::Write for Encryptor<W, S> {
     }
 }
 
-impl<W: io::Write, S: Schedule> Drop for Encryptor<W, S> {
+impl<W: io::Write> Drop for Encryptor<'_, W> {
     fn drop(&mut self) {
         // Unfortunately, we cannot handle errors here.  If error
-        // handling is a concern, call finish() and properly handle
+        // handling is a concern, call finalize() and properly handle
         // errors there.
-        let _ = self.finish();
+        let _ = self.finalize_intern();
     }
 }
 
@@ -770,7 +1029,8 @@ mod tests {
                 AEADAlgorithm::EAX,
                 AEADAlgorithm::OCB,
                 AEADAlgorithm::GCM,
-            ].iter().filter(|algo| algo.is_supported() && algo.supports_symmetric_algo(sym_algo)) {
+            ].iter().filter(|algo| algo.is_supported()
+                            && algo.supports_symmetric_algo(*sym_algo)) {
                 let chunk_size = 64;
                 let mut key = vec![0; sym_algo.key_size().unwrap()];
                 crate::crypto::random(&mut key).unwrap();
@@ -780,7 +1040,7 @@ mod tests {
 
                 let mut ciphertext = Vec::new();
                 {
-                    let (message_key, schedule) = SEIPv2Schedule::new(
+                    let schedule = SEIPv2Schedule::new(
                         &key,
                         *sym_algo,
                         *aead,
@@ -790,7 +1050,6 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       message_key,
                                                        &mut ciphertext)
                         .unwrap();
 
@@ -801,7 +1060,7 @@ mod tests {
                 {
                     let cur = buffered_reader::Memory::with_cookie(
                         &ciphertext, Default::default());
-                    let (message_key, schedule) = SEIPv2Schedule::new(
+                    let schedule = SEIPv2Schedule::new(
                         &key,
                         *sym_algo,
                         *aead,
@@ -811,8 +1070,7 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       message_key,
-                                                       cur)
+                                                       cur.into_boxed())
                         .unwrap();
 
                     decryptor.read_to_end(&mut plaintext).unwrap();
