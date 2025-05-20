@@ -6317,7 +6317,7 @@ impl<'a> PacketParser<'a> {
                         chunk_size,
                         seip.salt())?;
 
-                    let dec = aead::Decryptor::new(
+                    let dec = aead::InternalDecryptor::new(
                         seip.symmetric_algo(), seip.aead(), chunk_size,
                         schedule, message_key,
                         cur)?;
@@ -6338,7 +6338,7 @@ impl<'a> PacketParser<'a> {
                     seip.salt())?;
 
                 let reader = self.take_reader();
-                let mut reader = aead::BufferedReaderDecryptor::with_cookie(
+                let mut reader = aead::Decryptor::with_cookie(
                     seip.symmetric_algo(), seip.aead(), chunk_size,
                     schedule, message_key, reader, Cookie::default()).unwrap();
                 reader.cookie_mut().level = Some(self.recursion_depth());

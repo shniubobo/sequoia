@@ -337,7 +337,7 @@ impl<T> Schedule<T> for SEIPv2Schedule {
 }
 
 /// A `Read`er for decrypting AEAD-encrypted data.
-pub struct Decryptor<'a, 's> {
+pub(crate) struct InternalDecryptor<'a, 's> {
     // The encrypted data.
     source: Box<dyn BufferedReader<Cookie> + 'a>,
 
@@ -353,10 +353,10 @@ pub struct Decryptor<'a, 's> {
     // Up to a chunk of unread data.
     buffer: Vec<u8>,
 }
-assert_send_and_sync!(Decryptor<'_, '_>);
+assert_send_and_sync!(InternalDecryptor<'_, '_>);
 
 
-impl<'a, 's> Decryptor<'a, 's> {
+impl<'a, 's> InternalDecryptor<'a, 's> {
     /// Instantiate a new AEAD decryptor.
     ///
     /// `source` is the source to wrap.
@@ -368,7 +368,7 @@ impl<'a, 's> Decryptor<'a, 's> {
         R: BufferedReader<Cookie> + 'a,
         S: Schedule<DecryptionContext> + 's,
     {
-        Ok(Decryptor {
+        Ok(InternalDecryptor {
             source: source.into_boxed(),
             sym_algo,
             aead,
@@ -550,7 +550,7 @@ impl<'a, 's> Decryptor<'a, 's> {
 // gratuitiously do a short read.  Specifically, if the return value
 // is less than `plaintext.len()`, then it is either because we
 // reached the end of the input or an error occurred.
-impl io::Read for Decryptor<'_, '_> {
+impl io::Read for InternalDecryptor<'_, '_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self.read_helper(buf) {
             Ok(n) => Ok(n),
@@ -566,15 +566,30 @@ impl io::Read for Decryptor<'_, '_> {
 
 /// A `BufferedReader` that decrypts AEAD-encrypted data as it is
 /// read.
-pub(crate) struct BufferedReaderDecryptor<'a, 's> {
-    reader: buffered_reader::Generic<Decryptor<'a, 's>, Cookie>,
+pub struct Decryptor<'a, 's> {
+    reader: buffered_reader::Generic<InternalDecryptor<'a, 's>, Cookie>,
 }
 
-impl<'a, 's> BufferedReaderDecryptor<'a, 's> {
-    /// Like `new()`, but sets a cookie, which can be retrieved using
-    /// the `cookie_ref` and `cookie_mut` methods, and set using
-    /// the `cookie_set` method.
-    pub fn with_cookie<S>(sym_algo: SymmetricAlgorithm,
+impl<'a, 's> Decryptor<'a, 's> {
+    /// Instantiate a new AEAD decryptor.
+    ///
+    /// `source` is the ciphertext to decrypt.
+    pub fn new<S>(symm: SymmetricAlgorithm,
+                  aead: AEADAlgorithm,
+                  chunk_size: usize,
+                  schedule: S,
+                  key: SessionKey,
+                  source: Box<dyn BufferedReader<Cookie> + 'a>)
+                  -> Result<Self>
+    where
+        S: Schedule<DecryptionContext> + 's,
+    {
+        Self::with_cookie(symm, aead, chunk_size, schedule, key, source,
+                          Default::default())
+    }
+
+    /// Like [`Decryptor::new`], but sets a cookie.
+    pub fn with_cookie<S>(symm: SymmetricAlgorithm,
                           aead: AEADAlgorithm,
                           chunk_size: usize,
                           schedule: S,
@@ -585,36 +600,36 @@ impl<'a, 's> BufferedReaderDecryptor<'a, 's> {
     where
         S: Schedule<DecryptionContext> + 's,
     {
-        Ok(BufferedReaderDecryptor {
+        Ok(Decryptor {
             reader: buffered_reader::Generic::with_cookie(
-                Decryptor::new(
-                    sym_algo, aead, chunk_size, schedule, key, source)?,
+                InternalDecryptor::new(
+                    symm, aead, chunk_size, schedule, key, source)?,
                 None, cookie),
         })
     }
 }
 
-impl io::Read for BufferedReaderDecryptor<'_, '_> {
+impl io::Read for Decryptor<'_, '_> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.reader.read(buf)
     }
 }
 
-impl fmt::Display for BufferedReaderDecryptor<'_, '_> {
+impl fmt::Display for Decryptor<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BufferedReaderDecryptor")
+        write!(f, "Decryptor")
     }
 }
 
-impl fmt::Debug for BufferedReaderDecryptor<'_, '_> {
+impl fmt::Debug for Decryptor<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("BufferedReaderDecryptor")
+        f.debug_struct("Decryptor")
             .field("reader", &self.get_ref().unwrap())
             .finish()
     }
 }
 
-impl BufferedReader<Cookie> for BufferedReaderDecryptor<'_, '_> {
+impl BufferedReader<Cookie> for Decryptor<'_, '_> {
     fn buffer(&self) -> &[u8] {
         self.reader.buffer()
     }
@@ -950,7 +965,7 @@ mod tests {
                                                        chunk_size,
                                                        schedule,
                                                        message_key,
-                                                       cur)
+                                                       cur.into_boxed())
                         .unwrap();
 
                     decryptor.read_to_end(&mut plaintext).unwrap();
