@@ -550,7 +550,7 @@ impl<'a, 's> AEADEncryptor<'a, 's, Cookie> {
                   chunk_size: usize, schedule: S, key: SessionKey)
                   -> Result<Message<'a>>
     where
-        S: aead::Schedule + 'a + 's,
+        S: aead::Schedule<aead::EncryptionContext> + 'a + 's,
     {
         Ok(Message::from(Box::new(AEADEncryptor {
             inner: Generic::new_unboxed(

@@ -17,7 +17,6 @@ use crate::crypto::{
     SessionKey,
     backend::{Backend, interface::Kdf},
 };
-use crate::crypto::aead::CipherOp;
 use crate::Error;
 use crate::types::{
     AEADAlgorithm,
@@ -109,7 +108,7 @@ impl SKESK6 {
         let mut iv = vec![0u8; esk_aead.nonce_size()?];
         crypto::random(&mut iv)?;
         let mut ctx =
-            esk_aead.context(esk_algo, &kek, &ad, &iv, CipherOp::Encrypt)?;
+            esk_aead.context(esk_algo, &kek, &ad, &iv)?.for_encryption()?;
         let mut esk_digest =
             vec![0u8; session_key.len() + esk_aead.digest_size()?];
         ctx.encrypt_seal(&mut esk_digest, session_key)?;
@@ -140,8 +139,8 @@ impl SKESK6 {
 
         // Use the derived key to decrypt the ESK.
         let mut cipher = self.aead_algo.context(
-            self.symmetric_algo(), &kek, &ad, self.aead_iv(),
-            CipherOp::Decrypt)?;
+            self.symmetric_algo(), &kek, &ad, self.aead_iv())?
+            .for_decryption()?;
 
         let mut plain: SessionKey =
             vec![0; self.esk().len() - self.aead_algo.digest_size()?].into();
