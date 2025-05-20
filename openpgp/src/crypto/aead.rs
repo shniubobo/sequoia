@@ -247,6 +247,7 @@ pub trait Schedule<T>: Send + Sync {
 /// See [Section 5.13.2 of RFC 9580].
 ///
 ///   [Section 5.13.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-5.13.2
+#[derive(Clone)]
 pub struct SEIPv2Schedule {
     key: SessionKey,
     nonce: Box<[u8]>,

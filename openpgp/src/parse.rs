@@ -6293,6 +6293,13 @@ impl<'a> PacketParser<'a> {
                 let chunk_size =
                     aead::chunk_size_usize(seip.chunk_size())?;
 
+                let schedule = aead::SEIPv2Schedule::new(
+                    key,
+                    seip.symmetric_algo(),
+                    seip.aead(),
+                    chunk_size,
+                    seip.salt())?;
+
                 // Read the first chunk and check whether we can
                 // decrypt it using the provided key.  Don't actually
                 // consume them in case we can't.
@@ -6310,16 +6317,9 @@ impl<'a> PacketParser<'a> {
                         &data[..cmp::min(data.len(), amount)],
                         Default::default());
 
-                    let schedule = aead::SEIPv2Schedule::new(
-                        key,
-                        seip.symmetric_algo(),
-                        seip.aead(),
-                        chunk_size,
-                        seip.salt())?;
-
                     let dec = aead::InternalDecryptor::new(
                         seip.symmetric_algo(), seip.aead(), chunk_size,
-                        schedule,
+                        schedule.clone(),
                         cur)?;
                     let mut chunk = Vec::new();
                     dec.take(seip.chunk_size() as u64).read_to_end(&mut chunk)?;
@@ -6327,15 +6327,6 @@ impl<'a> PacketParser<'a> {
 
                 // Ok, we can decrypt the data.  Push a Decryptor and
                 // a HashedReader on the `BufferedReader` stack.
-
-                // This can't fail, because we create a decryptor
-                // above with the same parameters.
-                let schedule = aead::SEIPv2Schedule::new(
-                    key,
-                    seip.symmetric_algo(),
-                    seip.aead(),
-                    chunk_size,
-                    seip.salt())?;
 
                 let reader = self.take_reader();
                 let mut reader = aead::Decryptor::with_cookie(
