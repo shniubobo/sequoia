@@ -19,16 +19,6 @@ use crate::seal;
 use crate::parse::Cookie;
 use crate::crypto::backend::{Backend, interface::Kdf};
 
-/// Minimum AEAD chunk size.
-///
-/// Implementations MUST support chunk sizes down to 64B.
-const MIN_CHUNK_SIZE: usize = 1 << 6; // 64B
-
-/// Maximum AEAD chunk size.
-///
-/// Implementations MUST support chunk sizes up to 4MiB.
-const MAX_CHUNK_SIZE: usize = 1 << 22; // 4MiB
-
 /// Maximum size of any Nonce used by an AEAD mode.
 pub const MAX_NONCE_LEN: usize = 16;
 
@@ -252,22 +242,38 @@ pub trait Schedule<T>: Send + Sync {
                  -> Result<T>;
 }
 
-const SEIP2AD_PREFIX_LEN: usize = 5;
 pub(crate) struct SEIPv2Schedule {
     key: SessionKey,
     nonce: Box<[u8]>,
-    ad: [u8; SEIP2AD_PREFIX_LEN],
+    ad: [u8; Self::AD_PREFIX_LEN],
     nonce_len: usize,
 }
 
 impl SEIPv2Schedule {
+    /// Minimum AEAD chunk size.
+    ///
+    /// Implementations MUST support chunk sizes down to 64B.
+    const MIN_CHUNK_SIZE: usize = 1 << 6; // 64B
+
+    /// Maximum AEAD chunk size.
+    ///
+    /// Implementations MUST support chunk sizes up to 4MiB.
+    const MAX_CHUNK_SIZE: usize = 1 << 22; // 4MiB
+
+    /// The length of the additional authenticated data.
+    ///
+    /// For the final tag, the stream length as big-endian u64 is
+    /// appended to this prefix.
+    const AD_PREFIX_LEN: usize = 5;
+
     pub(crate) fn new(session_key: &SessionKey,
                       sym_algo: SymmetricAlgorithm,
                       aead: AEADAlgorithm,
                       chunk_size: usize,
                       salt: &[u8]) -> Result<Self>
     {
-        if !(MIN_CHUNK_SIZE..=MAX_CHUNK_SIZE).contains(&chunk_size) {
+        if !(Self::MIN_CHUNK_SIZE..=Self::MAX_CHUNK_SIZE).contains(&chunk_size)
+        {
             return Err(Error::InvalidArgument(
                 format!("Invalid AEAD chunk size: {}", chunk_size)).into());
         }
@@ -322,9 +328,9 @@ impl<T> Schedule<T> for SEIPv2Schedule {
                  -> Result<T>
     {
         // Prepare the associated data.
-        let mut ad = [0u8; SEIP2AD_PREFIX_LEN + 8];
-        ad[..SEIP2AD_PREFIX_LEN].copy_from_slice(&self.ad);
-        write_be_u64(&mut ad[SEIP2AD_PREFIX_LEN..], length);
+        let mut ad = [0u8; Self::AD_PREFIX_LEN + 8];
+        ad[..Self::AD_PREFIX_LEN].copy_from_slice(&self.ad);
+        write_be_u64(&mut ad[Self::AD_PREFIX_LEN..], length);
 
         // The nonce is the NONCE (NONCE_LEN - 8 bytes taken from the
         // KDF) concatenated with the chunk index.
