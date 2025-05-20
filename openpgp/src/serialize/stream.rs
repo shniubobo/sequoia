@@ -3146,7 +3146,7 @@ impl<'a, 'b> Encryptor<'a, 'b> {
             seip.serialize_headers(&mut inner)?;
 
             use crate::crypto::aead::SEIPv2Schedule;
-            let (message_key, schedule) = SEIPv2Schedule::new(
+            let schedule = SEIPv2Schedule::new(
                 &sk,
                 seip.symmetric_algo(), seip.aead(), aead.chunk_size,
                 seip.salt())?;
@@ -3164,7 +3164,6 @@ impl<'a, 'b> Encryptor<'a, 'b> {
                 seip.aead(),
                 aead.chunk_size,
                 schedule,
-                message_key,
             )
         } else {
             // Write the SEIPDv1 packet.

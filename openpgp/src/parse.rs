@@ -6310,7 +6310,7 @@ impl<'a> PacketParser<'a> {
                         &data[..cmp::min(data.len(), amount)],
                         Default::default());
 
-                    let (message_key, schedule) = aead::SEIPv2Schedule::new(
+                    let schedule = aead::SEIPv2Schedule::new(
                         key,
                         seip.symmetric_algo(),
                         seip.aead(),
@@ -6319,7 +6319,7 @@ impl<'a> PacketParser<'a> {
 
                     let dec = aead::InternalDecryptor::new(
                         seip.symmetric_algo(), seip.aead(), chunk_size,
-                        schedule, message_key,
+                        schedule,
                         cur)?;
                     let mut chunk = Vec::new();
                     dec.take(seip.chunk_size() as u64).read_to_end(&mut chunk)?;
@@ -6330,7 +6330,7 @@ impl<'a> PacketParser<'a> {
 
                 // This can't fail, because we create a decryptor
                 // above with the same parameters.
-                let (message_key, schedule) = aead::SEIPv2Schedule::new(
+                let schedule = aead::SEIPv2Schedule::new(
                     key,
                     seip.symmetric_algo(),
                     seip.aead(),
@@ -6340,7 +6340,7 @@ impl<'a> PacketParser<'a> {
                 let reader = self.take_reader();
                 let mut reader = aead::Decryptor::with_cookie(
                     seip.symmetric_algo(), seip.aead(), chunk_size,
-                    schedule, message_key, reader, Cookie::default()).unwrap();
+                    schedule, reader, Cookie::default()).unwrap();
                 reader.cookie_mut().level = Some(self.recursion_depth());
 
                 t!("Pushing aead::Decryptor, level {:?}.",

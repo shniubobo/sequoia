@@ -217,43 +217,44 @@ impl AEADAlgorithm {
     }
 }
 
-/// Schedules nonce and additional authenticated data (AAD) for use
-/// with chunked AEAD encryption.
+/// Schedules key, nonce, and additional authenticated data (AAD) for
+/// use with chunked AEAD encryption.
 pub trait Schedule<T>: Send + Sync {
-    /// Compute nonce and AAD for a chunk.
+    /// Computes key, nonce, and AAD for a chunk.
     ///
-    /// For every chunk, implementations must produce a nonce and the
-    /// additional authenticated data (AAD), then invoke `fun` with
-    /// nonce and AAD.
+    /// For every chunk, implementations must produce a key, a nonce,
+    /// and the additional authenticated data (AAD), then invoke `fun`
+    /// with key, nonce, and AAD.
     ///
     /// `index` is the current chunk index.
     fn chunk(&self,
              index: u64,
-             fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
+             fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
              -> Result<T>;
 
-    /// Compute nonce and AAD for the final authentication tag.
+    /// Computes key, nonce, and AAD for the final authentication tag.
     ///
     /// When doing chunked AEAD, we need to protect against truncation
     /// of the chunked stream.  In OpenPGP this is done by adding a
     /// final empty chunk that includes the length of the stream in
     /// the additional authenticated data (AAD).
     ///
-    /// Implementations must produce a nonce and the AAD (which SHOULD
-    /// include the length of the stream), then invoke `fun` with
-    /// nonce and AAD.
+    /// Implementations must produce a key, a nonce, and the AAD
+    /// (which SHOULD include the length of the stream), then invoke
+    /// `fun` with key, nonce, and AAD.
     ///
     /// `index` is the current chunk index. `length` is the total
     /// length of the stream.
     fn finalizer(&self,
                  index: u64,
                  length: u64,
-                 fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
+                 fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
                  -> Result<T>;
 }
 
 const SEIP2AD_PREFIX_LEN: usize = 5;
 pub(crate) struct SEIPv2Schedule {
+    key: SessionKey,
     nonce: Box<[u8]>,
     ad: [u8; SEIP2AD_PREFIX_LEN],
     nonce_len: usize,
@@ -264,7 +265,7 @@ impl SEIPv2Schedule {
                       sym_algo: SymmetricAlgorithm,
                       aead: AEADAlgorithm,
                       chunk_size: usize,
-                      salt: &[u8]) -> Result<(SessionKey, Self)>
+                      salt: &[u8]) -> Result<Self>
     {
         if !(MIN_CHUNK_SIZE..=MAX_CHUNK_SIZE).contains(&chunk_size) {
             return Err(Error::InvalidArgument(
@@ -288,18 +289,19 @@ impl SEIPv2Schedule {
         let key = Vec::from(&key_nonce[..key_size]).into();
         let nonce = Vec::from(&key_nonce[key_size..]).into();
 
-        Ok((key, Self {
+        Ok(Self {
+            key,
             nonce,
             ad,
             nonce_len: aead.nonce_size()?,
-        }))
+        })
     }
 }
 
 impl<T> Schedule<T> for SEIPv2Schedule {
     fn chunk(&self,
              index: u64,
-             fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
+             fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
              -> Result<T>
     {
         // The nonce is the NONCE (NONCE_LEN - 8 bytes taken from the
@@ -310,13 +312,13 @@ impl<T> Schedule<T> for SEIPv2Schedule {
         nonce[..self.nonce.len()].copy_from_slice(&self.nonce);
         nonce[self.nonce.len()..].copy_from_slice(&index_be);
 
-        fun(nonce, &self.ad)
+        fun(&self.key, nonce, &self.ad)
     }
 
     fn finalizer(&self,
                  index: u64,
                  length: u64,
-                 fun: &mut dyn FnMut(&[u8], &[u8]) -> Result<T>)
+                 fun: &mut dyn FnMut(&SessionKey, &[u8], &[u8]) -> Result<T>)
                  -> Result<T>
     {
         // Prepare the associated data.
@@ -332,7 +334,7 @@ impl<T> Schedule<T> for SEIPv2Schedule {
         nonce[..self.nonce.len()].copy_from_slice(&self.nonce);
         nonce[self.nonce.len()..].copy_from_slice(&index_be);
 
-        fun(nonce, &ad)
+        fun(&self.key, nonce, &ad)
     }
 }
 
@@ -343,7 +345,6 @@ pub(crate) struct InternalDecryptor<'a, 's> {
 
     sym_algo: SymmetricAlgorithm,
     aead: AEADAlgorithm,
-    key: SessionKey,
     schedule: Box<dyn Schedule<DecryptionContext> + 's>,
 
     digest_size: usize,
@@ -362,7 +363,7 @@ impl<'a, 's> InternalDecryptor<'a, 's> {
     /// `source` is the source to wrap.
     pub fn new<R, S>(sym_algo: SymmetricAlgorithm,
                      aead: AEADAlgorithm, chunk_size: usize,
-                     schedule: S, key: SessionKey, source: R)
+                     schedule: S, source: R)
         -> Result<Self>
     where
         R: BufferedReader<Cookie> + 'a,
@@ -372,7 +373,6 @@ impl<'a, 's> InternalDecryptor<'a, 's> {
             source: source.into_boxed(),
             sym_algo,
             aead,
-            key,
             schedule: Box::new(schedule),
             digest_size: aead.digest_size()?,
             chunk_size,
@@ -479,8 +479,8 @@ impl<'a, 's> InternalDecryptor<'a, 's> {
             } else {
                 let mut aead = self.schedule.chunk(
                     self.chunk_index,
-                    &mut |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                    &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
                             .for_decryption()
                     })?;
 
@@ -526,8 +526,8 @@ impl<'a, 's> InternalDecryptor<'a, 's> {
                 // We read the whole ciphertext, now check the final digest.
                 let mut aead = self.schedule.finalizer(
                     self.chunk_index, self.bytes_decrypted,
-                    &mut |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                    &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
                             .for_decryption()
                     })?;
 
@@ -578,13 +578,12 @@ impl<'a, 's> Decryptor<'a, 's> {
                   aead: AEADAlgorithm,
                   chunk_size: usize,
                   schedule: S,
-                  key: SessionKey,
                   source: Box<dyn BufferedReader<Cookie> + 'a>)
                   -> Result<Self>
     where
         S: Schedule<DecryptionContext> + 's,
     {
-        Self::with_cookie(symm, aead, chunk_size, schedule, key, source,
+        Self::with_cookie(symm, aead, chunk_size, schedule, source,
                           Default::default())
     }
 
@@ -593,7 +592,6 @@ impl<'a, 's> Decryptor<'a, 's> {
                           aead: AEADAlgorithm,
                           chunk_size: usize,
                           schedule: S,
-                          key: SessionKey,
                           source: Box<dyn BufferedReader<Cookie> + 'a>,
                           cookie: Cookie)
                           -> Result<Self>
@@ -603,7 +601,7 @@ impl<'a, 's> Decryptor<'a, 's> {
         Ok(Decryptor {
             reader: buffered_reader::Generic::with_cookie(
                 InternalDecryptor::new(
-                    symm, aead, chunk_size, schedule, key, source)?,
+                    symm, aead, chunk_size, schedule, source)?,
                 None, cookie),
         })
     }
@@ -707,7 +705,6 @@ pub struct Encryptor<'s, W: io::Write> {
 
     sym_algo: SymmetricAlgorithm,
     aead: AEADAlgorithm,
-    key: SessionKey,
     schedule: Box<dyn Schedule<EncryptionContext> + 's>,
 
     digest_size: usize,
@@ -725,7 +722,7 @@ assert_send_and_sync!(Encryptor<'_, W> where W: io::Write);
 impl<'s, W: io::Write> Encryptor<'s, W> {
     /// Instantiate a new AEAD encryptor.
     pub fn new<S>(sym_algo: SymmetricAlgorithm, aead: AEADAlgorithm,
-                  chunk_size: usize, schedule: S, key: SessionKey, sink: W)
+                  chunk_size: usize, schedule: S, sink: W)
                   -> Result<Self>
     where
         S: Schedule<EncryptionContext> + 's,
@@ -734,7 +731,6 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
             inner: Some(sink),
             sym_algo,
             aead,
-            key,
             schedule: Box::new(schedule),
             digest_size: aead.digest_size()?,
             chunk_size,
@@ -763,8 +759,8 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
             // And possibly encrypt the chunk.
             if self.buffer.len() == self.chunk_size {
                 let mut aead =
-                    self.schedule.chunk(self.chunk_index, &mut |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
                             .for_encryption()
                     })?;
 
@@ -785,8 +781,8 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
             if chunk.len() == self.chunk_size {
                 // Complete chunk.
                 let mut aead =
-                    self.schedule.chunk(self.chunk_index, &mut |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
                             .for_encryption()
                     })?;
 
@@ -812,8 +808,8 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
         if let Some(mut inner) = self.inner.take() {
             if !self.buffer.is_empty() {
                 let mut aead =
-                    self.schedule.chunk(self.chunk_index, &mut |iv, ad| {
-                        self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                    self.schedule.chunk(self.chunk_index, &mut |key, iv, ad| {
+                        self.aead.context(self.sym_algo, key, ad, iv)?
                             .for_encryption()
                     })?;
 
@@ -836,8 +832,8 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
             // Write final digest.
             let mut aead = self.schedule.finalizer(
                 self.chunk_index, self.bytes_encrypted,
-                &mut |iv, ad| {
-                    self.aead.context(self.sym_algo, &self.key, ad, iv)?
+                &mut |key, iv, ad| {
+                    self.aead.context(self.sym_algo, key, ad, iv)?
                         .for_encryption()
                 })?;
             debug_assert!(self.digest_size <= self.scratch.len());
@@ -933,7 +929,7 @@ mod tests {
 
                 let mut ciphertext = Vec::new();
                 {
-                    let (message_key, schedule) = SEIPv2Schedule::new(
+                    let schedule = SEIPv2Schedule::new(
                         &key,
                         *sym_algo,
                         *aead,
@@ -943,7 +939,6 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       message_key,
                                                        &mut ciphertext)
                         .unwrap();
 
@@ -954,7 +949,7 @@ mod tests {
                 {
                     let cur = buffered_reader::Memory::with_cookie(
                         &ciphertext, Default::default());
-                    let (message_key, schedule) = SEIPv2Schedule::new(
+                    let schedule = SEIPv2Schedule::new(
                         &key,
                         *sym_algo,
                         *aead,
@@ -964,7 +959,6 @@ mod tests {
                                                        *aead,
                                                        chunk_size,
                                                        schedule,
-                                                       message_key,
                                                        cur.into_boxed())
                         .unwrap();
 

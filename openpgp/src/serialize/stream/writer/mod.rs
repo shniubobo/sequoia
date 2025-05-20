@@ -547,14 +547,14 @@ impl<'a, 's> AEADEncryptor<'a, 's, Cookie> {
     /// Makes an encrypting writer.
     pub fn new<S>(inner: Message<'a>, cookie: Cookie,
                   cipher: SymmetricAlgorithm, aead: AEADAlgorithm,
-                  chunk_size: usize, schedule: S, key: SessionKey)
+                  chunk_size: usize, schedule: S)
                   -> Result<Message<'a>>
     where
         S: aead::Schedule<aead::EncryptionContext> + 'a + 's,
     {
         Ok(Message::from(Box::new(AEADEncryptor {
             inner: Generic::new_unboxed(
-                aead::Encryptor::new(cipher, aead, chunk_size, schedule, key,
+                aead::Encryptor::new(cipher, aead, chunk_size, schedule,
                                      inner.into())?,
                 cookie),
         })))
