@@ -1,3 +1,90 @@
+//! Authenticated encryption with additional data.
+//!
+//! This module provides both a uniform streaming (chunked) and a
+//! non-streaming (non-chunked) interface to authenticated symmetric
+//! encryption and decryption using different block ciphers and AEAD
+//! modes.
+//!
+//! Note: this is a very low-level interface.  It is not about OpenPGP
+//! encryption or decryption.  If you are looking for that, see
+//! [`crate::serialize::stream::Encryptor`] and
+//! [`crate::parse::stream::Decryptor`] instead.
+//!
+//! # Examples
+//!
+//! This example demonstrates streaming (chunked) encryption and
+//! decryption.
+//!
+//! ```rust
+//! # use std::io::{Read, Write};
+//! # use sequoia_openpgp::crypto::SessionKey;
+//! # use sequoia_openpgp::crypto::{AEADAlgorithm, SymmetricAlgorithm};
+//! # use sequoia_openpgp::crypto::aead::*;
+//! # use sequoia_openpgp::parse::buffered_reader::{self, BufferedReader};
+//! # fn main() -> sequoia_openpgp::Result<()> {
+//! let text = b"Hello World :)";
+//! let algo = SymmetricAlgorithm::default();
+//! let aead = AEADAlgorithm::default();
+//! let key = SessionKey::new(algo.key_size()?)?;
+//! let chunk_size = 4096;
+//! let schedule = SEIPv2Schedule::new(&key, algo, aead, chunk_size, b"salt")?;
+//!
+//! // Encrypt the `text`.
+//! let mut ciphertext = Vec::new();
+//! let mut encryptor = Encryptor::new(
+//!     algo, aead, chunk_size, schedule.clone(), &mut ciphertext)?;
+//! encryptor.write_all(text)?;
+//! encryptor.finalize()?;
+//!
+//! // Decrypt the `ciphertext`.
+//! let mut plaintext = Vec::new();
+//! let reader = buffered_reader::Memory::with_cookie(
+//!     &ciphertext, Default::default());
+//!
+//! let mut decryptor = Decryptor::new(
+//!     algo, aead, chunk_size, schedule.clone(), reader.into_boxed())?;
+//!
+//! decryptor.read_to_end(&mut plaintext)?;
+//!
+//! // Check that we recovered it.
+//! assert_eq!(&plaintext[..], text);
+//! # Ok(()) }
+//! ```
+//!
+//! This example demonstrates non-streaming (non-chunked) encryption
+//! and decryption.
+//!
+//! ```rust
+//! # use std::io::{Read, Write};
+//! # use sequoia_openpgp::crypto::{self, SessionKey};
+//! # use sequoia_openpgp::crypto::{AEADAlgorithm, SymmetricAlgorithm};
+//! # use sequoia_openpgp::crypto::aead::*;
+//! # fn main() -> sequoia_openpgp::Result<()> {
+//! let text = b"Hello World :)";
+//! let aad = b"Not secret, but authenticated";
+//! let algo = SymmetricAlgorithm::default();
+//! let aead = AEADAlgorithm::default();
+//! let key = SessionKey::new(algo.key_size()?)?;
+//! let mut nonce = vec![0; aead.nonce_size()?];
+//! crypto::random(&mut nonce)?;
+//!
+//! // Encrypt the `text`.
+//! let mut ciphertext = vec![0; text.len() + aead.digest_size()?];
+//! aead.context(algo, &key, aad, &nonce)?
+//!     .for_encryption()?
+//!     .encrypt_seal(&mut ciphertext, text)?;
+//!
+//! // Decrypt the `ciphertext`.
+//! let mut plaintext = vec![0; ciphertext.len() - aead.digest_size()?];
+//! aead.context(algo, &key, aad, &nonce)?
+//!     .for_decryption()?
+//!     .decrypt_verify(&mut plaintext, &ciphertext)?;
+//!
+//! // Check that we recovered it.
+//! assert_eq!(&plaintext[..], text);
+//! # Ok(()) }
+//! ```
+
 use std::cmp;
 use std::convert::TryInto;
 use std::fmt;
