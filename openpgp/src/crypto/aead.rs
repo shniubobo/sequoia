@@ -852,13 +852,13 @@ impl<'s, W: io::Write> Encryptor<'s, W> {
     }
 
     /// Acquires a reference to the underlying writer.
-    pub fn get_ref(&self) -> Option<&W> {
+    pub(crate) fn get_ref(&self) -> Option<&W> {
         self.inner.as_ref()
     }
 
     /// Acquires a mutable reference to the underlying writer.
     #[allow(dead_code)]
-    pub fn get_mut(&mut self) -> Option<&mut W> {
+    pub(crate) fn get_mut(&mut self) -> Option<&mut W> {
         self.inner.as_mut()
     }
 }
