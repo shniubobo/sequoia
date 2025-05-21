@@ -524,7 +524,9 @@ impl fmt::Debug for ProtectedMPI {
 /// the occasional elliptic curve) in [`Key`] packets.
 ///
 ///   [`Key`]: crate::packet::Key
+#[allow(non_camel_case_types)]
 #[non_exhaustive]
+#[allow(non_camel_case_types)]
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PublicKey {
     /// RSA public key.
@@ -609,6 +611,60 @@ pub enum PublicKey {
         a: Box<[u8; 57]>,
     },
 
+    /// Composite signature algorithm using ML-DSA-65 and Ed25519.
+    MLDSA65_Ed25519 {
+        /// The Ed25519 public key, an opaque string.
+        eddsa: Box<[u8; 32]>,
+
+        /// The ML-DSA public key, an opaque string.
+        mldsa: Box<[u8; 1952]>,
+    },
+
+    /// Composite signature algorithm using ML-DSA-87 and Ed448.
+    MLDSA87_Ed448 {
+        /// The Ed448 public key, an opaque string.
+        eddsa: Box<[u8; 57]>,
+
+        /// The ML-DSA public key, an opaque string.
+        mldsa: Box<[u8; 2592]>,
+    },
+
+    /// SLH-DSA-SHAKE-128s public key.
+    SLHDSA128s {
+        /// The public key, an opaque string.
+        public: [u8; 32],
+    },
+
+    /// SLH-DSA-SHAKE-128f public key.
+    SLHDSA128f {
+        /// The public key, an opaque string.
+        public: [u8; 32],
+    },
+
+    /// SLH-DSA-SHAKE-256s public key.
+    SLHDSA256s {
+        /// The public key, an opaque string.
+        public: Box<[u8; 64]>,
+    },
+
+    /// Composite KEM using ML-KEM-768 and X25519.
+    MLKEM768_X25519 {
+        /// The X25519 public key, an opaque string.
+        ecdh: Box<[u8; 32]>,
+
+        /// The ML-KEM public key, an opaque string.
+        mlkem: Box<[u8; 1184]>,
+    },
+
+    /// Composite KEM using ML-KEM-1024 and X448.
+    MLKEM1024_X448 {
+        /// The X448 public key, an opaque string.
+        ecdh: Box<[u8; 56]>,
+
+        /// The ML-KEM public key, an opaque string.
+        mlkem: Box<[u8; 1568]>,
+    },
+
     /// Unknown number of MPIs for an unknown algorithm.
     Unknown {
         /// The successfully parsed MPIs.
@@ -683,6 +739,45 @@ impl fmt::Debug for PublicKey {
                 .field("a", &hex::encode(a.as_ref()))
                 .finish(),
 
+            PublicKey::MLDSA65_Ed25519 { eddsa, mldsa } =>
+                f.debug_struct("MLDSA65_Ed25519")
+                .field("eddsa", &hex::encode(eddsa.as_ref()))
+                .field("mldsa", &hex::encode(mldsa.as_ref()))
+                .finish(),
+
+            PublicKey::MLDSA87_Ed448 { eddsa, mldsa } =>
+                f.debug_struct("MLDSA87_Ed448")
+                .field("eddsa", &hex::encode(eddsa.as_ref()))
+                .field("mldsa", &hex::encode(mldsa.as_ref()))
+                .finish(),
+
+            PublicKey::SLHDSA128s { public } =>
+                f.debug_struct("SLHDSA128s")
+                .field("public", &hex::encode(public))
+                .finish(),
+
+            PublicKey::SLHDSA128f { public } =>
+                f.debug_struct("SLHDSA128f")
+                .field("public", &hex::encode(public))
+                .finish(),
+
+            PublicKey::SLHDSA256s { public } =>
+                f.debug_struct("SLHDSA256s")
+                .field("public", &hex::encode(public.as_ref()))
+                .finish(),
+
+            PublicKey::MLKEM768_X25519 { ecdh, mlkem } =>
+                f.debug_struct("MLKEM768_X25519")
+                .field("ecdh", &hex::encode(ecdh.as_ref()))
+                .field("mlkem", &hex::encode(mlkem.as_ref()))
+                .finish(),
+
+            PublicKey::MLKEM1024_X448 { ecdh, mlkem } =>
+                f.debug_struct("MLKEM1024_X448")
+                .field("ecdh", &hex::encode(ecdh.as_ref()))
+                .field("mlkem", &hex::encode(mlkem.as_ref()))
+                .finish(),
+
             PublicKey::Unknown { mpis, rest } =>
                 f.debug_struct("Unknown")
                 .field("mpis", mpis)
@@ -716,6 +811,13 @@ impl PublicKey {
             X448 { .. } => Some(448),
             Ed25519 { .. } => Some(256),
             Ed448 { .. } => Some(456),
+            MLDSA65_Ed25519 { .. } => None,
+            MLDSA87_Ed448 { .. } => None,
+            SLHDSA128s { .. } => None,
+            SLHDSA128f { .. } => None,
+            SLHDSA256s { .. } => None,
+            MLKEM768_X25519 { .. } => None,
+            MLKEM1024_X448 { .. } => None,
             Unknown { .. } => None,
         }
     }
@@ -736,6 +838,17 @@ impl PublicKey {
             X448 { .. } => Some(PublicKeyAlgorithm::X448),
             Ed25519 { .. } => Some(PublicKeyAlgorithm::Ed25519),
             Ed448 { .. } => Some(PublicKeyAlgorithm::Ed448),
+            MLDSA65_Ed25519 { .. } =>
+                Some(PublicKeyAlgorithm::MLDSA65_Ed25519),
+            MLDSA87_Ed448 { .. } =>
+                Some(PublicKeyAlgorithm::MLDSA87_Ed448),
+            SLHDSA128s { .. } => Some(PublicKeyAlgorithm::SLHDSA128s),
+            SLHDSA128f { .. } => Some(PublicKeyAlgorithm::SLHDSA128f),
+            SLHDSA256s { .. } => Some(PublicKeyAlgorithm::SLHDSA256s),
+            MLKEM768_X25519 { .. } =>
+                Some(PublicKeyAlgorithm::MLKEM768_X25519),
+            MLKEM1024_X448 { .. } =>
+                Some(PublicKeyAlgorithm::MLKEM1024_X448),
             Unknown { .. } => None,
         }
     }
@@ -753,7 +866,7 @@ impl Arbitrary for PublicKey {
         use self::PublicKey::*;
         use crate::arbitrary_helper::gen_arbitrary_from_range;
 
-        match gen_arbitrary_from_range(0..10, g) {
+        match gen_arbitrary_from_range(0..17, g) {
             0 => RSA {
                 e: MPI::arbitrary(g),
                 n: MPI::arbitrary(g),
@@ -794,6 +907,38 @@ impl Arbitrary for PublicKey {
             8 => Ed25519 { a: arbitrary(g) },
             9 => Ed448 { a: Box::new(arbitrarize(g, [0; 57])) },
 
+            10 => MLDSA65_Ed25519 {
+                eddsa: Box::new(arbitrarize(g, [0; 32])),
+                mldsa: Box::new(arbitrarize(g, [0; 1952])),
+            },
+
+            11 => MLDSA87_Ed448 {
+                eddsa: Box::new(arbitrarize(g, [0; 57])),
+                mldsa: Box::new(arbitrarize(g, [0; 2592])),
+            },
+
+            12 => SLHDSA128s {
+                public: arbitrary(g),
+            },
+
+            13 => SLHDSA128f {
+                public: arbitrary(g),
+            },
+
+            14 => SLHDSA256s {
+                public: Box::new(arbitrarize(g, [0; 64])),
+            },
+
+            15 => MLKEM768_X25519 {
+                ecdh: Box::new(arbitrarize(g, [0; 32])),
+                mlkem: Box::new(arbitrarize(g, [0; 1184])),
+            },
+
+            16 => MLKEM1024_X448 {
+                ecdh: Box::new(arbitrarize(g, [0; 56])),
+                mlkem: Box::new(arbitrarize(g, [0; 1568])),
+            },
+
             _ => unreachable!(),
         }
     }
@@ -822,7 +967,9 @@ pub(crate) fn arbitrary<T: Default + AsMut<[u8]>>(g: &mut Gen) -> T
 ///   [`Key`]: crate::packet::Key
 // Deriving Hash here is okay: PartialEq is manually implemented to
 // ensure that secrets are compared in constant-time.
+#[allow(non_camel_case_types)]
 #[non_exhaustive]
+#[allow(non_camel_case_types)]
 #[allow(clippy::derived_hash_with_manual_eq)]
 #[derive(Clone, Hash)]
 pub enum SecretKeyMaterial {
@@ -892,6 +1039,60 @@ pub enum SecretKeyMaterial {
         x: Protected,
     },
 
+    /// Composite signature algorithm using ML-DSA-65 and Ed25519.
+    MLDSA65_Ed25519 {
+        /// The Ed25519 secret key, an opaque string.
+        eddsa: Protected,
+
+        /// The ML-DSA secret key, an opaque string.
+        mldsa: Protected,
+    },
+
+    /// Composite signature algorithm using ML-DSA-87 and Ed448.
+    MLDSA87_Ed448 {
+        /// The Ed448 secret key, an opaque string.
+        eddsa: Protected,
+
+        /// The ML-DSA secret key, an opaque string.
+        mldsa: Protected,
+    },
+
+    /// SLH-DSA-SHAKE-128s secret key.
+    SLHDSA128s {
+        /// The secret key, an opaque string.
+        secret: Protected,
+    },
+
+    /// SLH-DSA-SHAKE-128f secret key.
+    SLHDSA128f {
+        /// The secret key, an opaque string.
+        secret: Protected,
+    },
+
+    /// SLH-DSA-SHAKE-256s secret key.
+    SLHDSA256s {
+        /// The secret key, an opaque string.
+        secret: Protected,
+    },
+
+    /// Composite KEM using ML-KEM-768 and X25519.
+    MLKEM768_X25519 {
+        /// The X25519 secret key, an opaque string.
+        ecdh: Protected,
+
+        /// The ML-KEM secret key, an opaque string.
+        mlkem: Protected,
+    },
+
+    /// Composite KEM using ML-KEM-1024 and X448.
+    MLKEM1024_X448 {
+        /// The X448 secret key, an opaque string.
+        ecdh: Protected,
+
+        /// The ML-KEM secret key, an opaque string.
+        mlkem: Protected,
+    },
+
     /// Unknown number of MPIs for an unknown algorithm.
     Unknown {
         /// The successfully parsed MPIs.
@@ -959,6 +1160,45 @@ impl fmt::Debug for SecretKeyMaterial {
                     .field("x", &hex::encode(x))
                     .finish(),
 
+                SecretKeyMaterial::MLDSA65_Ed25519 { eddsa, mldsa } =>
+                    f.debug_struct("MLDSA65_Ed25519")
+                    .field("eddsa", &hex::encode(eddsa))
+                    .field("mldsa", &hex::encode(mldsa))
+                    .finish(),
+
+                SecretKeyMaterial::MLDSA87_Ed448 { eddsa, mldsa } =>
+                    f.debug_struct("MLDSA87_Ed448")
+                    .field("eddsa", &hex::encode(eddsa))
+                    .field("mldsa", &hex::encode(mldsa))
+                    .finish(),
+
+                SecretKeyMaterial::SLHDSA128s { secret } =>
+                    f.debug_struct("SLHDSA128s")
+                    .field("secret", &hex::encode(secret.as_ref()))
+                    .finish(),
+
+                SecretKeyMaterial::SLHDSA128f { secret } =>
+                    f.debug_struct("SLHDSA128f")
+                    .field("secret", &hex::encode(secret.as_ref()))
+                    .finish(),
+
+                SecretKeyMaterial::SLHDSA256s { secret } =>
+                    f.debug_struct("SLHDSA256s")
+                    .field("secret", &hex::encode(secret.as_ref()))
+                    .finish(),
+
+                SecretKeyMaterial::MLKEM768_X25519 { ecdh, mlkem } =>
+                    f.debug_struct("MLKEM768_X25519")
+                    .field("ecdh", &hex::encode(ecdh))
+                    .field("mlkem", &hex::encode(mlkem))
+                    .finish(),
+
+                SecretKeyMaterial::MLKEM1024_X448 { ecdh, mlkem } =>
+                    f.debug_struct("MLKEM1024_X448")
+                    .field("ecdh", &hex::encode(ecdh))
+                    .field("mlkem", &hex::encode(mlkem))
+                    .finish(),
+
                 SecretKeyMaterial::Unknown{ mpis, rest } =>
                     f.debug_struct("Unknown")
                     .field("mpis", mpis)
@@ -987,6 +1227,20 @@ impl fmt::Debug for SecretKeyMaterial {
                     f.write_str("Ed25519 { <Redacted> }"),
                 SecretKeyMaterial::Ed448 { .. } =>
                     f.write_str("Ed448 { <Redacted> }"),
+                SecretKeyMaterial::MLDSA65_Ed25519 { .. } =>
+                    f.write_str("MLDSA65_Ed25519 { <Redacted> }"),
+                SecretKeyMaterial::MLDSA87_Ed448 { .. } =>
+                    f.write_str("MLDSA87_Ed448 { <Redacted> }"),
+                SecretKeyMaterial::SLHDSA128s { .. } =>
+                    f.write_str("SLHDSA128s { <Redacted> }"),
+                SecretKeyMaterial::SLHDSA128f { .. } =>
+                    f.write_str("SLHDSA128f { <Redacted> }"),
+                SecretKeyMaterial::SLHDSA256s { .. } =>
+                    f.write_str("SLHDSA256s { <Redacted> }"),
+                SecretKeyMaterial::MLKEM768_X25519 { .. } =>
+                    f.write_str("MLKEM768_X25519 { <Redacted> }"),
+                SecretKeyMaterial::MLKEM1024_X448 { .. } =>
+                    f.write_str("MLKEM1024_X448 { <Redacted> }"),
                 SecretKeyMaterial::Unknown{ .. } =>
                     f.write_str("Unknown { <Redacted> }"),
             }
@@ -1017,6 +1271,13 @@ impl Ord for SecretKeyMaterial {
                 SecretKeyMaterial::Ed25519 { .. } => 8,
                 SecretKeyMaterial::Ed448 { .. } => 9,
                 SecretKeyMaterial::Unknown { .. } => 10,
+                SecretKeyMaterial::MLDSA65_Ed25519 { .. } => 11,
+                SecretKeyMaterial::MLDSA87_Ed448 { .. } => 12,
+                SecretKeyMaterial::SLHDSA128s { .. } => 13,
+                SecretKeyMaterial::SLHDSA128f { .. } => 14,
+                SecretKeyMaterial::SLHDSA256s { .. } => 15,
+                SecretKeyMaterial::MLKEM768_X25519 { .. } => 16,
+                SecretKeyMaterial::MLKEM1024_X448 { .. } => 17,
             }
         }
 
@@ -1061,6 +1322,39 @@ impl Ord for SecretKeyMaterial {
              SecretKeyMaterial::Ed25519 { x: x1 }) => x0.cmp(x1),
             (SecretKeyMaterial::Ed448 { x: x0 },
              SecretKeyMaterial::Ed448 { x: x1 }) => x0.cmp(x1),
+
+            (SecretKeyMaterial::MLDSA65_Ed25519 { eddsa: e0, mldsa: m0 },
+             SecretKeyMaterial::MLDSA65_Ed25519 { eddsa: e1, mldsa: m1 }) =>
+                iter::once(e0.cmp(e1))
+                    .chain(iter::once(m0.cmp(m1)))
+                    .fold(Ordering::Equal, |acc, x| acc.then(x)),
+
+            (SecretKeyMaterial::MLDSA87_Ed448 { eddsa: e0, mldsa: m0 },
+             SecretKeyMaterial::MLDSA87_Ed448 { eddsa: e1, mldsa: m1 }) =>
+                iter::once(e0.cmp(e1))
+                    .chain(iter::once(m0.cmp(m1)))
+                    .fold(Ordering::Equal, |acc, x| acc.then(x)),
+
+            (SecretKeyMaterial::SLHDSA128s { secret: s0 },
+             SecretKeyMaterial::SLHDSA128s { secret: s1 }) => s0.cmp(s1),
+
+            (SecretKeyMaterial::SLHDSA128f { secret: s0 },
+             SecretKeyMaterial::SLHDSA128f { secret: s1 }) => s0.cmp(s1),
+
+            (SecretKeyMaterial::SLHDSA256s { secret: s0 },
+             SecretKeyMaterial::SLHDSA256s { secret: s1 }) => s0.cmp(s1),
+
+            (SecretKeyMaterial::MLKEM768_X25519 { ecdh: e0, mlkem: m0 },
+             SecretKeyMaterial::MLKEM768_X25519 { ecdh: e1, mlkem: m1 }) =>
+                iter::once(e0.cmp(e1))
+                    .chain(iter::once(m0.cmp(m1)))
+                    .fold(Ordering::Equal, |acc, x| acc.then(x)),
+
+            (SecretKeyMaterial::MLKEM1024_X448 { ecdh: e0, mlkem: m0 },
+             SecretKeyMaterial::MLKEM1024_X448 { ecdh: e1, mlkem: m1 }) =>
+                iter::once(e0.cmp(e1))
+                    .chain(iter::once(m0.cmp(m1)))
+                    .fold(Ordering::Equal, |acc, x| acc.then(x)),
 
             (&SecretKeyMaterial::Unknown{ mpis: ref mpis1, rest: ref rest1 }
             ,&SecretKeyMaterial::Unknown{ mpis: ref mpis2, rest: ref rest2 }) => {
@@ -1111,6 +1405,13 @@ impl SecretKeyMaterial {
             X448 { .. } => Some(PublicKeyAlgorithm::X448),
             Ed25519 { .. } => Some(PublicKeyAlgorithm::Ed25519),
             Ed448 { .. } => Some(PublicKeyAlgorithm::Ed448),
+            MLDSA65_Ed25519 { .. } => Some(PublicKeyAlgorithm::MLDSA65_Ed25519),
+            MLDSA87_Ed448 { .. } => Some(PublicKeyAlgorithm::MLDSA87_Ed448),
+            SLHDSA128s { .. } => Some(PublicKeyAlgorithm::SLHDSA128s),
+            SLHDSA128f { .. } => Some(PublicKeyAlgorithm::SLHDSA128f),
+            SLHDSA256s { .. } => Some(PublicKeyAlgorithm::SLHDSA256s),
+            MLKEM768_X25519 { .. } => Some(PublicKeyAlgorithm::MLKEM768_X25519),
+            MLKEM1024_X448 { .. } => Some(PublicKeyAlgorithm::MLKEM1024_X448),
             Unknown { .. } => None,
         }
     }
@@ -1168,6 +1469,38 @@ impl SecretKeyMaterial {
                 x: arbitrarize(g, vec![0; 57]).into(),
             }),
 
+            MLDSA65_Ed25519 => Ok(SecretKeyMaterial::MLDSA65_Ed25519 {
+                eddsa: arbitrarize(g, vec![0; 32]).into(),
+                mldsa: arbitrarize(g, vec![0; 32]).into(),
+            }),
+
+            MLDSA87_Ed448 => Ok(SecretKeyMaterial::MLDSA87_Ed448 {
+                eddsa: arbitrarize(g, vec![0; 57]).into(),
+                mldsa: arbitrarize(g, vec![0; 32]).into(),
+            }),
+
+            SLHDSA128s => Ok(SecretKeyMaterial::SLHDSA128s {
+                secret: arbitrarize(g, [0; 64]).into(),
+            }),
+
+            SLHDSA128f => Ok(SecretKeyMaterial::SLHDSA128f {
+                secret: arbitrarize(g, [0; 64]).into(),
+            }),
+
+            SLHDSA256s => Ok(SecretKeyMaterial::SLHDSA256s {
+                secret: arbitrarize(g, [0; 128]).into(),
+            }),
+
+            MLKEM768_X25519 => Ok(SecretKeyMaterial::MLKEM768_X25519 {
+                ecdh: arbitrarize(g, vec![0; 32]).into(),
+                mlkem: arbitrarize(g, vec![0; 64]).into(),
+            }),
+
+            MLKEM1024_X448 => Ok(SecretKeyMaterial::MLKEM1024_X448 {
+                ecdh: arbitrarize(g, vec![0; 56]).into(),
+                mlkem: arbitrarize(g, vec![0; 64]).into(),
+            }),
+
             Private(_) | Unknown(_) =>
                 Err(Error::UnsupportedPublicKeyAlgorithm(pk).into()),
         }
@@ -1221,6 +1554,7 @@ impl SecretKeyChecksum {
 /// [`PKESK`] packets.
 ///
 ///   [`PKESK`]: crate::packet::PKESK
+#[allow(non_camel_case_types)]
 #[non_exhaustive]
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ciphertext {
@@ -1260,6 +1594,30 @@ pub enum Ciphertext {
         e: Box<[u8; 56]>,
         /// Symmetrically encrypted session key.
         key: Box<[u8]>,
+    },
+
+    /// Composite KEM using ML-KEM-768 and X25519.
+    MLKEM768_X25519 {
+        /// The X25519 ciphertext, an opaque string.
+        ecdh: Box<[u8; 32]>,
+
+        /// The ML-KEM ciphertext, an opaque string.
+        mlkem: Box<[u8; 1088]>,
+
+        /// Symmetrically encrypted session key.
+        esk: Box<[u8]>,
+    },
+
+    /// Composite KEM using ML-KEM-1024 and X448.
+    MLKEM1024_X448 {
+        /// The X448 ciphertext, an opaque string.
+        ecdh: Box<[u8; 56]>,
+
+        /// The ML-KEM ciphertext, an opaque string.
+        mlkem: Box<[u8; 1568]>,
+
+        /// Symmetrically encrypted session key.
+        esk: Box<[u8]>,
     },
 
     /// Unknown number of MPIs for an unknown algorithm.
@@ -1304,6 +1662,20 @@ impl fmt::Debug for Ciphertext {
                 .field("key", &hex::encode(key))
                 .finish(),
 
+            Ciphertext::MLKEM768_X25519 { ecdh, mlkem, esk } =>
+                f.debug_struct("MLKEM768_X25519")
+                .field("ecdh", &hex::encode(&ecdh[..]))
+                .field("mlkem", &hex::encode(&mlkem[..]))
+                .field("esk", &hex::encode(esk))
+                .finish(),
+
+            Ciphertext::MLKEM1024_X448 { ecdh, mlkem, esk } =>
+                f.debug_struct("MLKEM1024_X448")
+                .field("ecdh", &hex::encode(&ecdh[..]))
+                .field("mlkem", &hex::encode(&mlkem[..]))
+                .field("esk", &hex::encode(esk))
+                .finish(),
+
             Ciphertext::Unknown { mpis, rest } =>
                 f.debug_struct("Unknown")
                 .field("mpis", mpis)
@@ -1329,6 +1701,8 @@ impl Ciphertext {
             ECDH { .. } => Some(PublicKeyAlgorithm::ECDH),
             X25519 { .. } => Some(PublicKeyAlgorithm::X25519),
             X448 { .. } => Some(PublicKeyAlgorithm::X448),
+            MLKEM768_X25519 { .. } => Some(PublicKeyAlgorithm::MLKEM768_X25519),
+            MLKEM1024_X448 { .. } => Some(PublicKeyAlgorithm::MLKEM1024_X448),
             Unknown { .. } => None,
         }
     }
@@ -1345,7 +1719,7 @@ impl Arbitrary for Ciphertext {
     fn arbitrary(g: &mut Gen) -> Self {
         use crate::arbitrary_helper::gen_arbitrary_from_range;
 
-        match gen_arbitrary_from_range(0..5, g) {
+        match gen_arbitrary_from_range(0..7, g) {
             0 => Ciphertext::RSA {
                 c: MPI::arbitrary(g),
             },
@@ -1381,6 +1755,27 @@ impl Arbitrary for Ciphertext {
                     k.into_boxed_slice()
                 },
             },
+
+            5 => Ciphertext::MLKEM768_X25519 {
+                ecdh: Box::new(arbitrarize(g, [0; 32])),
+                mlkem: Box::new(arbitrarize(g, [0; 1088])),
+                esk: {
+                    let mut k = <Vec<u8>>::arbitrary(g);
+                    k.truncate(255);
+                    k.into_boxed_slice()
+                },
+            },
+
+            6 => Ciphertext::MLKEM1024_X448 {
+                ecdh: Box::new(arbitrarize(g, [0; 56])),
+                mlkem: Box::new(arbitrarize(g, [0; 1568])),
+                esk: {
+                    let mut k = <Vec<u8>>::arbitrary(g);
+                    k.truncate(255);
+                    k.into_boxed_slice()
+                },
+            },
+
             _ => unreachable!(),
         }
     }
@@ -1393,6 +1788,7 @@ impl Arbitrary for Ciphertext {
 ///
 ///   [`Signature`]: crate::packet::Signature
 #[non_exhaustive]
+#[allow(non_camel_case_types)]
 #[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Signature {
     /// RSA signature.
@@ -1443,6 +1839,42 @@ pub enum Signature {
     Ed448 {
         /// The signature.
         s: Box<[u8; 114]>,
+    },
+
+    /// Composite signature algorithm using ML-DSA-65 and Ed25519.
+    MLDSA65_Ed25519 {
+        /// The Ed25519 signature, an opaque string.
+        eddsa: Box<[u8; 64]>,
+
+        /// The ML-DSA signature, an opaque string.
+        mldsa: Box<[u8; 3309]>,
+    },
+
+    /// Composite signature algorithm using ML-DSA-87 and Ed448.
+    MLDSA87_Ed448 {
+        /// The Ed448 signature, an opaque string.
+        eddsa: Box<[u8; 114]>,
+
+        /// The ML-DSA signature, an opaque string.
+        mldsa: Box<[u8; 4627]>,
+    },
+
+    /// SLH-DSA-SHAKE-128s signature.
+    SLHDSA128s {
+        /// The signature, an opaque string.
+        sig: Box<[u8; 7856]>,
+    },
+
+    /// SLH-DSA-SHAKE-128f signature.
+    SLHDSA128f {
+        /// The signature, an opaque string.
+        sig: Box<[u8; 17088]>,
+    },
+
+    /// SLH-DSA-SHAKE-256s signature.
+    SLHDSA256s {
+        /// The signature, an opaque string.
+        sig: Box<[u8; 29792]>,
     },
 
     /// Unknown number of MPIs for an unknown algorithm.
@@ -1497,6 +1929,33 @@ impl fmt::Debug for Signature {
                 .field("s", &hex::encode(&s[..]))
                 .finish(),
 
+            Signature::MLDSA65_Ed25519 { eddsa, mldsa } =>
+                f.debug_struct("MLDSA65_Ed25519")
+                .field("eddsa", &hex::encode(&eddsa[..]))
+                .field("mldsa", &hex::encode(&mldsa[..]))
+                .finish(),
+
+            Signature::MLDSA87_Ed448 { eddsa, mldsa } =>
+                f.debug_struct("MLDSA87_Ed448")
+                .field("eddsa", &hex::encode(&eddsa[..]))
+                .field("mldsa", &hex::encode(&mldsa[..]))
+                .finish(),
+
+            Signature::SLHDSA128s { sig } =>
+                f.debug_struct("SLHDSA128s")
+                .field("sig", &hex::encode(sig.as_ref()))
+                .finish(),
+
+            Signature::SLHDSA128f { sig } =>
+                f.debug_struct("SLHDSA128f")
+                .field("sig", &hex::encode(sig.as_ref()))
+                .finish(),
+
+            Signature::SLHDSA256s { sig } =>
+                f.debug_struct("SLHDSA256s")
+                .field("sig", &hex::encode(sig.as_ref()))
+                .finish(),
+
             Signature::Unknown { mpis, rest } =>
                 f.debug_struct("Unknown")
                 .field("mpis", mpis)
@@ -1517,7 +1976,7 @@ impl Arbitrary for Signature {
     fn arbitrary(g: &mut Gen) -> Self {
         use crate::arbitrary_helper::gen_arbitrary_from_range;
 
-        match gen_arbitrary_from_range(0..6, g) {
+        match gen_arbitrary_from_range(0..8, g) {
             0 => Signature::RSA  {
                 s: MPI::arbitrary(g),
             },
@@ -1543,6 +2002,16 @@ impl Arbitrary for Signature {
 
             5 => Signature::Ed448  {
                 s: Box::new(arbitrarize(g, [0; 114])),
+            },
+
+            6 => Signature::MLDSA65_Ed25519  {
+                eddsa: Box::new(arbitrarize(g, [0; 64])),
+                mldsa: Box::new(arbitrarize(g, [0; 3309])),
+            },
+
+            7 => Signature::MLDSA87_Ed448  {
+                eddsa: Box::new(arbitrarize(g, [0; 114])),
+                mldsa: Box::new(arbitrarize(g, [0; 4627])),
             },
 
             _ => unreachable!(),
@@ -1645,6 +2114,18 @@ mod tests {
                     Signature::parse(Ed25519, cur).unwrap(),
                 Signature::Ed448 { .. } =>
                     Signature::parse(Ed448, cur).unwrap(),
+
+                Signature::MLDSA65_Ed25519 { .. } =>
+                    Signature::parse(MLDSA65_Ed25519, cur).unwrap(),
+                Signature::MLDSA87_Ed448 { .. } =>
+                    Signature::parse(MLDSA87_Ed448, cur).unwrap(),
+
+                Signature::SLHDSA128s { .. } =>
+                    Signature::parse(SLHDSA128s, cur).unwrap(),
+                Signature::SLHDSA128f { .. } =>
+                    Signature::parse(SLHDSA128f, cur).unwrap(),
+                Signature::SLHDSA256s { .. } =>
+                    Signature::parse(SLHDSA256s, cur).unwrap(),
 
                 Signature::Unknown { .. } => unreachable!(),
             };

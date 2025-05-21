@@ -137,11 +137,13 @@ fn classify_pk_algo(algo: PublicKeyAlgorithm, seipdv1: bool)
         PublicKeyAlgorithm::ECDH =>
             Ok((true, false, seipdv1)),
 
-        // Corner case: for X25519 and X448 we have to prepend
-        // the cipher octet to the ciphertext instead of
-        // encrypting it.
+        // Corner case: for the modern algorithms like X25519 and X448
+        // we have to prepend the cipher octet to the ciphertext
+        // instead of encrypting it.
         PublicKeyAlgorithm::X25519 |
-        PublicKeyAlgorithm::X448 =>
+        PublicKeyAlgorithm::X448 |
+        PublicKeyAlgorithm::MLKEM768_X25519 |
+        PublicKeyAlgorithm::MLKEM1024_X448 =>
             Ok((false, seipdv1, false)),
 
         a @ PublicKeyAlgorithm::RSASign |
@@ -150,6 +152,11 @@ fn classify_pk_algo(algo: PublicKeyAlgorithm, seipdv1: bool)
         a @ PublicKeyAlgorithm::EdDSA |
         a @ PublicKeyAlgorithm::Ed25519 |
         a @ PublicKeyAlgorithm::Ed448 |
+        a @ PublicKeyAlgorithm::MLDSA65_Ed25519 |
+        a @ PublicKeyAlgorithm::MLDSA87_Ed448 |
+        a @ PublicKeyAlgorithm::SLHDSA128s |
+        a @ PublicKeyAlgorithm::SLHDSA128f |
+        a @ PublicKeyAlgorithm::SLHDSA256s |
         a @ PublicKeyAlgorithm::Private(_) |
         a @ PublicKeyAlgorithm::Unknown(_) =>
             Err(Error::UnsupportedPublicKeyAlgorithm(a).into()),
@@ -249,6 +256,32 @@ impl packet::PKESK {
                     modified_ciphertext = Ciphertext::X448 {
                         e: e.clone(),
                         key: key[1..].into(),
+                    };
+                    esk = &modified_ciphertext;
+                },
+
+                Ciphertext::MLKEM768_X25519 { ecdh, mlkem, esk: key, } => {
+                    sym_algo =
+                        Some((*key.get(0).ok_or_else(
+                            || Error::MalformedPacket("Short ESK".into()))?)
+                             .into());
+                    modified_ciphertext = Ciphertext::MLKEM768_X25519 {
+                        ecdh: ecdh.clone(),
+                        mlkem: mlkem.clone(),
+                        esk: key[1..].into(),
+                    };
+                    esk = &modified_ciphertext;
+                },
+
+                Ciphertext::MLKEM1024_X448 { ecdh, mlkem, esk: key, } => {
+                    sym_algo =
+                        Some((*key.get(0).ok_or_else(
+                            || Error::MalformedPacket("Short ESK".into()))?)
+                             .into());
+                    modified_ciphertext = Ciphertext::MLKEM1024_X448 {
+                        ecdh: ecdh.clone(),
+                        mlkem: mlkem.clone(),
+                        esk: key[1..].into(),
                     };
                     esk = &modified_ciphertext;
                 },

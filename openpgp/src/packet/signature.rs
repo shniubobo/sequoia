@@ -3713,9 +3713,33 @@ impl ArbitraryBounded for Signature4 {
                 },
             },
 
+            MLDSA65_Ed25519 => mpi::Signature::MLDSA65_Ed25519 {
+                eddsa: Box::new(arbitrarize(g, [0; 64])),
+                mldsa: Box::new(arbitrarize(g, [0; 3309])),
+            },
+
+            MLDSA87_Ed448 => mpi::Signature::MLDSA87_Ed448 {
+                eddsa: Box::new(arbitrarize(g, [0; 114])),
+                mldsa: Box::new(arbitrarize(g, [0; 4627])),
+            },
+
+            SLHDSA128s => mpi::Signature::SLHDSA128s {
+                sig: arbitrarize(g, vec![0; 7856]).try_into().unwrap(),
+            },
+
+            SLHDSA128f => mpi::Signature::SLHDSA128f {
+                sig: arbitrarize(g, vec![0; 17088]).try_into().unwrap(),
+            },
+
+            SLHDSA256s => mpi::Signature::SLHDSA256s {
+                sig: arbitrarize(g, vec![0; 29792]).try_into().unwrap(),
+            },
+
             ElGamalEncryptSign |
             RSAEncrypt | ElGamalEncrypt | ECDH |
             X25519 | X448 |
+            MLKEM768_X25519 |
+            MLKEM1024_X448 |
             Private(_) | Unknown(_) => unreachable!(),
         };
 
@@ -3730,6 +3754,13 @@ impl ArbitraryBounded for Signature4 {
             additional_issuers: OnceLock::new(),
         }
     }
+}
+
+#[cfg(test)]
+pub(crate) fn arbitrarize<T: AsMut<[u8]>>(g: &mut Gen, mut a: T) -> T
+{
+    a.as_mut().iter_mut().for_each(|p| *p = Arbitrary::arbitrary(g));
+    a
 }
 
 #[cfg(test)]
@@ -3770,6 +3801,28 @@ impl ArbitraryBounded for Signature3 {
 
             Ed448 => mpi::Signature::Ed448  {
                 s: Box::new(arbitrarize(g, [0; 114])),
+            },
+
+            MLDSA65_Ed25519 => mpi::Signature::MLDSA65_Ed25519 {
+                eddsa: Box::new(arbitrarize(g, [0; 64])),
+                mldsa: Box::new(arbitrarize(g, [0; 3309])),
+            },
+
+            MLDSA87_Ed448 => mpi::Signature::MLDSA87_Ed448 {
+                eddsa: Box::new(arbitrarize(g, [0; 114])),
+                mldsa: Box::new(arbitrarize(g, [0; 4627])),
+            },
+
+            SLHDSA128s => mpi::Signature::SLHDSA128s {
+                sig: arbitrarize(g, vec![0; 7856]).try_into().unwrap(),
+            },
+
+            SLHDSA128f => mpi::Signature::SLHDSA128f {
+                sig: arbitrarize(g, vec![0; 17088]).try_into().unwrap(),
+            },
+
+            SLHDSA256s => mpi::Signature::SLHDSA256s {
+                sig: arbitrarize(g, vec![0; 29792]).try_into().unwrap(),
             },
 
             _ => unreachable!(),

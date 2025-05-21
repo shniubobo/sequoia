@@ -29,7 +29,7 @@ use crate::{
 };
 
 pub(crate) mod aead;
-mod asymmetric;
+pub(crate) mod asymmetric;
 pub use self::asymmetric::{Signer, Decryptor, KeyPair};
 pub(crate) mod backend;
 pub mod ecdh;

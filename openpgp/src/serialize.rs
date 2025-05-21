@@ -1007,6 +1007,38 @@ impl Marshal for crypto::mpi::PublicKey {
             Ed25519 { a } => w.write_all(&a[..])?,
             Ed448 { a } => w.write_all(&a[..])?,
 
+            MLDSA65_Ed25519 { eddsa, mldsa } => {
+                w.write_all(eddsa.as_ref())?;
+                w.write_all(mldsa.as_ref())?;
+            },
+
+            MLDSA87_Ed448 { eddsa, mldsa } => {
+                w.write_all(eddsa.as_ref())?;
+                w.write_all(mldsa.as_ref())?;
+            },
+
+            SLHDSA128s { public } => {
+                w.write_all(public)?;
+            },
+
+            SLHDSA128f { public } => {
+                w.write_all(public)?;
+            },
+
+            SLHDSA256s { public } => {
+                w.write_all(public.as_ref())?;
+            },
+
+            MLKEM768_X25519 { ecdh, mlkem } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+            },
+
+            MLKEM1024_X448 { ecdh, mlkem } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+            },
+
             Unknown { ref mpis, ref rest } => {
                 for mpi in mpis.iter() {
                     mpi.serialize(w)?;
@@ -1052,6 +1084,16 @@ impl MarshalInto for crypto::mpi::PublicKey {
             X448 { .. } => 56,
             Ed25519 { .. } => 32,
             Ed448 { .. } => 57,
+
+            MLDSA65_Ed25519 { .. } => 32 + 1952,
+            MLDSA87_Ed448 { .. } => 57 + 2592,
+
+            SLHDSA128s { .. } => 32,
+            SLHDSA128f { .. } => 32,
+            SLHDSA256s { .. } => 64,
+
+            MLKEM768_X25519 { .. } => 32 + 1184,
+            MLKEM1024_X448 { .. } => 56 + 1568,
 
             Unknown { ref mpis, ref rest } => {
                 mpis.iter().map(|mpi| mpi.serialized_len()).sum::<usize>()
@@ -1103,6 +1145,38 @@ impl Marshal for crypto::mpi::SecretKeyMaterial {
             Ed25519 { x } => w.write_all(x)?,
             Ed448 { x } => w.write_all(x)?,
 
+            MLDSA65_Ed25519 { eddsa, mldsa } => {
+                w.write_all(eddsa.as_ref())?;
+                w.write_all(mldsa.as_ref())?;
+            },
+
+            MLDSA87_Ed448 { eddsa, mldsa } => {
+                w.write_all(eddsa.as_ref())?;
+                w.write_all(mldsa.as_ref())?;
+            },
+
+            SLHDSA128s { secret } => {
+                w.write_all(secret.as_ref())?;
+            },
+
+            SLHDSA128f { secret } => {
+                w.write_all(secret.as_ref())?;
+            },
+
+            SLHDSA256s { secret } => {
+                w.write_all(secret.as_ref())?;
+            },
+
+            MLKEM768_X25519 { ecdh, mlkem } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+            },
+
+            MLKEM1024_X448 { ecdh, mlkem } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+            },
+
             Unknown { ref mpis, ref rest } => {
                 for mpi in mpis.iter() {
                     mpi.serialize(w)?;
@@ -1148,6 +1222,16 @@ impl MarshalInto for crypto::mpi::SecretKeyMaterial {
             X448 { .. } => 56,
             Ed25519 { .. } => 32,
             Ed448 { .. } => 57,
+
+            MLDSA65_Ed25519 { .. } => 32 + 32,
+            MLDSA87_Ed448 { .. } => 57 + 32,
+
+            SLHDSA128s { .. } => 64,
+            SLHDSA128f { .. } => 64,
+            SLHDSA256s { .. } => 128,
+
+            MLKEM768_X25519 { .. } => 32 + 64,
+            MLKEM1024_X448 { .. } => 56 + 64,
 
             Unknown { ref mpis, ref rest } => {
                 mpis.iter().map(|mpi| mpi.serialized_len()).sum::<usize>()
@@ -1222,6 +1306,18 @@ impl Marshal for crypto::mpi::Ciphertext {
                 write_field_with_u8_size(w, "Key", key)?;
             }
 
+            MLKEM768_X25519 { ecdh, mlkem, esk } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+                write_field_with_u8_size(w, "ESK", esk)?;
+            },
+
+            MLKEM1024_X448 { ecdh, mlkem, esk } => {
+                w.write_all(ecdh.as_ref())?;
+                w.write_all(mlkem.as_ref())?;
+                write_field_with_u8_size(w, "ESK", esk)?;
+            },
+
             Unknown { ref mpis, ref rest } => {
                 for mpi in mpis.iter() {
                     mpi.serialize(w)?;
@@ -1257,6 +1353,12 @@ impl MarshalInto for crypto::mpi::Ciphertext {
             X448 { key, .. } => {
                 56 + 1 + key.len()
             }
+
+            MLKEM768_X25519 { esk, .. } =>
+                32 + 1088 + 1 + esk.len(),
+
+            MLKEM1024_X448 { esk, .. } =>
+                56 + 1568 + 1 + esk.len(),
 
             Unknown { ref mpis, ref rest } => {
                 mpis.iter().map(|mpi| mpi.serialized_len()).sum::<usize>()
@@ -1299,6 +1401,29 @@ impl Marshal for crypto::mpi::Signature {
             Ed25519 { s } => w.write_all(&s[..])?,
             Ed448 { s } => w.write_all(&s[..])?,
 
+            SLHDSA128s { sig } => {
+                w.write_all(sig.as_ref())?;
+            },
+
+            SLHDSA128f { sig } => {
+                w.write_all(sig.as_ref())?;
+            },
+
+            SLHDSA256s { sig } => {
+                w.write_all(sig.as_ref())?;
+            },
+
+
+            MLDSA65_Ed25519 { eddsa, mldsa } => {
+                w.write_all(&eddsa[..])?;
+                w.write_all(&mldsa[..])?;
+            },
+
+            MLDSA87_Ed448 { eddsa, mldsa } => {
+                w.write_all(&eddsa[..])?;
+                w.write_all(&mldsa[..])?;
+            },
+
             Unknown { ref mpis, ref rest } => {
                 for mpi in mpis.iter() {
                     mpi.serialize(w)?;
@@ -1333,6 +1458,13 @@ impl MarshalInto for crypto::mpi::Signature {
 
             Ed25519 { .. } => 64,
             Ed448 { .. } => 114,
+
+            MLDSA65_Ed25519 { .. } => 64 + 3309,
+            MLDSA87_Ed448 { .. } => 114 + 4627,
+
+            SLHDSA128s { .. } => 7856,
+            SLHDSA128f { .. } => 17088,
+            SLHDSA256s { .. } => 29792,
 
             Unknown { ref mpis, ref rest } => {
                 mpis.iter().map(|mpi| mpi.serialized_len()).sum::<usize>()

@@ -714,7 +714,7 @@ a_cutoff_list!(SubpacketTagCutoffList, SubpacketTag, 40,
                    ACCEPT,                 // 39. PreferredAEADCiphersuites.
                ]);
 
-a_cutoff_list!(AsymmetricAlgorithmCutoffList, AsymmetricAlgorithm, 23,
+a_cutoff_list!(AsymmetricAlgorithmCutoffList, AsymmetricAlgorithm, 30,
                [
                    Some(Timestamp::Y2014M2), // 0. RSA1024.
                    ACCEPT,                   // 1. RSA2048.
@@ -739,6 +739,13 @@ a_cutoff_list!(AsymmetricAlgorithmCutoffList, AsymmetricAlgorithm, 23,
                    ACCEPT,                   // 20. X448.
                    ACCEPT,                   // 21. Ed25519.
                    ACCEPT,                   // 22. Ed448.
+                   ACCEPT,                   // 23. MLDSA65_Ed25519.
+                   ACCEPT,                   // 24. MLDSA87_Ed448.
+                   ACCEPT,                   // 25. SLHDSA128s.
+                   ACCEPT,                   // 26. SLHDSA128f.
+                   ACCEPT,                   // 27. SLHDSA256s.
+                   ACCEPT,                   // 28. MLKEM768_X25519.
+                   ACCEPT,                   // 29. MLKEM1024_X448.
                ]);
 
 a_cutoff_list!(SymmetricAlgorithmCutoffList, SymmetricAlgorithm, 14,
@@ -1582,6 +1589,23 @@ impl<'a> Policy for StandardPolicy<'a> {
             (PublicKeyAlgorithm::Ed25519, _) => AsymmetricAlgorithm::Ed25519,
             (PublicKeyAlgorithm::Ed448, _) => AsymmetricAlgorithm::Ed448,
 
+            (PublicKeyAlgorithm::MLDSA65_Ed25519, _) =>
+                AsymmetricAlgorithm::MLDSA65_Ed25519,
+            (PublicKeyAlgorithm::MLDSA87_Ed448, _) =>
+                AsymmetricAlgorithm::MLDSA87_Ed448,
+
+            (PublicKeyAlgorithm::SLHDSA128s, _) =>
+                AsymmetricAlgorithm::SLHDSA128s,
+            (PublicKeyAlgorithm::SLHDSA128f, _) =>
+                AsymmetricAlgorithm::SLHDSA128f,
+            (PublicKeyAlgorithm::SLHDSA256s, _) =>
+                AsymmetricAlgorithm::SLHDSA256s,
+
+            (PublicKeyAlgorithm::MLKEM768_X25519, _) =>
+                AsymmetricAlgorithm::MLKEM768_X25519,
+            (PublicKeyAlgorithm::MLKEM1024_X448, _) =>
+                AsymmetricAlgorithm::MLKEM1024_X448,
+
             (PublicKeyAlgorithm::Private(_), _)
                 | (PublicKeyAlgorithm::Unknown(_), _) => Unknown,
         };
@@ -1666,7 +1690,9 @@ impl<'a> Policy for StandardPolicy<'a> {
 /// Key sizes put into are buckets, rounding down to the nearest
 /// bucket.  For example, a 3253-bit RSA key is categorized as
 /// `RSA3072`.
+#[allow(non_camel_case_types)]
 #[non_exhaustive]
+#[allow(non_camel_case_types)]
 #[derive(Clone, Debug, PartialEq, Eq, Copy)]
 pub enum AsymmetricAlgorithm {
     /// RSA with key sizes up to 2048-1 bit.
@@ -1715,12 +1741,34 @@ pub enum AsymmetricAlgorithm {
     Ed25519,
     /// Ed448 (RFC 8032).
     Ed448,
+
+    /// Composite signature algorithm using ML-DSA-65 and Ed25519.
+    MLDSA65_Ed25519,
+
+    /// Composite signature algorithm using ML-DSA-87 and Ed448.
+    MLDSA87_Ed448,
+
+    /// SLH-DSA signature algorithm 128 bit, small signatures.
+    SLHDSA128s,
+
+    /// SLH-DSA signature algorithm 128 bit, fast signatures.
+    SLHDSA128f,
+
+    /// SLH-DSA signature algorithm 256 bit, small signatures.
+    SLHDSA256s,
+
+    /// Composite KEM using ML-KEM-768 and X25519.
+    MLKEM768_X25519,
+
+    /// Composite KEM using ML-KEM-1024 and X448.
+    MLKEM1024_X448,
+
     /// Unknown algorithm.
     Unknown,
 }
 assert_send_and_sync!(AsymmetricAlgorithm);
 
-const ASYMMETRIC_ALGORITHM_VARIANTS: [AsymmetricAlgorithm; 23] = [
+const ASYMMETRIC_ALGORITHM_VARIANTS: [AsymmetricAlgorithm; 30] = [
     AsymmetricAlgorithm::RSA1024,
     AsymmetricAlgorithm::RSA2048,
     AsymmetricAlgorithm::RSA3072,
@@ -1744,6 +1792,13 @@ const ASYMMETRIC_ALGORITHM_VARIANTS: [AsymmetricAlgorithm; 23] = [
     AsymmetricAlgorithm::X448,
     AsymmetricAlgorithm::Ed25519,
     AsymmetricAlgorithm::Ed448,
+    AsymmetricAlgorithm::MLDSA65_Ed25519,
+    AsymmetricAlgorithm::MLDSA87_Ed448,
+    AsymmetricAlgorithm::SLHDSA128s,
+    AsymmetricAlgorithm::SLHDSA128f,
+    AsymmetricAlgorithm::SLHDSA256s,
+    AsymmetricAlgorithm::MLKEM768_X25519,
+    AsymmetricAlgorithm::MLKEM1024_X448,
 ];
 
 impl AsymmetricAlgorithm {
@@ -1789,6 +1844,13 @@ impl From<AsymmetricAlgorithm> for u8 {
             X448 => 20,
             Ed25519 => 21,
             Ed448 => 22,
+            MLDSA65_Ed25519 => 23,
+            MLDSA87_Ed448 => 24,
+            SLHDSA128s => 25,
+            SLHDSA128f => 26,
+            SLHDSA256s => 27,
+            MLKEM768_X25519 => 28,
+            MLKEM1024_X448 => 29,
             Unknown => 255,
         }
     }

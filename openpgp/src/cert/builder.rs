@@ -80,6 +80,14 @@ pub enum CipherSuite {
     /// 4096 bit RSA with SHA512 and AES256
     RSA4k,
 
+    /// Composite signature algorithm MLDSA65+Ed25519, and composite
+    /// KEM MLKEM768+X25519.
+    MLDSA65,
+
+    /// Composite signature algorithm MLDSA78+Ed448, and composite
+    /// KEM MLKEM1024+X448.
+    MLDSA87,
+
     // If you add a variant here, be sure to update
     // CipherSuite::variants below.
 }
@@ -96,7 +104,7 @@ impl CipherSuite {
     pub fn variants() -> impl Iterator<Item=CipherSuite> {
         use CipherSuite::*;
 
-        [ Cv25519, RSA3k, P256, P384, P521, RSA2k, RSA4k ]
+        [ Cv25519, RSA3k, P256, P384, P521, RSA2k, RSA4k, MLDSA65, MLDSA87 ]
             .into_iter()
     }
 
@@ -150,6 +158,10 @@ impl CipherSuite {
                 check_curve!(Curve::NistP521);
                 check_pk!(PublicKeyAlgorithm::ECDH);
             },
+            MLDSA65 =>
+                check_pk!(PublicKeyAlgorithm::MLDSA65_Ed25519),
+            MLDSA87 =>
+                check_pk!(PublicKeyAlgorithm::MLDSA87_Ed448),
         }
         Ok(())
     }
@@ -211,6 +223,11 @@ impl CipherSuite {
                             .into()),
                 }
             },
+
+            CipherSuite::MLDSA65 | CipherSuite::MLDSA87 =>
+                Err(Error::InvalidOperation(
+                    "can't use algorithms for v4 keys".into())
+                    .into()),
         }
     }
 
@@ -273,6 +290,28 @@ impl CipherSuite {
                             .into()),
                 }
             },
+
+            a @ CipherSuite::MLDSA65 | a @ CipherSuite::MLDSA87 =>
+                match (sign, encrypt, a) {
+                    (true, false, CipherSuite::MLDSA65) =>
+                        Key6::generate_mldsa65_ed25519(),
+                    (true, false, CipherSuite::MLDSA87) =>
+                        Key6::generate_mldsa87_ed448(),
+                    (true, false, _) => unreachable!(),
+                    (false, true, CipherSuite::MLDSA65) =>
+                        Key6::generate_mlkem768_x25519(),
+                    (false, true, CipherSuite::MLDSA87) =>
+                        Key6::generate_mlkem1024_x448(),
+                    (false, true, _) => unreachable!(),
+                    (true, true, _) =>
+                        Err(Error::InvalidOperation(
+                            "Can't use key for encryption and signing".into())
+                            .into()),
+                    (false, false, _) =>
+                        Err(Error::InvalidOperation(
+                            "No key flags set".into())
+                            .into()),
+                },
         }
     }
 }
@@ -1936,9 +1975,12 @@ mod tests {
         for cs in CipherSuite::variants()
             .into_iter().filter(|cs| cs.is_supported().is_ok())
         {
-            assert!(CertBuilder::new()
+            CertBuilder::new()
+                .set_profile(crate::Profile::RFC9580).unwrap()
                 .set_cipher_suite(cs)
-                .generate().is_ok());
+                .add_transport_encryption_subkey()
+                .generate()
+                .unwrap();
         }
     }
 

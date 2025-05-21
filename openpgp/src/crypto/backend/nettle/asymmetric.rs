@@ -39,6 +39,11 @@ impl Asymmetric for super::Backend {
                 => true,
             X448 | Ed448
                 => curve448::IS_SUPPORTED,
+            MLDSA65_Ed25519 => false,
+            MLDSA87_Ed448 => false,
+            SLHDSA128s | SLHDSA128f | SLHDSA256s => false,
+            MLKEM768_X25519 => false,
+            MLKEM1024_X448 => false,
             ElGamalEncrypt | ElGamalEncryptSign | Private(_) | Unknown(_)
                 => false,
         }
@@ -386,7 +391,9 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
             ECDH => crate::crypto::ecdh::encrypt(self.parts_as_public(),
                                                  data),
 
-            RSASign | DSA | ECDSA | EdDSA | Ed25519 | Ed448 =>
+            RSASign | DSA | ECDSA | EdDSA | Ed25519 | Ed448
+                | MLDSA65_Ed25519 | MLDSA87_Ed448
+                | SLHDSA128s | SLHDSA128f | SLHDSA256s =>
                 Err(Error::InvalidOperation(
                     format!("{} is not an encryption algorithm", self.pk_algo())
                 ).into()),
@@ -394,6 +401,8 @@ impl<P: key::KeyParts, R: key::KeyRole> Key<P, R> {
             X25519 | // Handled in common code.
             X448 | // Handled in common code.
             ElGamalEncrypt | ElGamalEncryptSign |
+            MLKEM768_X25519 | // Handled in common code.
+            MLKEM1024_X448 | // Handled in common code.
             Private(_) | Unknown(_) =>
                 Err(Error::UnsupportedPublicKeyAlgorithm(self.pk_algo()).into()),
         }

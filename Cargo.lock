@@ -2124,8 +2124,7 @@ checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
 [[package]]
 name = "openssl"
 version = "0.10.72"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fedfea7d58a1f73118430a55da6a286e7b044961736ce96a16a17068ea25e5da"
+source = "git+https://github.com/teythoon/rust-openssl?branch=justus/pqc#4ada1c1d7c264e052e7bb71ecddbd196a5c2a0c7"
 dependencies = [
  "bitflags",
  "cfg-if",
@@ -2139,8 +2138,7 @@ dependencies = [
 [[package]]
 name = "openssl-macros"
 version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a948666b637a0f465e8564c73e89d4dde00d72d4d473cc972f390fc3dcee7d9c"
+source = "git+https://github.com/teythoon/rust-openssl?branch=justus/pqc#4ada1c1d7c264e052e7bb71ecddbd196a5c2a0c7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2155,9 +2153,8 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.107"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8288979acd84749c744a9014b4382d42b8f7b2592847b5afb2ed29e5d16ede07"
+version = "0.9.108"
+source = "git+https://github.com/teythoon/rust-openssl?branch=justus/pqc#4ada1c1d7c264e052e7bb71ecddbd196a5c2a0c7"
 dependencies = [
  "cc",
  "libc",
