@@ -423,13 +423,10 @@ pub const DEFAULT_MAX_RECURSION_DEPTH : u8 = 16;
 ///   [`PacketParserBuilder::max_packet_size`]: PacketParserBuilder::max_packet_size()
 pub const DEFAULT_MAX_PACKET_SIZE: u32 = 1 << 20; // 1 MiB
 
-// Used to parse an OpenPGP packet's header (note: in this case, the
-// header means a Packet's fixed data, not the OpenPGP framing
-// information, such as the CTB, and length information).
-//
-// This struct is not exposed to the user.  Instead, when a header has
-// been successfully parsed, a `PacketParser` is returned.
-pub(crate) struct PacketHeaderParser<'a> {
+/// Used to parse an OpenPGP packet's header (note: in this case, the
+/// header means a Packet's fixed data, not the OpenPGP framing
+/// information, such as the CTB, and length information).
+pub struct PacketHeaderParser<'a> {
     // The reader stack wrapped in a buffered_reader::Dup so that if
     // there is a parse error, we can abort and still return an
     // Unknown packet.
@@ -446,7 +443,7 @@ pub(crate) struct PacketHeaderParser<'a> {
     state: PacketParserState,
 
     /// A map of this packet.
-    map: Option<map::Map>,
+    pub map: Option<map::Map>,
 }
 
 /// Creates a local marco called php_try! that returns an Unknown
@@ -500,10 +497,10 @@ impl std::fmt::Debug for PacketHeaderParser<'_> {
 }
 
 impl<'a> PacketHeaderParser<'a> {
-    // Returns a `PacketHeaderParser` to parse an OpenPGP packet.
-    // `inner` points to the start of the OpenPGP framing information,
-    // i.e., the CTB.
-    fn new(inner: Box<dyn BufferedReader<Cookie> + 'a>,
+    /// Returns a `PacketHeaderParser` to parse an OpenPGP packet.
+    /// `inner` points to the start of the OpenPGP framing information,
+    /// i.e., the CTB.
+    pub fn new(inner: Box<dyn BufferedReader<Cookie> + 'a>,
            state: PacketParserState,
            path: Vec<usize>, header: Header,
            header_bytes: Vec<u8>) -> Self
@@ -529,12 +526,12 @@ impl<'a> PacketHeaderParser<'a> {
         }
     }
 
-    // Returns a `PacketHeaderParser` that parses a bare packet.  That
-    // is, `inner` points to the start of the packet; the OpenPGP
-    // framing has already been processed, and `inner` already
-    // includes any required filters (e.g., a
-    // `BufferedReaderPartialBodyFilter`, etc.).
-    fn new_naked(inner: Box<dyn BufferedReader<Cookie> + 'a>) -> Self {
+    /// Returns a `PacketHeaderParser` that parses a bare packet.  That
+    /// is, `inner` points to the start of the packet; the OpenPGP
+    /// framing has already been processed, and `inner` already
+    /// includes any required filters (e.g., a
+    /// `BufferedReaderPartialBodyFilter`, etc.).
+    pub fn new_naked(inner: Box<dyn BufferedReader<Cookie> + 'a>) -> Self {
         PacketHeaderParser::new(inner,
                                 PacketParserState::new(Default::default()),
                                 vec![ 0 ],
@@ -1078,38 +1075,38 @@ fn buffered_reader_stack_pop<'a>(
 }
 
 
-// A `PacketParser`'s settings.
+/// A `PacketParser`'s settings.
 #[derive(Clone, Debug)]
-struct PacketParserSettings {
-    // The maximum allowed recursion depth.
-    //
-    // There is absolutely no reason that this should be more than
-    // 255.  (GnuPG defaults to 32.)  Moreover, if it is too large,
-    // then a read from the reader pipeline could blow the stack.
-    max_recursion_depth: u8,
+pub struct PacketParserSettings {
+    /// The maximum allowed recursion depth.
+    ///
+    /// There is absolutely no reason that this should be more than
+    /// 255.  (GnuPG defaults to 32.)  Moreover, if it is too large,
+    /// then a read from the reader pipeline could blow the stack.
+    pub max_recursion_depth: u8,
 
-    // The maximum size of non-container packets.
-    //
-    // Packets that exceed this limit will be returned as
-    // `Packet::Unknown`, with the error set to
-    // `Error::PacketTooLarge`.
-    //
-    // This limit applies to any packet type that is *not* a
-    // container packet, i.e. any packet that is not a literal data
-    // packet, a compressed data packet, a symmetrically encrypted
-    // data packet, or an AEAD encrypted data packet.
-    max_packet_size: u32,
+    /// The maximum size of non-container packets.
+    ///
+    /// Packets that exceed this limit will be returned as
+    /// `Packet::Unknown`, with the error set to
+    /// `Error::PacketTooLarge`.
+    ///
+    /// This limit applies to any packet type that is *not* a
+    /// container packet, i.e. any packet that is not a literal data
+    /// packet, a compressed data packet, a symmetrically encrypted
+    /// data packet, or an AEAD encrypted data packet.
+    pub max_packet_size: u32,
 
-    // Whether a packet's contents should be buffered or dropped when
-    // the next packet is retrieved.
-    buffer_unread_content: bool,
+    /// Whether a packet's contents should be buffered or dropped when
+    /// the next packet is retrieved.
+    pub buffer_unread_content: bool,
 
-    // Whether to create a map.
-    map: bool,
+    /// Whether to create a map.
+    pub map: bool,
 
-    // Whether to implicitly start hashing upon parsing OnePassSig
-    // packets.
-    automatic_hashing: bool,
+    /// Whether to implicitly start hashing upon parsing OnePassSig
+    /// packets.
+    pub automatic_hashing: bool,
 }
 
 // The default `PacketParser` settings.
@@ -1350,7 +1347,7 @@ fn body_length_old_format() {
 
 impl Unknown {
     /// Parses the body of any packet and returns an Unknown.
-    fn parse(php: PacketHeaderParser, error: anyhow::Error)
+    pub fn parse(php: PacketHeaderParser, error: anyhow::Error)
              -> Result<PacketParser>
     {
         let tag = php.header.ctb().tag();
@@ -1399,8 +1396,8 @@ pub(crate) fn to_unknown_packet<R: Read + Send + Sync>(reader: R) -> Result<Unkn
 }
 
 impl Signature {
-    // Parses a signature packet.
-    fn parse(mut php: PacketHeaderParser)
+    /// Parses a signature packet.
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         let indent = php.recursion_depth();
@@ -1547,8 +1544,8 @@ impl Signature {
 }
 
 impl Signature6 {
-    // Parses a signature packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    /// Parses a signature packet.
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let indent = php.recursion_depth();
         tracer!(TRACE, "Signature6::parse", indent);
 
@@ -1593,8 +1590,8 @@ impl Signature6 {
 }
 
 impl Signature4 {
-    // Parses a signature packet.
-    fn parse(mut php: PacketHeaderParser)
+    /// Parses a signature packet.
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         let indent = php.recursion_depth();
@@ -1683,8 +1680,8 @@ impl Signature4 {
 }
 
 impl Signature3 {
-    // Parses a v3 signature packet.
-    fn parse(mut php: PacketHeaderParser)
+    /// Parses a v3 signature packet.
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         let indent = php.recursion_depth();
@@ -1750,8 +1747,8 @@ fn signature_parser_test () {
 }
 
 impl SubpacketArea {
-    // Parses a subpacket area.
-    fn parse(php: &mut PacketHeaderParser,
+    /// Parses a subpacket area.
+    pub fn parse(php: &mut PacketHeaderParser,
              mut limit: usize,
              hash_algo: HashAlgorithm)
              -> Result<Self>
@@ -1775,8 +1772,8 @@ impl SubpacketArea {
 }
 
 impl Subpacket {
-    // Parses a raw subpacket.
-    fn parse(php: &mut PacketHeaderParser,
+    /// Parses a raw subpacket.
+    pub fn parse(php: &mut PacketHeaderParser,
              limit: usize,
              hash_algo: HashAlgorithm)
              -> Result<Self>
@@ -2104,7 +2101,8 @@ quickcheck! {
 }
 
 impl OnePassSig {
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    #[expect(missing_docs)]
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let indent = php.recursion_depth();
         tracer!(TRACE, "OnePassSig", indent);
 
@@ -2127,7 +2125,8 @@ impl OnePassSig {
 impl_parse_with_buffered_reader!(OnePassSig);
 
 impl OnePassSig3 {
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    #[expect(missing_docs)]
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let indent = php.recursion_depth();
         tracer!(TRACE, "OnePassSig3", indent);
 
@@ -2418,8 +2417,9 @@ impl_parse_with_buffered_reader!(
     });
 
 impl OnePassSig6 {
+    #[expect(missing_docs)]
     #[allow(clippy::blocks_in_if_conditions)]
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let indent = php.recursion_depth();
         tracer!(TRACE, "OnePassSig6", indent);
 
@@ -2651,7 +2651,7 @@ impl Key<key::UnspecifiedParts, key::UnspecifiedRole>
 {
     /// Parses the body of a public key, public subkey, secret key or
     /// secret subkey packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "Key::parse", php.recursion_depth());
         make_php_try!(php);
         let tag = php.header.ctb().tag();
@@ -2713,7 +2713,7 @@ impl Key4<key::UnspecifiedParts, key::UnspecifiedRole>
 {
     /// Parses the body of a public key, public subkey, secret key or
     /// secret subkey packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "Key4::parse", php.recursion_depth());
         make_php_try!(php);
         let tag = php.header.ctb().tag();
@@ -2898,7 +2898,7 @@ impl Key6<key::UnspecifiedParts, key::UnspecifiedRole>
 {
     /// Parses the body of a public key, public subkey, secret key or
     /// secret subkey packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "Key6::parse", php.recursion_depth());
         make_php_try!(php);
         let tag = php.header.ctb().tag();
@@ -3145,7 +3145,7 @@ impl_parse_with_buffered_reader!(
 
 impl Trust {
     /// Parses the body of a trust packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "Trust::parse", php.recursion_depth());
         make_php_try!(php);
         let value = php_try!(php.parse_bytes_eof("value"));
@@ -3157,7 +3157,7 @@ impl_parse_with_buffered_reader!(Trust);
 
 impl UserID {
     /// Parses the body of a user id packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "UserID::parse", php.recursion_depth());
         make_php_try!(php);
 
@@ -3171,7 +3171,7 @@ impl_parse_with_buffered_reader!(UserID);
 
 impl UserAttribute {
     /// Parses the body of a user attribute packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "UserAttribute::parse", php.recursion_depth());
         make_php_try!(php);
 
@@ -3185,7 +3185,7 @@ impl_parse_with_buffered_reader!(UserAttribute);
 
 impl Marker {
     /// Parses the body of a marker packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser>
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser>
     {
         tracer!(TRACE, "Marker::parse", php.recursion_depth());
         make_php_try!(php);
@@ -3236,7 +3236,7 @@ impl Literal {
     /// Parses the body of a literal packet.
     ///
     /// Condition: Hashing has been disabled by the callee.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser>
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser>
     {
         tracer!(TRACE, "Literal::parse", php.recursion_depth());
         make_php_try!(php);
@@ -3323,7 +3323,7 @@ fn literal_parser_test () {
 
 impl CompressedData {
     /// Parses the body of a compressed data packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         let recursion_depth = php.recursion_depth();
         tracer!(TRACE, "CompressedData::parse", recursion_depth);
 
@@ -3442,7 +3442,7 @@ fn compressed_data_parser_test () {
 
 impl SKESK {
     /// Parses the body of an SK-ESK packet.
-    fn parse(mut php: PacketHeaderParser)
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         tracer!(TRACE, "SKESK::parse", php.recursion_depth());
@@ -3458,7 +3458,7 @@ impl SKESK {
 
 impl SKESK4 {
     /// Parses the body of an SK-ESK packet.
-    fn parse(mut php: PacketHeaderParser)
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         tracer!(TRACE, "SKESK4::parse", php.recursion_depth());
@@ -3488,7 +3488,7 @@ impl SKESK4 {
 
 impl SKESK6 {
     /// Parses the body of an SK-ESK packet.
-    fn parse(mut php: PacketHeaderParser)
+    pub fn parse(mut php: PacketHeaderParser)
              -> Result<PacketParser>
     {
         tracer!(TRACE, "SKESK5::parse", php.recursion_depth());
@@ -3589,7 +3589,7 @@ fn skesk_parser_test() {
 
 impl SEIP {
     /// Parses the body of a SEIP packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "SEIP::parse", php.recursion_depth());
         make_php_try!(php);
         let version = php_try!(php.parse_u8("version"));
@@ -3605,7 +3605,7 @@ impl_parse_with_buffered_reader!(SEIP);
 
 impl SEIP1 {
     /// Parses the body of a SEIP1 packet.
-    fn parse(php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(php: PacketHeaderParser) -> Result<PacketParser> {
         php.ok(SEIP1::new().into())
             .map(|pp| pp.set_processed(false))
     }
@@ -3613,7 +3613,7 @@ impl SEIP1 {
 
 impl SEIP2 {
     /// Parses the body of a SEIP2 packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "SEIP2::parse", php.recursion_depth());
         make_php_try!(php);
         let cipher: SymmetricAlgorithm =
@@ -3640,7 +3640,7 @@ impl SEIP2 {
 
 impl MDC {
     /// Parses the body of an MDC packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "MDC::parse", php.recursion_depth());
         make_php_try!(php);
 
@@ -3697,7 +3697,7 @@ impl_parse_with_buffered_reader!(MDC);
 
 impl Padding {
     /// Parses the body of a padding packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "Padding::parse", php.recursion_depth());
         make_php_try!(php);
         // XXX: I don't think we should capture the body.
@@ -3714,7 +3714,7 @@ impl MPI {
     /// See [Section 3.2 of RFC 9580] for details.
     ///
     ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
-    fn parse(name_len: &'static str,
+    pub fn parse(name_len: &'static str,
              name: &'static str,
              php: &mut PacketHeaderParser<'_>) -> Result<Self> {
         Ok(MPI::parse_common(name_len, name, false, false, php)?.into())
@@ -3828,7 +3828,7 @@ impl ProtectedMPI {
     /// See [Section 3.2 of RFC 9580] for details.
     ///
     ///   [Section 3.2 of RFC 9580]: https://www.rfc-editor.org/rfc/rfc9580.html#section-3.2
-    fn parse(name_len: &'static str,
+    pub fn parse(name_len: &'static str,
              name: &'static str,
              php: &mut PacketHeaderParser<'_>) -> Result<Self> {
         // XXX: While lenient parsing seemed like the right thing to
@@ -3840,7 +3840,7 @@ impl ProtectedMPI {
 }
 impl PKESK {
     /// Parses the body of an PK-ESK packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "PKESK::parse", php.recursion_depth());
         make_php_try!(php);
         let version = php_try!(php.parse_u8("version"));
@@ -3856,7 +3856,7 @@ impl_parse_with_buffered_reader!(PKESK);
 
 impl PKESK3 {
     /// Parses the body of an PK-ESK packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "PKESK3::parse", php.recursion_depth());
         make_php_try!(php);
 
@@ -3895,7 +3895,7 @@ impl_parse_with_buffered_reader!(
 
 impl PKESK6 {
     /// Parses the body of an PKESKv6 packet.
-    fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
+    pub fn parse(mut php: PacketHeaderParser) -> Result<PacketParser> {
         tracer!(TRACE, "PKESK6::parse", php.recursion_depth());
         make_php_try!(php);
         let fp_len = php_try!(php.parse_u8("recipient_len"));
@@ -3965,10 +3965,10 @@ impl_parse_with_buffered_reader!(
         }
     });
 
-// State that lives for the life of the packet parser, not the life of
-// an individual packet.
+/// State that lives for the life of the packet parser, not the life of
+/// an individual packet.
 #[derive(Debug)]
-struct PacketParserState {
+pub struct PacketParserState {
     // The `PacketParser`'s settings
     settings: PacketParserSettings,
 
@@ -3989,7 +3989,8 @@ struct PacketParserState {
 }
 
 impl PacketParserState {
-    fn new(settings: PacketParserSettings) -> Self {
+    #[expect(missing_docs)]
+    pub fn new(settings: PacketParserSettings) -> Self {
         PacketParserState {
             settings,
             message_validator: Default::default(),
@@ -4248,7 +4249,7 @@ pub struct PacketParser<'a> {
     processed: bool,
 
     /// A map of this packet.
-    map: Option<map::Map>,
+    pub map: Option<map::Map>,
 
     /// We compute a hashsum over the body to implement comparison on
     /// containers that have been streamed.

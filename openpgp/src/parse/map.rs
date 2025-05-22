@@ -150,7 +150,7 @@ impl<'a> Field<'a> {
                 Field {
                     offset: map.header.len() + e.offset,
                     name: e.field,
-                    data: &map.data[start..end],
+                    data: &map.data.get(start..end).unwrap_or_default(),
                 }
             })
         }
