@@ -31,7 +31,7 @@ use std::cmp;
 #[derive(Clone, Debug)]
 pub struct Map {
     length: usize,
-    entries: Vec<Entry>,
+    pub entries: Vec<Entry>,
     header: Vec<u8>,
     data: Vec<u8>,
 }
@@ -39,10 +39,10 @@ assert_send_and_sync!(Map);
 
 /// Represents an entry in the map.
 #[derive(Clone, Debug)]
-struct Entry {
-    offset: usize,
-    length: usize,
-    field: &'static str,
+pub struct Entry {
+    pub offset: usize,
+    pub length: usize,
+    pub field: &'static str,
 }
 
 impl Map {
